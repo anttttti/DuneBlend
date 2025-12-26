@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dune Imperium Blend Builder</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Expansion colors matching Excel style */
+        .expansion-base { background-color: #E7E6E6 !important; }  /* Light gray for base game */
+        .expansion-ix { background-color: #FFE699 !important; }     /* Light yellow/gold for Ix */
+        .expansion-immortality { background-color: #E2EFDA !important; }  /* Light green */
+        .expansion-uprising { background-color: #FCE4D6 !important; }     /* Light orange */
+        .expansion-bloodlines { background-color: #F4B084 !important; }   /* Darker orange */
+        .expansion-promo { background-color: #E0CFFC !important; }   /* Light lavender for promos */
+
+        /* Specific cell coloring for Name and Set columns */
+        td.expansion-base { background-color: #E7E6E6 !important; }
+        td.expansion-ix { background-color: #FFE699 !important; }
+        td.expansion-immortality { background-color: #E2EFDA !important; }
+        td.expansion-uprising { background-color: #FCE4D6 !important; }
+        td.expansion-bloodlines { background-color: #F4B084 !important; }
+        td.expansion-promo { background-color: #E0CFFC !important; }
+
+        .card-row { cursor: pointer; user-select: none; }
+        .card-row:hover { opacity: 0.8; }
+        .card-row:hover td { opacity: 1; } /* Prevent td opacity from compounding */
+
+        /* Access columns with individual colors for each faction */
+        .access-x {
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Color-code each Access column */
+        .access-green {
+            background-color: #C6E0B4 !important;  /* Light green */
+        }
+
+        .access-purple {
+            background-color: #D5A6BD !important;  /* Light purple */
+        }
+
+        .access-yellow {
+            background-color: #FFE699 !important;  /* Light yellow */
+        }
+
+        .access-emperor {
+            background-color: #B4C7E7 !important;  /* Light blue (Imperial) */
+        }
+
+        .access-guild {
+            background-color: #FFC000 !important;  /* Orange/gold (Spacing Guild) */
+        }
+
+        .access-bg {
+            background-color: #9966CC !important;  /* Purple (Bene Gesserit) */
+        }
+
+        .access-fremen {
+            background-color: #F4B183 !important;  /* Sandy orange (Fremen) */
+        }
+
+        .access-spy {
+            background-color: #A6A6A6 !important;  /* Gray (Spy) */
+        }
+
+        .access-x {
+            color: #0066cc;
+        }
+
+        /* Table styling */
+        .table-sm td, .table-sm th {
+            padding: 0.4rem;
+            vertical-align: middle;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sticky-top {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        /* Sortable column headers */
+        th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+        th.sortable:hover {
+            background-color: #e9ecef;
+        }
+        th.sortable::after {
+            content: ' ⇅';
+            opacity: 0.3;
+        }
+        th.sortable.asc::after {
+            content: ' ▲';
+            opacity: 1;
+        }
+        th.sortable.desc::after {
+            content: ' ▼';
+            opacity: 1;
+        }
+
+        /* Group headers */
+        th.group-header {
+            background-color: #6c757d !important;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* Resizable columns */
+        th.resizable {
+            position: relative;
+        }
+
+        .resize-handle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 5px;
+            height: 100%;
+            cursor: col-resize;
+            background-color: transparent;
+            z-index: 1;
+        }
+
+        .resize-handle:hover {
+            background-color: #0066cc;
+        }
+
+        .resizing {
+            user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid p-3">
+        <h1 class="mb-3">Dune Imperium Blend Builder</h1>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="deckName" class="form-label">Blend Name:</label>
+                <input type="text" class="form-control" id="deckName" value="Untitled Blend">
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+                <button class="btn btn-primary me-2" onclick="saveDeck()">Save Blend</button>
+                <button class="btn btn-secondary" onclick="clearDeck()">Clear Blend</button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            Available Cards
+                            <span class="badge bg-secondary" id="availableCount">0</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-2">
+                            <div class="col-md-3">
+                                <label for="setFilter" class="form-label">Filter by Set:</label>
+                                <select id="setFilter" class="form-select form-select-sm" onchange="filterCards()">
+                                    <option value="all">All</option>
+                                    <option value="base">Base Game</option>
+                                    <option value="ix">Rise of Ix</option>
+                                    <option value="immortality">Immortality</option>
+                                    <option value="uprising">Uprising</option>
+                                    <option value="bloodlines">Bloodlines</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="searchBox" class="form-label">Search:</label>
+                                <input type="text" id="searchBox" class="form-control form-control-sm"
+                                       placeholder="Search card names..." oninput="filterCards()">
+                            </div>
+                        </div>
+                        <div class="table-responsive" style="max-height: 600px; overflow: auto;">
+                            <table class="table table-sm table-hover table-bordered mb-0" id="cardTable" style="table-layout: fixed;">
+                                <colgroup>
+                                    <col style="width: 150px;"><!-- Name -->
+                                    <col style="width: 80px;"><!-- Set -->
+                                    <col style="width: 50px;"><!-- Count -->
+                                    <col style="width: 50px;"><!-- Cost -->
+                                    <col style="width: 50px;"><!-- Agent -->
+                                    <col style="width: 55px;"><!-- Passive -->
+                                    <col style="width: 80px;"><!-- Acquisition -->
+                                    <col style="width: 60px;"><!-- Reveal Persuasion -->
+                                    <col style="width: 60px;"><!-- Reveal Swords -->
+                                    <col style="width: 50px;"><!-- Reveal Ability -->
+                                    <col style="width: 80px;"><!-- Tech -->
+                                    <col style="width: 80px;"><!-- Shipping -->
+                                    <col style="width: 80px;"><!-- Unload -->
+                                    <col style="width: 80px;"><!-- Infiltration -->
+                                    <col style="width: 80px;"><!-- Research -->
+                                    <col style="width: 80px;"><!-- Grafting -->
+                                    <col style="width: 80px;"><!-- Spies -->
+                                    <col style="width: 80px;"><!-- Sandworms -->
+                                    <col style="width: 80px;"><!-- Contracts -->
+                                    <col style="width: 80px;"><!-- Battle Icons -->
+                                    <col style="width: 80px;"><!-- Sardaukar -->
+                                    <col style="width: 50px;"><!-- Green Access -->
+                                    <col style="width: 50px;"><!-- Purple Access -->
+                                    <col style="width: 50px;"><!-- Yellow Access -->
+                                    <col style="width: 50px;"><!-- Emperor Access -->
+                                    <col style="width: 50px;"><!-- Guild Access -->
+                                    <col style="width: 50px;"><!-- BG Access -->
+                                    <col style="width: 50px;"><!-- Fremen Access -->
+                                    <col style="width: 50px;"><!-- Spy Access -->
+                                    <col style="width: 80px;"><!-- Compatibility -->
+                                    <col style="width: 50px;"><!-- VPs -->
+                                </colgroup>
+                                <thead class="sticky-top bg-white">
+                                    <tr>
+                                        <th rowspan="2" class="sortable resizable" data-column="name" onclick="sortTable('name')" style="width: 150px;">
+                                            Name<div class="resize-handle"></div>
+                                        </th>
+                                        <th rowspan="2" class="sortable resizable" data-column="set" onclick="sortTable('set')" style="width: 80px;">
+                                            Set<div class="resize-handle"></div>
+                                        </th>
+                                        <th rowspan="2" class="sortable resizable" data-column="count" onclick="sortTable('count')" style="width: 50px;">
+                                            Count<div class="resize-handle"></div>
+                                        </th>
+                                        <th rowspan="2" class="sortable resizable" data-column="cost" onclick="sortTable('cost')" style="width: 50px;">
+                                            Cost<div class="resize-handle"></div>
+                                        </th>
+                                        <th colspan="3" class="group-header">Abilities</th>
+                                        <th colspan="3" class="group-header">Reveal</th>
+                                        <th colspan="11" class="group-header">Mechanics</th>
+                                        <th colspan="8" class="group-header">Access</th>
+                                        <th rowspan="2" class="sortable resizable" data-column="compatibility" onclick="sortTable('compatibility')" style="width: 80px;">
+                                            Compat<div class="resize-handle"></div>
+                                        </th>
+                                        <th rowspan="2" class="resizable" style="width: 50px;">
+                                            VPs<div class="resize-handle"></div>
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <!-- Ability columns -->
+                                        <th class="sortable resizable" data-column="agent" onclick="sortTable('agent')" style="width: 50px;">
+                                            Agent<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="resizable" style="width: 55px;">
+                                            Passive<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="resizable" style="width: 80px;">
+                                            Acquisition<div class="resize-handle"></div>
+                                        </th>
+                                        <!-- Reveal columns -->
+                                        <th class="sortable resizable" data-column="reveal_persuasion" onclick="sortTable('reveal_persuasion')" style="width: 60px;">
+                                            Persuasion<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="sortable resizable" data-column="reveal_swords" onclick="sortTable('reveal_swords')" style="width: 60px;">
+                                            Swords<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="sortable resizable" data-column="reveal_ability" onclick="sortTable('reveal_ability')" style="width: 50px;">
+                                            Ability<div class="resize-handle"></div>
+                                        </th>
+                                        <!-- Mechanics columns -->
+                                        <th class="resizable" style="width: 80px;">
+                                            Tech<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="resizable" style="width: 80px;">
+                                            Shipping<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="resizable" style="width: 80px;">
+                                            Unload<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="resizable" style="width: 80px;">
+                                            Infiltration<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="resizable" style="width: 80px;">
+                                            Research<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="resizable" style="width: 80px;">
+                                            Grafting<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="resizable" style="width: 80px;">
+                                            Spies<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="resizable" style="width: 80px;">
+                                            Sandworms<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="resizable" style="width: 80px;">
+                                            Contracts<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="resizable" style="width: 80px;">
+                                            Battle Icons<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="resizable" style="width: 80px;">
+                                            Sardaukar<div class="resize-handle"></div>
+                                        </th>
+                                        <!-- Access columns -->
+                                        <th class="resizable" style="width: 50px;">
+                                            Green<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="resizable" style="width: 50px;">
+                                            Purple<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="resizable" style="width: 50px;">
+                                            Yellow<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="resizable" style="width: 50px;">
+                                            Emperor<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="resizable" style="width: 50px;">
+                                            Guild<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="resizable" style="width: 50px;">
+                                            BG<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="resizable" style="width: 50px;">
+                                            Fremen<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="resizable" style="width: 50px;">
+                                            Spy<div class="resize-handle"></div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="availableCards"></tbody>
+                            </table>
+                        </div>
+                        <small class="text-muted">Double-click to add card to blend. Drag column borders to resize.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            Selected Cards
+                            <span class="badge bg-primary" id="deckCount">0</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead class="sticky-top bg-white">
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Set</th>
+                                        <th>Count</th>
+                                        <th>Cost</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="selectedCards"></tbody>
+                            </table>
+                        </div>
+                        <small class="text-muted">Double-click to remove card from blend</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Statistics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="stats">
+                            <p class="text-muted">No cards selected</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allCards = [];
+        let selectedCards = [];
+        let currentSort = { column: null, direction: 'asc' };
+
+        // Column resizing
+        let isResizing = false;
+        let currentColumn = null;
+        let startX = 0;
+        let startWidth = 0;
+
+        // Load cards from API
+        fetch('/api/cards')
+            .then(r => r.json())
+            .then(cards => {
+                allCards = cards;
+                filterCards();
+                initializeResizing();
+            })
+            .catch(err => {
+                console.error('Failed to load cards:', err);
+                alert('Failed to load card data. Please refresh the page.');
+            });
+
+        function initializeResizing() {
+            const handles = document.querySelectorAll('.resize-handle');
+            handles.forEach(handle => {
+                handle.addEventListener('mousedown', startResize);
+            });
+
+            document.addEventListener('mousemove', doResize);
+            document.addEventListener('mouseup', stopResize);
+        }
+
+        function startResize(e) {
+            isResizing = true;
+            currentColumn = e.target.parentElement;
+            startX = e.pageX;
+            startWidth = currentColumn.offsetWidth;
+            document.body.classList.add('resizing');
+            e.preventDefault();
+        }
+
+        function doResize(e) {
+            if (!isResizing) return;
+            const diff = e.pageX - startX;
+            const newWidth = Math.max(30, startWidth + diff); // Minimum 30px
+            currentColumn.style.width = newWidth + 'px';
+            currentColumn.style.minWidth = newWidth + 'px';
+        }
+
+        function stopResize() {
+            if (isResizing) {
+                isResizing = false;
+                currentColumn = null;
+                document.body.classList.remove('resizing');
+            }
+        }
+
+        function sortTable(column) {
+            // Toggle sort direction
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'asc';
+            }
+
+            // Update header indicators
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.classList.remove('asc', 'desc');
+            });
+            const header = document.querySelector(`th[data-column="${column}"]`);
+            if (header) {
+                header.classList.add(currentSort.direction);
+            }
+
+            // Re-render with sorting
+            filterCards();
+        }
+
+        function getSortValue(card, column) {
+            switch(column) {
+                case 'name': return card.name.toLowerCase();
+                case 'set': return card.source || card.card_set;
+                case 'count': return card.count || 0;
+                case 'cost': return parseFloat(card.cost) || 0;
+                case 'agent': return (card.agent_ability || '').toLowerCase();
+                case 'reveal_ability': return (card.reveal_ability || '').toLowerCase();
+                case 'reveal_persuasion': return parseFloat(card.reveal_persuasion) || 0;
+                case 'reveal_swords': return parseFloat(card.reveal_swords) || 0;
+                case 'compatibility': return card.compatibility || '';
+                default: return '';
+            }
+        }
+
+        function truncate(text, maxLength) {
+            if (!text) return '';
+            return text.length > maxLength ? text.substring(0, maxLength - 3) + '...' : text;
+        }
+
+        function filterCards() {
+            const filter = document.getElementById('setFilter').value;
+            const search = document.getElementById('searchBox').value.toLowerCase();
+            const tbody = document.getElementById('availableCards');
+            tbody.innerHTML = '';
+
+            let filtered = filter === 'all'
+                ? allCards
+                : allCards.filter(c => c.card_set === filter);
+
+            if (search) {
+                filtered = filtered.filter(c =>
+                    c.name.toLowerCase().includes(search)
+                );
+            }
+
+            // Apply sorting
+            if (currentSort.column) {
+                filtered.sort((a, b) => {
+                    const aVal = getSortValue(a, currentSort.column);
+                    const bVal = getSortValue(b, currentSort.column);
+
+                    if (aVal < bVal) return currentSort.direction === 'asc' ? -1 : 1;
+                    if (aVal > bVal) return currentSort.direction === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+
+            filtered.forEach(card => {
+                const tr = document.createElement('tr');
+                tr.className = `card-row`;
+                tr.ondblclick = () => addCard(card);
+
+                tr.innerHTML = `
+                    <td class="expansion-${card.card_set}" title="${card.name}">${card.name}</td>
+                    <td class="expansion-${card.card_set}">${card.source || card.card_set}</td>
+                    <td>${card.count}</td>
+                    <td>${parseFloat(card.cost) || 0}</td>
+                    <td title="${card.agent_ability}">${truncate(card.agent_ability, 50)}</td>
+                    <td title="${card.passive_ability}">${truncate(card.passive_ability, 50)}</td>
+                    <td title="${card.acquisition_bonus}">${truncate(card.acquisition_bonus, 50)}</td>
+                    <td>${card.reveal_persuasion !== '0' && card.reveal_persuasion !== '0.0' ? parseFloat(card.reveal_persuasion) : ''}</td>
+                    <td>${card.reveal_swords !== '0' && card.reveal_swords !== '0.0' ? parseFloat(card.reveal_swords) : ''}</td>
+                    <td title="${card.reveal_ability}">${truncate(card.reveal_ability, 50)}</td>
+                    <td>${card.tech}</td>
+                    <td>${card.shipping}</td>
+                    <td>${card.unload}</td>
+                    <td>${card.infiltration}</td>
+                    <td>${card.research}</td>
+                    <td>${card.grafting}</td>
+                    <td>${card.spies}</td>
+                    <td>${card.sandworms}</td>
+                    <td>${card.contracts}</td>
+                    <td>${card.battle_icons}</td>
+                    <td>${card.sardaukar}</td>
+                    <td class="access-x access-green">${card.green_access ? 'X' : ''}</td>
+                    <td class="access-x access-purple">${card.purple_access ? 'X' : ''}</td>
+                    <td class="access-x access-yellow">${card.yellow_access ? 'X' : ''}</td>
+                    <td class="access-x access-emperor">${card.emperor_access ? 'X' : ''}</td>
+                    <td class="access-x access-guild">${card.spacing_guild_access ? 'X' : ''}</td>
+                    <td class="access-x access-bg">${card.bene_gesserit_access ? 'X' : ''}</td>
+                    <td class="access-x access-fremen">${card.fremen_access ? 'X' : ''}</td>
+                    <td class="access-x access-spy">${card.spy_access ? 'X' : ''}</td>
+                    <td>${card.compatibility}</td>
+                    <td>${card.vps_available && card.vps_available !== '0' && card.vps_available !== '0.0' ? parseFloat(card.vps_available) : ''}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('availableCount').textContent = filtered.length;
+        }
+
+        function addCard(card) {
+            // Count how many of this card are already in the deck
+            const currentCount = selectedCards.filter(c => c.name === card.name).length;
+
+            // Check if we've reached the limit
+            if (currentCount >= card.count) {
+                alert(`Cannot add more than ${card.count} copies of "${card.name}"`);
+                return;
+            }
+
+            selectedCards.push(card);
+            updateDeck();
+        }
+
+        function removeCard(index) {
+            selectedCards.splice(index, 1);
+            updateDeck();
+        }
+
+        function clearDeck() {
+            if (selectedCards.length === 0) return;
+            if (confirm('Remove all cards from blend?')) {
+                selectedCards = [];
+                updateDeck();
+            }
+        }
+
+        function updateDeck() {
+            const tbody = document.getElementById('selectedCards');
+            tbody.innerHTML = '';
+
+            selectedCards.forEach((card, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = `card-row`;
+                tr.ondblclick = () => removeCard(idx);
+                tr.innerHTML = `
+                    <td class="expansion-${card.card_set}">${card.name}</td>
+                    <td class="expansion-${card.card_set}">${card.source || card.card_set}</td>
+                    <td>${card.count}</td>
+                    <td>${parseFloat(card.cost) || 0}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('deckCount').textContent = selectedCards.length;
+            updateStats();
+        }
+
+        function updateStats() {
+            const statsDiv = document.getElementById('stats');
+
+            if (selectedCards.length === 0) {
+                statsDiv.innerHTML = '<p class="text-muted">No cards selected</p>';
+                return;
+            }
+
+            const totalCost = selectedCards.reduce((sum, c) => sum + (parseFloat(c.cost) || 0), 0);
+            const avgCost = totalCost / selectedCards.length;
+
+            const bySets = {};
+            selectedCards.forEach(c => {
+                const setName = c.source || c.card_set;
+                bySets[setName] = (bySets[setName] || 0) + 1;
+            });
+
+            let html = `
+                <div class="row">
+                    <div class="col-6">
+                        <strong>Total Cards:</strong><br>
+                        <strong>Total Cost:</strong><br>
+                        <strong>Avg Cost:</strong>
+                    </div>
+                    <div class="col-6">
+                        ${selectedCards.length}<br>
+                        ${totalCost.toFixed(1)}<br>
+                        ${avgCost.toFixed(2)}
+                    </div>
+                </div>
+                <hr>
+                <strong>By Set:</strong>
+                <ul class="mb-0">
+            `;
+
+            for (const [set, count] of Object.entries(bySets).sort()) {
+                const pct = (count / selectedCards.length * 100).toFixed(1);
+                html += `<li>${set}: ${count} (${pct}%)</li>`;
+            }
+
+            html += '</ul>';
+            statsDiv.innerHTML = html;
+        }
+
+        function saveDeck() {
+            const name = document.getElementById('deckName').value;
+
+            if (selectedCards.length === 0) {
+                alert('Cannot save an empty blend.');
+                return;
+            }
+
+            fetch('/api/deck/save', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name, cards: selectedCards})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Blend saved to: ' + data.filepath);
+                } else {
+                    alert('Failed to save blend');
+                }
+            })
+            .catch(err => {
+                console.error('Save error:', err);
+                alert('Failed to save blend');
+            });
+        }
+    </script>
+</body>
+</html>
+
