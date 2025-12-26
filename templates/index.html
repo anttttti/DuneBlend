@@ -149,6 +149,7 @@
             </div>
             <div class="col-md-6 d-flex align-items-end">
                 <button class="btn btn-primary me-2" onclick="saveDeck()">Save Blend</button>
+                <button class="btn btn-success me-2" onclick="showLoadDialog()">Load Blend</button>
                 <button class="btn btn-secondary" onclick="clearDeck()">Clear Blend</button>
             </div>
         </div>
@@ -375,6 +376,25 @@
         </div>
     </div>
 
+    <!-- Load Blend Modal -->
+    <div class="modal fade" id="loadBlendModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Load Blend</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Select a blend to load:</p>
+                    <div id="blendList" class="list-group">
+                        <p class="text-muted">Loading...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let allCards = [];
         let selectedCards = [];
@@ -639,6 +659,99 @@
 
             html += '</ul>';
             statsDiv.innerHTML = html;
+        }
+
+        function showLoadDialog() {
+            // Load list of available blends
+            fetch('/api/blends')
+                .then(r => r.json())
+                .then(blends => {
+                    const listDiv = document.getElementById('blendList');
+                    if (blends.length === 0) {
+                        listDiv.innerHTML = '<p class="text-muted">No saved blends found</p>';
+                    } else {
+                        listDiv.innerHTML = '';
+                        blends.forEach(blend => {
+                            const btn = document.createElement('button');
+                            btn.className = 'list-group-item list-group-item-action';
+                            btn.textContent = blend.name;
+                            btn.onclick = () => loadBlend(blend.filename, blend.name);
+                            listDiv.appendChild(btn);
+                        });
+                    }
+                    // Show modal
+                    const modal = new bootstrap.Modal(document.getElementById('loadBlendModal'));
+                    modal.show();
+                })
+                .catch(err => {
+                    console.error('Failed to load blend list:', err);
+                    alert('Failed to load blend list');
+                });
+        }
+
+        function loadBlend(filename, name) {
+            fetch(`/api/blend/load/${filename}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        // Clear current deck
+                        selectedCards = [];
+
+                        // Find and add cards by name
+                        const cardNames = data.card_names;
+                        const notFound = [];
+                        const found = [];
+
+                        cardNames.forEach(cardName => {
+                            // Try exact match first
+                            let card = allCards.find(c => c.name === cardName);
+
+                            // If not found, try trimmed match
+                            if (!card) {
+                                card = allCards.find(c => c.name.trim() === cardName.trim());
+                            }
+
+                            // If still not found, try case-insensitive match
+                            if (!card) {
+                                card = allCards.find(c => c.name.toLowerCase() === cardName.toLowerCase());
+                            }
+
+                            if (card) {
+                                selectedCards.push(card);
+                                found.push(cardName);
+                            } else {
+                                notFound.push(cardName);
+                                console.warn(`Card not found: "${cardName}"`);
+                            }
+                        });
+
+                        // Update deck name
+                        document.getElementById('deckName').value = name;
+
+                        // Update display
+                        updateDeck();
+
+                        // Close modal
+                        bootstrap.Modal.getInstance(document.getElementById('loadBlendModal')).hide();
+
+                        // Show detailed message
+                        let message = `Loaded ${found.length} cards from "${name}"`;
+                        if (notFound.length > 0) {
+                            message += `\n\nWarning: ${notFound.length} cards not found in database:`;
+                            message += `\n${notFound.slice(0, 5).join(', ')}`;
+                            if (notFound.length > 5) {
+                                message += `\n... and ${notFound.length - 5} more`;
+                            }
+                        }
+                        alert(message);
+                    } else {
+                        alert('Failed to load blend: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(err => {
+                    console.error('Failed to load blend:', err);
+                    alert('Failed to load blend');
+                });
         }
 
         function saveDeck() {
