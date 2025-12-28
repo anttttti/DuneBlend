@@ -6,68 +6,33 @@
     <title>Dune Imperium Blend Builder</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* Expansion colors matching Excel style */
-        .expansion-base { background-color: #E7E6E6 !important; }  /* Light gray for base game */
-        .expansion-ix { background-color: #FFE699 !important; }     /* Light yellow/gold for Ix */
-        .expansion-immortality { background-color: #E2EFDA !important; }  /* Light green */
-        .expansion-uprising { background-color: #FCE4D6 !important; }     /* Light orange */
-        .expansion-bloodlines { background-color: #F4B084 !important; }   /* Darker orange */
-        .expansion-promo { background-color: #E0CFFC !important; }   /* Light lavender for promos */
+        body { padding: 20px; background-color: #f5f5f5; }
 
-        /* Specific cell coloring for Name and Set columns */
+        /* Tab styling */
+        .nav-tabs { margin-bottom: 20px; border-bottom: 2px solid #ddd; flex-wrap: wrap; }
+        .nav-tabs .nav-link { color: #666; border: none; padding: 8px 15px; font-size: 0.9em; }
+        .nav-tabs .nav-link.active {
+            color: #000;
+            background-color: #fff;
+            border-bottom: 3px solid #0066cc;
+            font-weight: bold;
+        }
+        .nav-tabs .nav-link:hover { background-color: #f0f0f0; }
+
+        /* Expansion colors */
+        .expansion-base { background-color: #E7E6E6 !important; }
+        .expansion-ix { background-color: #FFE699 !important; }
+        .expansion-immortality { background-color: #E2EFDA !important; }
+        .expansion-uprising { background-color: #FCE4D6 !important; }
+        .expansion-bloodlines { background-color: #F4B084 !important; }
+        .expansion-promo { background-color: #E0CFFC !important; }
+
         td.expansion-base { background-color: #E7E6E6 !important; }
         td.expansion-ix { background-color: #FFE699 !important; }
         td.expansion-immortality { background-color: #E2EFDA !important; }
         td.expansion-uprising { background-color: #FCE4D6 !important; }
         td.expansion-bloodlines { background-color: #F4B084 !important; }
         td.expansion-promo { background-color: #E0CFFC !important; }
-
-        .card-row { cursor: pointer; user-select: none; }
-        .card-row:hover { opacity: 0.8; }
-        .card-row:hover td { opacity: 1; } /* Prevent td opacity from compounding */
-
-        /* Access columns with individual colors for each faction */
-        .access-x {
-            text-align: center;
-            font-weight: bold;
-        }
-
-        /* Color-code each Access column */
-        .access-green {
-            background-color: #C6E0B4 !important;  /* Light green */
-        }
-
-        .access-purple {
-            background-color: #D5A6BD !important;  /* Light purple */
-        }
-
-        .access-yellow {
-            background-color: #FFE699 !important;  /* Light yellow */
-        }
-
-        .access-emperor {
-            background-color: #B4C7E7 !important;  /* Light blue (Imperial) */
-        }
-
-        .access-guild {
-            background-color: #FFC000 !important;  /* Orange/gold (Spacing Guild) */
-        }
-
-        .access-bg {
-            background-color: #9966CC !important;  /* Purple (Bene Gesserit) */
-        }
-
-        .access-fremen {
-            background-color: #F4B183 !important;  /* Sandy orange (Fremen) */
-        }
-
-        .access-spy {
-            background-color: #A6A6A6 !important;  /* Gray (Spy) */
-        }
-
-        .access-x {
-            color: #0066cc;
-        }
 
         /* Table styling */
         .table-sm td, .table-sm th {
@@ -78,164 +43,231 @@
             text-overflow: ellipsis;
         }
 
-        .sticky-top {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
+        .resource-row { cursor: pointer; user-select: none; }
+        .resource-row:hover { background-color: #f8f9fa !important; }
 
-        /* Sortable column headers */
-        th.sortable {
-            cursor: pointer;
-            user-select: none;
-        }
-        th.sortable:hover {
-            background-color: #e9ecef;
-        }
-        th.sortable::after {
-            content: ' ⇅';
-            opacity: 0.3;
-        }
-        th.sortable.asc::after {
-            content: ' ▲';
-            opacity: 1;
-        }
-        th.sortable.desc::after {
-            content: ' ▼';
-            opacity: 1;
-        }
+        .sticky-top { position: sticky; top: 0; z-index: 10; }
 
-        /* Group headers */
-        th.group-header {
-            background-color: #6c757d !important;
-            color: white;
-            font-weight: bold;
+        .selected-list { max-height: 250px; overflow-y: auto; }
+
+        /* Access column colors */
+        .access-x {
             text-align: center;
+            font-weight: bold;
+            color: #0066cc;
+            width: 40px !important;
+            max-width: 40px !important;
+            min-width: 40px !important;
+            padding: 4px 2px !important;
+            overflow: hidden;
         }
 
-        /* Resizable columns */
+        .access-green { background-color: #C6E0B4 !important; }
+        .access-purple { background-color: #D5A6BD !important; }
+        .access-yellow { background-color: #FFE699 !important; }
+        .access-emperor { background-color: #B4C7E7 !important; }
+        .access-guild { background-color: #FFC000 !important; }
+        .access-bg { background-color: #9966CC !important; }
+        .access-fremen { background-color: #F4B183 !important; }
+        .access-spy { background-color: #A6A6A6 !important; }
+
+        /* Compact columns for numeric/short values */
+        td.compact {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-align: center;
+            padding: 4px 8px;
+        }
+
+        /* Make table cells truncate with ellipsis for long content */
+        .table-hover td {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .table-hover td[title] {
+            cursor: help;
+        }
+
+        /* Column resizing */
         th.resizable {
             position: relative;
+            padding-right: 10px !important;
         }
-
         .resize-handle {
             position: absolute;
             top: 0;
             right: 0;
-            width: 5px;
-            height: 100%;
+            bottom: 0;
+            width: 8px;
             cursor: col-resize;
-            background-color: transparent;
-            z-index: 1;
-        }
-
-        .resize-handle:hover {
-            background-color: #0066cc;
-        }
-
-        .resizing {
             user-select: none;
+            background: transparent;
+            z-index: 10;
+        }
+        .resize-handle:hover {
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+
+        /* Ensure table respects column widths */
+        table[style*="table-layout: fixed"] th,
+        table[style*="table-layout: fixed"] td {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .group-header {
+            text-align: center;
+            background-color: #6c757d !important;
+            color: white !important;
+            font-weight: bold;
+        }
+
+        /* Sortable columns */
+        .sortable {
+            cursor: pointer !important;
+            user-select: none;
+        }
+        .sortable:hover {
+            background-color: #e9ecef !important;
         }
     </style>
 </head>
 <body>
-    <div class="container-fluid p-3">
-        <h1 class="mb-3">Dune Imperium Blend Builder</h1>
-
+    <div class="container-fluid">
         <div class="row mb-3">
             <div class="col-md-6">
-                <label for="deckName" class="form-label">Blend Name:</label>
-                <input type="text" class="form-control" id="deckName" value="Untitled Blend">
+                <h1>Dune Imperium Blend Builder</h1>
             </div>
-            <div class="col-md-6 d-flex align-items-end">
-                <button class="btn btn-primary me-2" onclick="saveDeck()">Save Blend</button>
-                <button class="btn btn-success me-2" onclick="showLoadDialog()">Load Blend</button>
-                <button class="btn btn-secondary" onclick="clearDeck()">Clear Blend</button>
+            <div class="col-md-6">
+                <div class="mb-2">
+                    <label for="blendName" class="form-label">Filename:</label>
+                    <input type="text" class="form-control" id="blendName" value="My_Custom_Blend.md">
+                </div>
+                <button class="btn btn-primary btn-sm me-2" onclick="saveBlend()">Save</button>
+                <button class="btn btn-info btn-sm me-2" onclick="showSaveAsDialog()">Save As</button>
+                <button class="btn btn-success btn-sm me-2" onclick="showLoadDialog()">Load</button>
+                <button class="btn btn-secondary btn-sm" onclick="clearBlend()">Clear All</button>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            Available Cards
-                            <span class="badge bg-secondary" id="availableCount">0</span>
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row mb-2">
-                            <div class="col-md-3">
-                                <label for="setFilter" class="form-label">Filter by Set:</label>
-                                <select id="setFilter" class="form-select form-select-sm" onchange="filterCards()">
-                                    <option value="all">All</option>
-                                    <option value="base">Base Game</option>
-                                    <option value="ix">Rise of Ix</option>
-                                    <option value="immortality">Immortality</option>
-                                    <option value="uprising">Uprising</option>
-                                    <option value="bloodlines">Bloodlines</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="searchBox" class="form-label">Search:</label>
-                                <input type="text" id="searchBox" class="form-control form-control-sm"
-                                       placeholder="Search card names..." oninput="filterCards()">
-                            </div>
-                        </div>
-                        <div class="table-responsive" style="max-height: 600px; overflow: auto;">
-                            <table class="table table-sm table-hover table-bordered mb-0" id="cardTable" style="table-layout: fixed;">
+        <!-- Resource Type Tabs -->
+        <ul class="nav nav-tabs" id="resourceTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="imperium-tab" data-bs-toggle="tab" data-bs-target="#imperium-panel" type="button">
+                    Imperium <span id="imperium-badge" class="badge bg-secondary">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="intrigue-tab" data-bs-toggle="tab" data-bs-target="#intrigue-panel" type="button">
+                    Intrigue <span id="intrigue-badge" class="badge bg-secondary">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tleilax-tab" data-bs-toggle="tab" data-bs-target="#tleilax-panel" type="button">
+                    Tleilax <span id="tleilax-badge" class="badge bg-secondary">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="reserve-tab" data-bs-toggle="tab" data-bs-target="#reserve-panel" type="button">
+                    Reserve <span id="reserve-badge" class="badge bg-secondary">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tech-tab" data-bs-toggle="tab" data-bs-target="#tech-panel" type="button">
+                    Tech <span id="tech-badge" class="badge bg-secondary">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="contracts-tab" data-bs-toggle="tab" data-bs-target="#contracts-panel" type="button">
+                    Contracts <span id="contracts-badge" class="badge bg-secondary">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="leader-tab" data-bs-toggle="tab" data-bs-target="#leader-panel" type="button">
+                    Leaders <span id="leader-badge" class="badge bg-secondary">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="sardaukar-tab" data-bs-toggle="tab" data-bs-target="#sardaukar-panel" type="button">
+                    Sardaukar <span id="sardaukar-badge" class="badge bg-secondary">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="starter-tab" data-bs-toggle="tab" data-bs-target="#starter-panel" type="button">
+                    Starter <span id="starter-badge" class="badge bg-secondary">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="conflict-tab" data-bs-toggle="tab" data-bs-target="#conflict-panel" type="button">
+                    Conflict <span id="conflict-badge" class="badge bg-secondary">0</span>
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content Panels -->
+        <div class="tab-content" id="resourceTabContent">
+            <!-- Imperium Panel -->
+            <div class="tab-pane fade show active" id="imperium-panel" role="tabpanel">
+                <div class="row">
+                    <div class="col-12">
+                        <h4>Available Imperium Cards <span class="badge bg-secondary" id="imperium-available-count">0</span></h4>
+                        <div class="table-responsive" style="max-height: 500px; overflow: auto;">
+                            <table class="table table-sm table-hover table-bordered" id="imperium-table" style="table-layout: fixed;">
                                 <colgroup>
-                                    <col style="width: 150px;"><!-- Name -->
-                                    <col style="width: 80px;"><!-- Set -->
-                                    <col style="width: 50px;"><!-- Count -->
-                                    <col style="width: 50px;"><!-- Cost -->
-                                    <col style="width: 50px;"><!-- Agent -->
-                                    <col style="width: 55px;"><!-- Passive -->
+                                    <col style="width: 100px;"><!-- Name -->
+                                    <col style="width: 50px;"><!-- Set -->
+                                    <col style="width: 45px;"><!-- Count -->
+                                    <col style="width: 35px;"><!-- Cost -->
+                                    <col style="width: 70px;"><!-- Agent -->
+                                    <col style="width: 70px;"><!-- Passive -->
                                     <col style="width: 80px;"><!-- Acquisition -->
-                                    <col style="width: 60px;"><!-- Reveal Persuasion -->
-                                    <col style="width: 60px;"><!-- Reveal Swords -->
-                                    <col style="width: 50px;"><!-- Reveal Ability -->
-                                    <col style="width: 80px;"><!-- Tech -->
-                                    <col style="width: 80px;"><!-- Shipping -->
-                                    <col style="width: 80px;"><!-- Unload -->
-                                    <col style="width: 80px;"><!-- Infiltration -->
-                                    <col style="width: 80px;"><!-- Research -->
-                                    <col style="width: 80px;"><!-- Grafting -->
-                                    <col style="width: 80px;"><!-- Spies -->
-                                    <col style="width: 80px;"><!-- Sandworms -->
-                                    <col style="width: 80px;"><!-- Contracts -->
-                                    <col style="width: 80px;"><!-- Battle Icons -->
-                                    <col style="width: 80px;"><!-- Sardaukar -->
-                                    <col style="width: 50px;"><!-- Green Access -->
-                                    <col style="width: 50px;"><!-- Purple Access -->
-                                    <col style="width: 50px;"><!-- Yellow Access -->
-                                    <col style="width: 50px;"><!-- Emperor Access -->
-                                    <col style="width: 50px;"><!-- Guild Access -->
-                                    <col style="width: 50px;"><!-- BG Access -->
-                                    <col style="width: 50px;"><!-- Fremen Access -->
-                                    <col style="width: 50px;"><!-- Spy Access -->
-                                    <col style="width: 80px;"><!-- Compatibility -->
-                                    <col style="width: 50px;"><!-- VPs -->
+                                    <col style="width: 45px;"><!-- Reveal Persuasion -->
+                                    <col style="width: 45px;"><!-- Reveal Swords -->
+                                    <col style="width: 70px;"><!-- Reveal Ability -->
+                                    <col style="width: 35px;"><!-- Tech -->
+                                    <col style="width: 40px;"><!-- Shipping -->
+                                    <col style="width: 40px;"><!-- Unload -->
+                                    <col style="width: 50px;"><!-- Infiltration -->
+                                    <col style="width: 45px;"><!-- Research -->
+                                    <col style="width: 40px;"><!-- Grafting -->
+                                    <col style="width: 35px;"><!-- Spies -->
+                                    <col style="width: 50px;"><!-- Sandworms -->
+                                    <col style="width: 50px;"><!-- Contracts -->
+                                    <col style="width: 40px;"><!-- Battle Icons -->
+                                    <col style="width: 50px;"><!-- Sardaukar -->
+                                    <col style="width: 35px;"><!-- Green Access -->
+                                    <col style="width: 35px;"><!-- Purple Access -->
+                                    <col style="width: 35px;"><!-- Yellow Access -->
+                                    <col style="width: 45px;"><!-- Emperor Access -->
+                                    <col style="width: 35px;"><!-- Guild Access -->
+                                    <col style="width: 30px;"><!-- BG Access -->
+                                    <col style="width: 40px;"><!-- Fremen Access -->
+                                    <col style="width: 30px;"><!-- Spy Access -->
+                                    <col style="width: 50px;"><!-- Compatibility -->
+                                    <col style="width: 35px;"><!-- VPs -->
                                 </colgroup>
                                 <thead class="sticky-top bg-white">
                                     <tr>
-                                        <th rowspan="2" class="sortable resizable" data-column="name" onclick="sortTable('name')" style="width: 150px;">
+                                        <th rowspan="2" class="resizable sortable" style="width: 150px; cursor: pointer;" onclick="sortResourceTable('imperium', 'name')">
                                             Name<div class="resize-handle"></div>
                                         </th>
-                                        <th rowspan="2" class="sortable resizable" data-column="set" onclick="sortTable('set')" style="width: 80px;">
+                                        <th rowspan="2" class="resizable sortable" style="width: 80px; cursor: pointer;" onclick="sortResourceTable('imperium', 'source')">
                                             Set<div class="resize-handle"></div>
                                         </th>
-                                        <th rowspan="2" class="sortable resizable" data-column="count" onclick="sortTable('count')" style="width: 50px;">
+                                        <th rowspan="2" class="resizable sortable" style="width: 70px; cursor: pointer;" onclick="sortResourceTable('imperium', 'count')">
                                             Count<div class="resize-handle"></div>
                                         </th>
-                                        <th rowspan="2" class="sortable resizable" data-column="cost" onclick="sortTable('cost')" style="width: 50px;">
+                                        <th rowspan="2" class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('imperium', 'persuasion_cost')">
                                             Cost<div class="resize-handle"></div>
                                         </th>
                                         <th colspan="3" class="group-header">Abilities</th>
                                         <th colspan="3" class="group-header">Reveal</th>
                                         <th colspan="11" class="group-header">Mechanics</th>
                                         <th colspan="8" class="group-header">Access</th>
-                                        <th rowspan="2" class="sortable resizable" data-column="compatibility" onclick="sortTable('compatibility')" style="width: 80px;">
+                                        <th rowspan="2" class="resizable" style="width: 80px;">
                                             Compat<div class="resize-handle"></div>
                                         </th>
                                         <th rowspan="2" class="resizable" style="width: 50px;">
@@ -244,7 +276,7 @@
                                     </tr>
                                     <tr>
                                         <!-- Ability columns -->
-                                        <th class="sortable resizable" data-column="agent" onclick="sortTable('agent')" style="width: 50px;">
+                                        <th class="resizable" style="width: 50px;">
                                             Agent<div class="resize-handle"></div>
                                         </th>
                                         <th class="resizable" style="width: 55px;">
@@ -254,47 +286,47 @@
                                             Acquisition<div class="resize-handle"></div>
                                         </th>
                                         <!-- Reveal columns -->
-                                        <th class="sortable resizable" data-column="reveal_persuasion" onclick="sortTable('reveal_persuasion')" style="width: 60px;">
+                                        <th class="resizable sortable" style="width: 60px; cursor: pointer;" onclick="sortResourceTable('imperium', 'reveal_persuasion')">
                                             Persuasion<div class="resize-handle"></div>
                                         </th>
-                                        <th class="sortable resizable" data-column="reveal_swords" onclick="sortTable('reveal_swords')" style="width: 60px;">
+                                        <th class="resizable sortable" style="width: 60px; cursor: pointer;" onclick="sortResourceTable('imperium', 'reveal_swords')">
                                             Swords<div class="resize-handle"></div>
                                         </th>
-                                        <th class="sortable resizable" data-column="reveal_ability" onclick="sortTable('reveal_ability')" style="width: 50px;">
+                                        <th class="resizable" style="width: 50px;">
                                             Ability<div class="resize-handle"></div>
                                         </th>
                                         <!-- Mechanics columns -->
-                                        <th class="resizable" style="width: 80px;">
+                                        <th class="resizable" style="width: 50px;">
                                             Tech<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 80px;">
+                                        <th class="resizable" style="width: 50px;">
                                             Shipping<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 80px;">
+                                        <th class="resizable" style="width: 50px;">
                                             Unload<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 80px;">
+                                        <th class="resizable" style="width: 60px;">
                                             Infiltration<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 80px;">
+                                        <th class="resizable" style="width: 50px;">
                                             Research<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 80px;">
+                                        <th class="resizable" style="width: 50px;">
                                             Grafting<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 80px;">
+                                        <th class="resizable" style="width: 50px;">
                                             Spies<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 80px;">
+                                        <th class="resizable" style="width: 60px;">
                                             Sandworms<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 80px;">
+                                        <th class="resizable" style="width: 60px;">
                                             Contracts<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 80px;">
+                                        <th class="resizable" style="width: 50px;">
                                             Battle Icons<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 80px;">
+                                        <th class="resizable" style="width: 60px;">
                                             Sardaukar<div class="resize-handle"></div>
                                         </th>
                                         <!-- Access columns -->
@@ -324,51 +356,593 @@
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody id="availableCards"></tbody>
+                                <tbody id="imperium-tbody"></tbody>
                             </table>
                         </div>
                         <small class="text-muted">Double-click to add card to blend. Drag column borders to resize.</small>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <div class="row mt-3">
-            <div class="col-lg-8">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">
-                            Selected Cards
-                            <span class="badge bg-primary" id="deckCount">0</span>
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                            <table class="table table-sm table-hover mb-0">
+                <div class="row mt-3">
+                    <div class="col-md-8">
+                        <h5>Selected Imperium Cards: <span id="imperium-count">0</span></h5>
+                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                            <table class="table table-sm table-hover">
                                 <thead class="sticky-top bg-white">
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Set</th>
-                                        <th>Count</th>
-                                        <th>Cost</th>
-                                    </tr>
+                                    <tr><th>Name</th><th>Set</th><th>Count</th><th>Cost</th></tr>
                                 </thead>
-                                <tbody id="selectedCards"></tbody>
+                                <tbody id="imperium-selected"></tbody>
                             </table>
                         </div>
                         <small class="text-muted">Double-click to remove card from blend</small>
                     </div>
+                    <div class="col-md-4">
+                        <h5>Statistics</h5>
+                        <div id="imperium-stats">
+                            <p class="text-muted">No cards selected</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="col-lg-4">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Statistics</h5>
+            <!-- Intrigue Panel -->
+            <div class="tab-pane fade" id="intrigue-panel" role="tabpanel">
+                <div class="row">
+                    <div class="col-12">
+                        <h4>Available Intrigue Cards <span class="badge bg-secondary" id="intrigue-available-count">0</span></h4>
+                        <div class="table-responsive" style="max-height: 500px; overflow: auto;">
+                            <table class="table table-sm table-hover table-bordered" style="table-layout: fixed;">
+                                <colgroup>
+                                    <col style="width: 100px;"><!-- Name -->
+                                    <col style="width: 50px;"><!-- Set -->
+                                    <col style="width: 45px;"><!-- Count -->
+                                    <col style="width: 30px;"><!-- Tech -->
+                                    <col style="width: 40px;"><!-- Shipping -->
+                                    <col style="width: 45px;"><!-- Research -->
+                                    <col style="width: 35px;"><!-- Spies -->
+                                    <col style="width: 50px;"><!-- Sandworms -->
+                                    <col style="width: 50px;"><!-- Contracts -->
+                                    <col style="width: 35px;"><!-- Battle -->
+                                    <col style="width: 50px;"><!-- Sardaukar -->
+                                    <col style="width: 70px;"><!-- Plot -->
+                                    <col style="width: 70px;"><!-- Combat -->
+                                    <col style="width: 70px;"><!-- Endgame -->
+                                    <col style="width: 40px;"><!-- Twisted -->
+                                    <col style="width: 30px;"><!-- VPs -->
+                                </colgroup>
+                                <thead class="sticky-top bg-white">
+                                    <tr>
+                                        <th rowspan="2" class="resizable sortable" style="width: 150px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'name')">Name<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 80px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'source')">Set<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 70px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'count')">Count<div class="resize-handle"></div></th>
+                                        <th colspan="8" class="group-header">Mechanics</th>
+                                        <th colspan="3" class="group-header">Effects</th>
+                                        <th rowspan="2" class="resizable" style="width: 50px;">Twisted<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable" style="width: 50px;">VPs<div class="resize-handle"></div></th>
+                                    </tr>
+                                    <tr>
+                                        <!-- Mechanics -->
+                                        <th class="resizable" style="width: 45px;">Tech<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 50px;">Shipping<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 50px;">Research<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 45px;">Spies<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 60px;">Sandworms<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 60px;">Contracts<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 50px;">Battle<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 60px;">Sardaukar<div class="resize-handle"></div></th>
+                                        <!-- Effects -->
+                                        <th class="resizable" style="width: 100px;">Plot<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 100px;">Combat<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 100px;">Endgame<div class="resize-handle"></div></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="intrigue-tbody"></tbody>
+                            </table>
+                        </div>
+                        <small class="text-muted">Double-click to add card to blend. Drag column borders to resize.</small>
                     </div>
-                    <div class="card-body">
-                        <div id="stats">
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-8">
+                        <h5>Selected Intrigue Cards: <span id="intrigue-count">0</span></h5>
+                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                            <table class="table table-sm table-hover">
+                                <thead class="sticky-top bg-white">
+                                    <tr><th>Name</th><th>Set</th><th>Count</th></tr>
+                                </thead>
+                                <tbody id="intrigue-selected"></tbody>
+                            </table>
+                        </div>
+                        <small class="text-muted">Double-click to remove card from blend</small>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Statistics</h5>
+                        <div id="intrigue-stats">
                             <p class="text-muted">No cards selected</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tleilax Panel -->
+            <div class="tab-pane fade" id="tleilax-panel" role="tabpanel">
+                <div class="row">
+                    <div class="col-12">
+                        <h4>Available Tleilax Cards <span class="badge bg-secondary" id="tleilax-available-count">0</span></h4>
+                        <div class="table-responsive" style="max-height: 500px; overflow: auto;">
+                            <table class="table table-sm table-hover table-bordered" style="table-layout: fixed;">
+                                <colgroup>
+                                    <col style="width: 100px;"><!-- Name -->
+                                    <col style="width: 50px;"><!-- Set -->
+                                    <col style="width: 45px;"><!-- Count -->
+                                    <col style="width: 35px;"><!-- Cost -->
+                                    <col style="width: 70px;"><!-- Agent -->
+                                    <col style="width: 70px;"><!-- Passive -->
+                                    <col style="width: 45px;"><!-- Reveal Persuasion -->
+                                    <col style="width: 45px;"><!-- Reveal Swords -->
+                                    <col style="width: 70px;"><!-- Reveal Ability -->
+                                    <col style="width: 30px;"><!-- Tech -->
+                                    <col style="width: 40px;"><!-- Shipping -->
+                                    <col style="width: 40px;"><!-- Unload -->
+                                    <col style="width: 50px;"><!-- Infiltration -->
+                                    <col style="width: 45px;"><!-- Research -->
+                                    <col style="width: 40px;"><!-- Grafting -->
+                                    <col style="width: 35px;"><!-- Spies -->
+                                    <col style="width: 50px;"><!-- Sandworms -->
+                                    <col style="width: 50px;"><!-- Contracts -->
+                                    <col style="width: 35px;"><!-- Green Access -->
+                                    <col style="width: 35px;"><!-- Purple Access -->
+                                    <col style="width: 35px;"><!-- Yellow Access -->
+                                    <col style="width: 45px;"><!-- Emperor Access -->
+                                    <col style="width: 35px;"><!-- Guild Access -->
+                                    <col style="width: 30px;"><!-- BG Access -->
+                                    <col style="width: 40px;"><!-- Fremen Access -->
+                                    <col style="width: 30px;"><!-- Spy Access -->
+                                    <col style="width: 30px;"><!-- VPs -->
+                                </colgroup>
+                                <thead class="sticky-top bg-white">
+                                    <tr>
+                                        <th rowspan="2" class="resizable" style="width: 150px;">Name<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable" style="width: 80px;">Set<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable" style="width: 70px;">Count<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable" style="width: 50px;">Cost<div class="resize-handle"></div></th>
+                                        <th colspan="2" class="group-header">Abilities</th>
+                                        <th colspan="3" class="group-header">Reveal</th>
+                                        <th colspan="9" class="group-header">Mechanics</th>
+                                        <th colspan="8" class="group-header">Access</th>
+                                        <th rowspan="2" class="resizable" style="width: 50px;">VPs<div class="resize-handle"></div></th>
+                                    </tr>
+                                    <tr>
+                                        <!-- Abilities -->
+                                        <th class="resizable" style="width: 50px;">Agent<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 55px;">Passive<div class="resize-handle"></div></th>
+                                        <!-- Reveal -->
+                                        <th class="resizable" style="width: 60px;">Persuasion<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 60px;">Swords<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 50px;">Ability<div class="resize-handle"></div></th>
+                                        <!-- Mechanics -->
+                                        <th class="resizable" style="width: 45px;">Tech<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 50px;">Shipping<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 50px;">Unload<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 60px;">Infiltration<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 50px;">Research<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 50px;">Grafting<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 45px;">Spies<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 60px;">Sandworms<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 60px;">Contracts<div class="resize-handle"></div></th>
+                                        <!-- Access -->
+                                        <th class="resizable" style="width: 45px;">Green<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 45px;">Purple<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 45px;">Yellow<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 50px;">Emperor<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 45px;">Guild<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 40px;">BG<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 45px;">Fremen<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 40px;">Spy<div class="resize-handle"></div></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tleilax-tbody"></tbody>
+                            </table>
+                        </div>
+                        <small class="text-muted">Double-click to add card to blend. Drag column borders to resize.</small>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-8">
+                        <h5>Selected Tleilax Cards: <span id="tleilax-count">0</span></h5>
+                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                            <table class="table table-sm table-hover">
+                                <thead class="sticky-top bg-white">
+                                    <tr><th>Name</th><th>Set</th><th>Count</th><th>Cost</th></tr>
+                                </thead>
+                                <tbody id="tleilax-selected"></tbody>
+                            </table>
+                        </div>
+                        <small class="text-muted">Double-click to remove card from blend</small>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Statistics</h5>
+                        <div id="tleilax-stats">
+                            <p class="text-muted">No cards selected</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reserve Panel -->
+            <div class="tab-pane fade" id="reserve-panel" role="tabpanel">
+                <div class="row">
+                    <div class="col-12">
+                        <h4>Available Reserve Cards <span class="badge bg-secondary" id="reserve-available-count">0</span></h4>
+                        <div class="table-responsive" style="max-height: 500px; overflow: auto;">
+                            <table class="table table-sm table-hover table-bordered" style="table-layout: fixed;">
+                                <colgroup>
+                                    <col style="width: 100px;"><!-- Name -->
+                                    <col style="width: 50px;"><!-- Set -->
+                                    <col style="width: 45px;"><!-- Count -->
+                                    <col style="width: 35px;"><!-- Cost -->
+                                    <col style="width: 70px;"><!-- Agent -->
+                                    <col style="width: 70px;"><!-- Passive -->
+                                    <col style="width: 45px;"><!-- Persuasion -->
+                                    <col style="width: 45px;"><!-- Swords -->
+                                    <col style="width: 70px;"><!-- Ability -->
+                                    <col style="width: 35px;"><!-- Green -->
+                                    <col style="width: 35px;"><!-- Purple -->
+                                    <col style="width: 35px;"><!-- Yellow -->
+                                    <col style="width: 45px;"><!-- Emperor -->
+                                    <col style="width: 35px;"><!-- Guild -->
+                                    <col style="width: 30px;"><!-- BG -->
+                                    <col style="width: 40px;"><!-- Fremen -->
+                                    <col style="width: 30px;"><!-- Spy -->
+                                </colgroup>
+                                <thead class="sticky-top bg-white">
+                                    <tr>
+                                        <th rowspan="2" class="resizable" style="width: 150px;">Name<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable" style="width: 80px;">Set<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable" style="width: 70px;">Count<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable" style="width: 50px;">Cost<div class="resize-handle"></div></th>
+                                        <th colspan="2" class="group-header">Abilities</th>
+                                        <th colspan="3" class="group-header">Reveal</th>
+                                        <th colspan="8" class="group-header">Access</th>
+                                    </tr>
+                                    <tr>
+                                        <!-- Abilities -->
+                                        <th class="resizable" style="width: 50px;">Agent<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 55px;">Passive<div class="resize-handle"></div></th>
+                                        <!-- Reveal -->
+                                        <th class="resizable" style="width: 60px;">Persuasion<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 60px;">Swords<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 50px;">Ability<div class="resize-handle"></div></th>
+                                        <!-- Access -->
+                                        <th class="resizable" style="width: 45px;">Green<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 45px;">Purple<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 45px;">Yellow<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 50px;">Emperor<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 45px;">Guild<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 40px;">BG<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 45px;">Fremen<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 40px;">Spy<div class="resize-handle"></div></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reserve-tbody"></tbody>
+                            </table>
+                        </div>
+                        <small class="text-muted">Double-click to add card to blend.</small>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-8">
+                        <h5>Selected Reserve Cards: <span id="reserve-count">0</span></h5>
+                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                            <table class="table table-sm table-hover">
+                                <thead class="sticky-top bg-white">
+                                    <tr><th>Name</th><th>Set</th><th>Count</th><th>Cost</th></tr>
+                                </thead>
+                                <tbody id="reserve-selected"></tbody>
+                            </table>
+                        </div>
+                        <small class="text-muted">Double-click to remove card from blend</small>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Statistics</h5>
+                        <div id="reserve-stats">
+                            <p class="text-muted">No cards selected</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tech Panel -->
+            <div class="tab-pane fade" id="tech-panel" role="tabpanel">
+                <div class="row">
+                    <div class="col-12">
+                        <h4>Available Tech Tiles <span class="badge bg-secondary" id="tech-available-count">0</span></h4>
+                        <div class="table-responsive" style="max-height: 500px; overflow: auto;">
+                            <table class="table table-sm table-hover table-bordered" style="table-layout: fixed;">
+                                <colgroup>
+                                    <col style="width: 100px;"><!-- Name -->
+                                    <col style="width: 50px;"><!-- Set -->
+                                    <col style="width: 50px;"><!-- Compat -->
+                                    <col style="width: 35px;"><!-- Cost -->
+                                    <col style="width: 40px;"><!-- Shipping -->
+                                    <col style="width: 35px;"><!-- Spies -->
+                                    <col style="width: 50px;"><!-- Sandworms -->
+                                    <col style="width: 50px;"><!-- Contracts -->
+                                    <col style="width: 35px;"><!-- Battle -->
+                                    <col style="width: 50px;"><!-- Sardaukar -->
+                                    <col style="width: 30px;"><!-- VPs -->
+                                    <col style="width: 100px;"><!-- Effect -->
+                                </colgroup>
+                                <thead class="sticky-top bg-white">
+                                    <tr>
+                                        <th rowspan="2" class="resizable" style="width: 150px;">Name<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable" style="width: 80px;">Set<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable" style="width: 80px;">Compat<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable" style="width: 50px;">Cost<div class="resize-handle"></div></th>
+                                        <th colspan="6" class="group-header">Mechanics</th>
+                                        <th rowspan="2" class="resizable" style="width: 50px;">VPs<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable" style="width: 100px;">Effect<div class="resize-handle"></div></th>
+                                    </tr>
+                                    <tr>
+                                        <th class="resizable" style="width: 50px;">Shipping<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 45px;">Spies<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 60px;">Sandworms<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 60px;">Contracts<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 50px;">Battle<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 60px;">Sardaukar<div class="resize-handle"></div></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tech-tbody"></tbody>
+                            </table>
+                        </div>
+                        <small class="text-muted">Double-click to add tech to blend.</small>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-8">
+                        <h5>Selected Tech Tiles: <span id="tech-count">0</span></h5>
+                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                            <table class="table table-sm table-hover">
+                                <thead class="sticky-top bg-white">
+                                    <tr><th>Name</th><th>Set</th><th>Cost</th></tr>
+                                </thead>
+                                <tbody id="tech-selected"></tbody>
+                            </table>
+                        </div>
+                        <small class="text-muted">Double-click to remove tech from blend</small>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Statistics</h5>
+                        <div id="tech-stats">
+                            <p class="text-muted">No tech selected</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contracts Panel -->
+            <div class="tab-pane fade" id="contracts-panel" role="tabpanel">
+                <div class="row">
+                    <div class="col-12">
+                        <h4>Available Contracts <span class="badge bg-secondary" id="contracts-available-count">0</span></h4>
+                        <div class="table-responsive" style="max-height: 500px; overflow: auto;">
+                            <table class="table table-sm table-hover table-bordered" style="table-layout: fixed;">
+                                <thead class="sticky-top bg-white">
+                                    <tr>
+                                        <th class="resizable" style="width: 200px;">Objective<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 80px;">Set<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 70px;">Count<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 150px;">Reward<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 80px;">Ix Specific<div class="resize-handle"></div></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="contracts-tbody"></tbody>
+                            </table>
+                        </div>
+                        <small class="text-muted">Double-click to add contract to blend.</small>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-10">
+                        <h5>Selected Contracts: <span id="contracts-count">0</span></h5>
+                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                            <table class="table table-sm table-hover">
+                                <thead class="sticky-top bg-white">
+                                    <tr><th>Objective</th><th>Set</th></tr>
+                                </thead>
+                                <tbody id="contracts-selected"></tbody>
+                            </table>
+                        </div>
+                        <small class="text-muted">Double-click to remove contract from blend</small>
+                    </div>
+                    <div class="col-md-2">
+                        <h5>Count</h5>
+                        <div id="contracts-stats">
+                            <p id="contracts-count-display">0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leader Panel -->
+            <div class="tab-pane fade" id="leader-panel" role="tabpanel">
+                <div class="row">
+                    <div class="col-12">
+                        <h4>Available Leaders <span class="badge bg-secondary" id="leader-available-count">0</span></h4>
+                        <div class="table-responsive" style="max-height: 500px; overflow: auto;">
+                            <table class="table table-sm table-hover table-bordered" style="table-layout: fixed;">
+                                <thead class="sticky-top bg-white">
+                                    <tr>
+                                        <th class="resizable" style="width: 150px;">Name<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 80px;">Set<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 80px;">Compat<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 100px;">House<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 150px;">Starting Effect<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 150px;">Leader Ability<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 150px;">Signet Ring<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 80px;">Complexity<div class="resize-handle"></div></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="leader-tbody"></tbody>
+                            </table>
+                        </div>
+                        <small class="text-muted">Double-click to add leader to blend.</small>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-8">
+                        <h5>Selected Leaders: <span id="leader-count">0</span></h5>
+                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                            <table class="table table-sm table-hover">
+                                <thead class="sticky-top bg-white">
+                                    <tr><th>Name</th><th>Set</th><th>House</th></tr>
+                                </thead>
+                                <tbody id="leader-selected"></tbody>
+                            </table>
+                        </div>
+                        <small class="text-muted">Double-click to remove leader from blend</small>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>By House</h5>
+                        <div id="leader-stats">
+                            <p class="text-muted">No leaders selected</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sardaukar Panel -->
+            <div class="tab-pane fade" id="sardaukar-panel" role="tabpanel">
+                <div class="row">
+                    <div class="col-12">
+                        <h4>Available Sardaukar <span class="badge bg-secondary" id="sardaukar-available-count">0</span></h4>
+                        <div class="table-responsive" style="max-height: 500px; overflow: auto;">
+                            <table class="table table-sm table-hover table-bordered">
+                                <thead class="sticky-top bg-white">
+                                    <tr>
+                                        <th style="width: 150px;">Name</th>
+                                        <th style="width: 100px;">Compatibility</th>
+                                        <th style="width: 60px;">Count</th>
+                                        <th style="width: 250px;">Effect</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sardaukar-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-8">
+                        <h5>Selected Sardaukar: <span id="sardaukar-count">0</span></h5>
+                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                            <table class="table table-sm table-hover">
+                                <thead class="sticky-top bg-white">
+                                    <tr><th>Name</th></tr>
+                                </thead>
+                                <tbody id="sardaukar-selected"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Starter Panel -->
+            <div class="tab-pane fade" id="starter-panel" role="tabpanel">
+                <div class="row">
+                    <div class="col-12">
+                        <h4>Available Starter Cards <span class="badge bg-secondary" id="starter-available-count">0</span></h4>
+                        <div class="table-responsive" style="max-height: 500px; overflow: auto;">
+                            <table class="table table-sm table-hover table-bordered" style="table-layout: fixed;">
+                                <colgroup>
+                                    <col style="width: 100px;"><!-- Name -->
+                                    <col style="width: 50px;"><!-- Set -->
+                                    <col style="width: 50px;"><!-- Compat -->
+                                    <col style="width: 45px;"><!-- Count/Player -->
+                                    <col style="width: 35px;"><!-- Green -->
+                                    <col style="width: 35px;"><!-- Purple -->
+                                    <col style="width: 35px;"><!-- Yellow -->
+                                    <col style="width: 45px;"><!-- Emperor -->
+                                    <col style="width: 35px;"><!-- Guild -->
+                                    <col style="width: 30px;"><!-- BG -->
+                                    <col style="width: 40px;"><!-- Fremen -->
+                                    <col style="width: 45px;"><!-- Persuasion -->
+                                    <col style="width: 45px;"><!-- Swords -->
+                                    <col style="width: 70px;"><!-- Ability -->
+                                    <col style="width: 100px;"><!-- Agent -->
+                                </colgroup>
+                                <thead class="sticky-top bg-white">
+                                    <tr>
+                                        <th rowspan="2" class="resizable" style="width: 150px;">Name<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable" style="width: 80px;">Set<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable" style="width: 80px;">Compat<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable" style="width: 70px;">Count/Player<div class="resize-handle"></div></th>
+                                        <th colspan="7" class="group-header">Access</th>
+                                        <th colspan="3" class="group-header">Reveal</th>
+                                        <th rowspan="2" class="resizable" style="width: 100px;">Agent<div class="resize-handle"></div></th>
+                                    </tr>
+                                    <tr>
+                                        <th class="resizable" style="width: 45px;">Green<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 45px;">Purple<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 45px;">Yellow<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 50px;">Emperor<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 45px;">Guild<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 40px;">BG<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 45px;">Fremen<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 50px;">Persuasion<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 50px;">Swords<div class="resize-handle"></div></th>
+                                        <th class="resizable" style="width: 70px;">Ability<div class="resize-handle"></div></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="starter-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-10">
+                        <h5>Selected Starter Cards: <span id="starter-count">0</span></h5>
+                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                            <table class="table table-sm table-hover">
+                                <thead class="sticky-top bg-white">
+                                    <tr><th>Name</th><th>Set</th></tr>
+                                </thead>
+                                <tbody id="starter-selected"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conflict Panel -->
+            <div class="tab-pane fade" id="conflict-panel" role="tabpanel">
+                <div class="row">
+                    <div class="col-12">
+                        <h4>Available Conflict Cards <span class="badge bg-secondary" id="conflict-available-count">0</span></h4>
+                        <div class="table-responsive" style="max-height: 500px; overflow: auto;">
+                            <table class="table table-sm table-hover table-bordered">
+                                <thead class="sticky-top bg-white">
+                                    <tr>
+                                        <th style="width: 150px;">Name</th>
+                                        <th style="width: 80px;">Set</th>
+                                        <th style="width: 100px;">Compatibility</th>
+                                        <th style="width: 80px;">Conflict Level</th>
+                                        <th style="width: 80px;">VPs Available</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="conflict-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-8">
+                        <h5>Selected Conflict Cards: <span id="conflict-count">0</span></h5>
+                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                            <table class="table table-sm table-hover">
+                                <thead class="sticky-top bg-white">
+                                    <tr><th>Name</th><th>Set</th></tr>
+                                </thead>
+                                <tbody id="conflict-selected"></tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -378,15 +952,34 @@
 
     <!-- Load Blend Modal -->
     <div class="modal fade" id="loadBlendModal" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Load Blend</h5>
+                    <h5 class="modal-title">Load Blend File</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Select a blend to load:</p>
-                    <div id="blendList" class="list-group">
+                    <!-- Drag and Drop Zone -->
+                    <div id="dropZone" class="border border-2 border-dashed rounded p-4 mb-3 text-center"
+                         style="background-color: #f8f9fa; cursor: pointer;"
+                         ondrop="handleDrop(event)"
+                         ondragover="handleDragOver(event)"
+                         ondragleave="handleDragLeave(event)"
+                         onclick="document.getElementById('fileInput').click()">
+                        <div class="mb-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-cloud-upload text-secondary" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M4.406 1.342A5.53 5.53 0 0 1 8 0c2.69 0 4.923 2 5.166 4.579C14.758 4.804 16 6.137 16 7.773 16 9.569 14.502 11 12.687 11H10a.5.5 0 0 1 0-1h2.688C13.979 10 15 8.988 15 7.773c0-1.216-1.02-2.228-2.313-2.228h-.5v-.5C12.188 2.825 10.328 1 8 1a4.53 4.53 0 0 0-2.941 1.1c-.757.652-1.153 1.438-1.153 2.055v.448l-.445.049C2.064 4.805 1 5.952 1 7.318 1 8.785 2.23 10 3.781 10H6a.5.5 0 0 1 0 1H3.781C1.708 11 0 9.366 0 7.318c0-1.763 1.266-3.223 2.942-3.593.143-.863.698-1.723 1.464-2.383z"/>
+                                <path fill-rule="evenodd" d="M7.646 4.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707V14.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3z"/>
+                            </svg>
+                        </div>
+                        <p class="mb-1"><strong>Drag & drop a .md file here</strong></p>
+                        <p class="text-muted mb-0">or click to browse</p>
+                        <input type="file" id="fileInput" accept=".md" style="display: none;" onchange="handleFileSelect(event)">
+                    </div>
+
+                    <!-- File List from blends directory -->
+                    <p class="mb-2"><strong>Available blend files in /blends folder:</strong></p>
+                    <div id="blendFileList" class="list-group" style="max-height: 300px; overflow-y: auto;">
                         <p class="text-muted">Loading...</p>
                     </div>
                 </div>
@@ -394,39 +987,499 @@
         </div>
     </div>
 
+    <!-- Save As Modal -->
+    <div class="modal fade" id="saveAsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Save As</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="saveAsFilename" class="form-label">Enter filename:</label>
+                        <input type="text" class="form-control" id="saveAsFilename" placeholder="My_Blend.md">
+                        <small class="text-muted">Filename will automatically get .md extension if not provided</small>
+                    </div>
+
+                    <!-- Show existing files for reference -->
+                    <p class="mb-2"><strong>Existing blend files:</strong></p>
+                    <div id="saveAsFileList" class="list-group" style="max-height: 200px; overflow-y: auto;">
+                        <p class="text-muted">Loading...</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="saveAsBlend()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        let allCards = [];
-        let selectedCards = [];
-        let currentSort = { column: null, direction: 'asc' };
+        // Global state
+        let allResources = {};
+        let selectedResources = {
+            imperium: [], intrigue: [], tleilax: [], reserve: [], tech: [],
+            contracts: [], leader: [], sardaukar: [], starter: [], conflict: []
+        };
+
+        // Sorting state for each resource type
+        let sortState = {};
+        Object.keys(selectedResources).forEach(type => {
+            sortState[type] = { column: null, direction: 'asc' };
+        });
+
+        // Resource type configurations
+        const resourceConfigs = {
+            imperium: { nameProp: 'name', costProp: 'persuasion_cost', hasSet: true },
+            intrigue: { nameProp: 'name', costProp: null, hasSet: true },
+            tleilax: { nameProp: 'name', costProp: 'specimen_cost', hasSet: true },
+            reserve: { nameProp: 'name', costProp: 'persuasion_cost', hasSet: true },
+            tech: { nameProp: 'name', costProp: 'spice_cost', hasSet: true },
+            contracts: { nameProp: 'objective', costProp: null, hasSet: true },
+            leader: { nameProp: 'name', costProp: null, hasSet: true, extraProp: 'house' },
+            sardaukar: { nameProp: 'name', costProp: null, hasSet: false },
+            starter: { nameProp: 'name', costProp: null, hasSet: true },
+            conflict: { nameProp: 'name', costProp: null, hasSet: true }
+        };
+
+        // Load all resources on page load
+        fetch('/api/resources')
+            .then(r => r.json())
+            .then(resources => {
+                allResources = resources;
+                console.log('Loaded resources:', Object.keys(resources).map(k => `${k}: ${resources[k].length}`));
+                initializeAllTabs();
+            });
+
+        function initializeAllTabs() {
+            Object.keys(resourceConfigs).forEach(type => {
+                if (allResources[type]) {
+                    initializeTab(type);
+                }
+            });
+        }
+
+        function initializeTab(type) {
+            const tbody = document.getElementById(`${type}-tbody`);
+            if (!tbody) return;
+
+            tbody.innerHTML = '';
+
+            // Get sorted resources if sorting is active
+            let resources;
+            if (sortState[type].column) {
+                resources = getSortedResources(type, sortState[type].column, sortState[type].direction);
+            } else {
+                resources = allResources[type] || [];
+            }
+
+            // Call detailed rendering function for each type
+            switch(type) {
+                case 'imperium':
+                    initializeImperiumDetailed(resources);
+                    break;
+                case 'intrigue':
+                    initializeIntrigueDetailed(resources);
+                    break;
+                case 'tleilax':
+                    initializeTleilaxDetailed(resources);
+                    break;
+                case 'reserve':
+                    initializeReserveDetailed(resources);
+                    break;
+                case 'tech':
+                    initializeTechDetailed(resources);
+                    break;
+                case 'contracts':
+                    initializeContractsDetailed(resources);
+                    break;
+                case 'leader':
+                    initializeLeaderDetailed(resources);
+                    break;
+                case 'sardaukar':
+                    initializeSardaukarDetailed(resources);
+                    break;
+                case 'starter':
+                    initializeStarterDetailed(resources);
+                    break;
+                case 'conflict':
+                    initializeConflictDetailed(resources);
+                    break;
+                default:
+                    console.warn('No detailed renderer for type:', type);
+            }
+        }
+
+        // Helper functions
+        function truncate(str, len) {
+            if (!str || str.length <= len) return str || '';
+            return str.substring(0, len) + '...';
+        }
+
+        function hasX(val) {
+            return val === true || val === 'X' || val === 'x' || val === '1';
+        }
+
+        function initializeImperiumDetailed(cards) {
+            const tbody = document.getElementById('imperium-tbody');
+            tbody.innerHTML = '';
+
+            cards.forEach(card => {
+                const tr = document.createElement('tr');
+                tr.className = 'resource-row';
+                tr.ondblclick = () => addResource('imperium', card);
+
+                tr.innerHTML = `
+                    <td class="expansion-${card.card_set}" title="${card.name || ''}">${card.name || ''}</td>
+                    <td class="expansion-${card.card_set}">${card.source || card.card_set || ''}</td>
+                    <td class="compact">${card.count || '1'}</td>
+                    <td class="compact">${parseFloat(card.cost || card.persuasion_cost || 0) || 0}</td>
+                    <td title="${card.agent_ability || ''}">${truncate(card.agent_ability || '', 50)}</td>
+                    <td title="${card.passive_ability || ''}">${truncate(card.passive_ability || '', 50)}</td>
+                    <td title="${card.acquisition_bonus || ''}">${truncate(card.acquisition_bonus || '', 50)}</td>
+                    <td class="compact">${card.reveal_persuasion && card.reveal_persuasion !== '0' && card.reveal_persuasion !== '0.0' ? parseFloat(card.reveal_persuasion) : ''}</td>
+                    <td class="compact">${card.reveal_swords && card.reveal_swords !== '0' && card.reveal_swords !== '0.0' ? parseFloat(card.reveal_swords) : ''}</td>
+                    <td title="${card.reveal_ability || ''}">${truncate(card.reveal_ability || '', 50)}</td>
+                    <td class="compact">${card.tech || ''}</td>
+                    <td class="compact">${card.shipping || ''}</td>
+                    <td class="compact">${card.unload || ''}</td>
+                    <td class="compact">${card.infiltration || ''}</td>
+                    <td class="compact">${card.research || ''}</td>
+                    <td class="compact">${card.grafting || ''}</td>
+                    <td class="compact">${card.spies || ''}</td>
+                    <td class="compact">${card.sandworms || ''}</td>
+                    <td class="compact">${card.contracts || ''}</td>
+                    <td class="compact">${card.battle_icons || ''}</td>
+                    <td class="compact">${card.sardaukar || ''}</td>
+                    <td class="access-x access-green">${hasX(card.green_access) ? 'X' : ''}</td>
+                    <td class="access-x access-purple">${hasX(card.purple_access) ? 'X' : ''}</td>
+                    <td class="access-x access-yellow">${hasX(card.yellow_access) ? 'X' : ''}</td>
+                    <td class="access-x access-emperor">${hasX(card.emperor_access) ? 'X' : ''}</td>
+                    <td class="access-x access-guild">${hasX(card.spacing_guild_access) ? 'X' : ''}</td>
+                    <td class="access-x access-bg">${hasX(card.bene_gesserit_access) ? 'X' : ''}</td>
+                    <td class="access-x access-fremen">${hasX(card.fremen_access) ? 'X' : ''}</td>
+                    <td class="access-x access-spy">${hasX(card.spy_access) ? 'X' : ''}</td>
+                    <td class="compact">${card.compatibility || 'All'}</td>
+                    <td class="compact">${card.vps_available && card.vps_available !== '0' && card.vps_available !== '0.0' ? parseFloat(card.vps_available) : ''}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('imperium-available-count').textContent = cards.length;
+            initializeResizing();
+        }
+
+        // Detailed rendering functions for other resource types
+        function initializeIntrigueDetailed(cards) {
+            const tbody = document.getElementById('intrigue-tbody');
+            tbody.innerHTML = '';
+
+            cards.forEach(card => {
+                const tr = document.createElement('tr');
+                tr.className = 'resource-row';
+                tr.ondblclick = () => addResource('intrigue', card);
+
+                tr.innerHTML = `
+                    <td class="expansion-${card.card_set}">${card.name || ''}</td>
+                    <td class="expansion-${card.card_set}">${card.source || card.card_set || ''}</td>
+                    <td class="compact">${card.count || '1'}</td>
+                    <td class="compact" style="max-width: 50px !important;">${card.tech || ''}</td>
+                    <td class="compact" style="max-width: 50px !important;">${card.shipping || ''}</td>
+                    <td class="compact" style="max-width: 50px !important;">${card.research || ''}</td>
+                    <td class="compact" style="max-width: 50px !important;">${card.spies || ''}</td>
+                    <td class="compact" style="max-width: 50px !important;">${card.sandworms || ''}</td>
+                    <td class="compact" style="max-width: 50px !important;">${card.contracts || ''}</td>
+                    <td class="compact" style="max-width: 50px !important;">${card.battle_icons || ''}</td>
+                    <td class="compact" style="max-width: 50px !important;">${card.sardaukar || ''}</td>
+                    <td title="${card.plot_effect || ''}">${truncate(card.plot_effect || '', 50)}</td>
+                    <td title="${card.combat_effect || ''}">${truncate(card.combat_effect || '', 50)}</td>
+                    <td title="${card.endgame_effect || ''}">${truncate(card.endgame_effect || '', 50)}</td>
+                    <td class="compact">${card.twisted || ''}</td>
+                    <td class="compact">${card.vps_available || ''}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('intrigue-available-count').textContent = cards.length;
+            initializeResizing();
+        }
+
+        function initializeTleilaxDetailed(cards) {
+            const tbody = document.getElementById('tleilax-tbody');
+            tbody.innerHTML = '';
+
+            cards.forEach(card => {
+                const tr = document.createElement('tr');
+                tr.className = 'resource-row';
+                tr.ondblclick = () => addResource('tleilax', card);
+
+                tr.innerHTML = `
+                    <td class="expansion-${card.card_set}">${card.name || ''}</td>
+                    <td class="expansion-${card.card_set}">${card.source || card.card_set || ''}</td>
+                    <td class="compact">${card.count || '1'}</td>
+                    <td class="compact">${parseFloat(card.specimen_cost || 0) || 0}</td>
+                    <td title="${card.agent_ability || ''}">${truncate(card.agent_ability || '', 50)}</td>
+                    <td title="${card.passive_ability || ''}">${truncate(card.passive_ability || '', 50)}</td>
+                    <td class="compact">${card.reveal_persuasion || ''}</td>
+                    <td class="compact">${card.reveal_swords || ''}</td>
+                    <td title="${card.reveal_ability || ''}">${truncate(card.reveal_ability || '', 50)}</td>
+                    <td class="compact">${card.tech || ''}</td>
+                    <td class="compact">${card.shipping || ''}</td>
+                    <td class="compact">${card.unload || ''}</td>
+                    <td class="compact">${card.infiltration || ''}</td>
+                    <td class="compact">${card.research || ''}</td>
+                    <td class="compact">${card.grafting || ''}</td>
+                    <td class="compact">${card.spies || ''}</td>
+                    <td class="compact">${card.sandworms || ''}</td>
+                    <td class="compact">${card.contracts || ''}</td>
+                    <td class="access-x access-green">${hasX(card.green_access) ? 'X' : ''}</td>
+                    <td class="access-x access-purple">${hasX(card.purple_access) ? 'X' : ''}</td>
+                    <td class="access-x access-yellow">${hasX(card.yellow_access) ? 'X' : ''}</td>
+                    <td class="access-x access-emperor">${hasX(card.emperor_access) ? 'X' : ''}</td>
+                    <td class="access-x access-guild">${hasX(card.spacing_guild_access) ? 'X' : ''}</td>
+                    <td class="access-x access-bg">${hasX(card.bene_gesserit_access) ? 'X' : ''}</td>
+                    <td class="access-x access-fremen">${hasX(card.fremen_access) ? 'X' : ''}</td>
+                    <td class="access-x access-spy">${hasX(card.spy_access) ? 'X' : ''}</td>
+                    <td class="compact">${card.vps_available || ''}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('tleilax-available-count').textContent = cards.length;
+            initializeResizing();
+        }
+
+        function initializeReserveDetailed(cards) {
+            const tbody = document.getElementById('reserve-tbody');
+            tbody.innerHTML = '';
+
+            cards.forEach(card => {
+                const tr = document.createElement('tr');
+                tr.className = 'resource-row';
+                tr.ondblclick = () => addResource('reserve', card);
+
+                tr.innerHTML = `
+                    <td class="expansion-${card.card_set}">${card.name || ''}</td>
+                    <td class="expansion-${card.card_set}">${card.source || card.card_set || ''}</td>
+                    <td class="compact">${card.count || '1'}</td>
+                    <td class="compact">${parseFloat(card.persuasion_cost || 0) || 0}</td>
+                    <td title="${card.agent_ability || ''}">${truncate(card.agent_ability || '', 50)}</td>
+                    <td title="${card.passive_ability || ''}">${truncate(card.passive_ability || '', 50)}</td>
+                    <td class="compact">${card.reveal_persuasion || ''}</td>
+                    <td class="compact">${card.reveal_swords || ''}</td>
+                    <td title="${card.reveal_ability || ''}">${truncate(card.reveal_ability || '', 50)}</td>
+                    <td class="access-x access-green">${hasX(card.green_access) ? 'X' : ''}</td>
+                    <td class="access-x access-purple">${hasX(card.purple_access) ? 'X' : ''}</td>
+                    <td class="access-x access-yellow">${hasX(card.yellow_access) ? 'X' : ''}</td>
+                    <td class="access-x access-emperor">${hasX(card.emperor_access) ? 'X' : ''}</td>
+                    <td class="access-x access-guild">${hasX(card.spacing_guild_access) ? 'X' : ''}</td>
+                    <td class="access-x access-bg">${hasX(card.bene_gesserit_access) ? 'X' : ''}</td>
+                    <td class="access-x access-fremen">${hasX(card.fremen_access) ? 'X' : ''}</td>
+                    <td class="access-x access-spy">${hasX(card.spy_access) ? 'X' : ''}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('reserve-available-count').textContent = cards.length;
+            initializeResizing();
+        }
+
+        function initializeTechDetailed(cards) {
+            const tbody = document.getElementById('tech-tbody');
+            tbody.innerHTML = '';
+
+            cards.forEach(card => {
+                const tr = document.createElement('tr');
+                tr.className = 'resource-row';
+                tr.ondblclick = () => addResource('tech', card);
+
+                tr.innerHTML = `
+                    <td>${card.name || ''}</td>
+                    <td>${card.source || ''}</td>
+                    <td class="compact">${card.compatibility || ''}</td>
+                    <td class="compact">${card.spice_cost || ''}</td>
+                    <td class="compact">${card.shipping || ''}</td>
+                    <td class="compact">${card.spies || ''}</td>
+                    <td class="compact">${card.sandworms || ''}</td>
+                    <td class="compact">${card.contracts || ''}</td>
+                    <td class="compact">${card.battle_icons || ''}</td>
+                    <td class="compact">${card.sardaukar || ''}</td>
+                    <td class="compact">${card.vps_available || ''}</td>
+                    <td title="${card.effect || ''}">${truncate(card.effect || '', 80)}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('tech-available-count').textContent = cards.length;
+            initializeResizing();
+        }
+
+        function initializeContractsDetailed(cards) {
+            const tbody = document.getElementById('contracts-tbody');
+            tbody.innerHTML = '';
+
+            cards.forEach(card => {
+                const tr = document.createElement('tr');
+                tr.className = 'resource-row';
+                tr.ondblclick = () => addResource('contracts', card);
+
+                tr.innerHTML = `
+                    <td>${card.objective || card.name || ''}</td>
+                    <td>${card.source || ''}</td>
+                    <td class="compact">${card.count || '1'}</td>
+                    <td title="${card.reward || ''}">${truncate(card.reward || '', 100)}</td>
+                    <td class="compact">${card['rise_of_ix_-specific?'] || ''}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('contracts-available-count').textContent = cards.length;
+            initializeResizing();
+        }
+
+        function initializeLeaderDetailed(cards) {
+            const tbody = document.getElementById('leader-tbody');
+            tbody.innerHTML = '';
+
+            cards.forEach(card => {
+                const tr = document.createElement('tr');
+                tr.className = 'resource-row';
+                tr.ondblclick = () => addResource('leader', card);
+
+                tr.innerHTML = `
+                    <td>${card.name || ''}</td>
+                    <td>${card.source || ''}</td>
+                    <td class="compact">${card.compatibility || ''}</td>
+                    <td>${card.house || ''}</td>
+                    <td title="${card.starting_effect || ''}">${truncate(card.starting_effect || '', 100)}</td>
+                    <td title="${card.leader_ability || ''}">${truncate(card.leader_ability || '', 100)}</td>
+                    <td title="${card.signet_ring_ability || ''}">${truncate(card.signet_ring_ability || '', 100)}</td>
+                    <td class="compact">${card.listed_complexity_level || ''}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('leader-available-count').textContent = cards.length;
+            initializeResizing();
+        }
+
+        function initializeSardaukarDetailed(cards) {
+            const tbody = document.getElementById('sardaukar-tbody');
+            tbody.innerHTML = '';
+
+            cards.forEach(card => {
+                const tr = document.createElement('tr');
+                tr.className = 'resource-row';
+                tr.ondblclick = () => addResource('sardaukar', card);
+
+                tr.innerHTML = `
+                    <td>${card.name || ''}</td>
+                    <td class="compact">${card.compatibility || ''}</td>
+                    <td class="compact">${card.count || '1'}</td>
+                    <td title="${card.effect || ''}">${truncate(card.effect || '', 150)}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('sardaukar-available-count').textContent = cards.length;
+            initializeResizing();
+        }
+
+        function initializeStarterDetailed(cards) {
+            const tbody = document.getElementById('starter-tbody');
+            tbody.innerHTML = '';
+
+            cards.forEach(card => {
+                const tr = document.createElement('tr');
+                tr.className = 'resource-row';
+                tr.ondblclick = () => addResource('starter', card);
+
+                tr.innerHTML = `
+                    <td>${card.name || ''}</td>
+                    <td>${card.source || ''}</td>
+                    <td class="compact">${card.compatibility || ''}</td>
+                    <td class="compact">${card.count_per_player || ''}</td>
+                    <td class="access-x access-green">${hasX(card.green_access) ? 'X' : ''}</td>
+                    <td class="access-x access-purple">${hasX(card.purple_access) ? 'X' : ''}</td>
+                    <td class="access-x access-yellow">${hasX(card.yellow_access) ? 'X' : ''}</td>
+                    <td class="access-x access-emperor">${hasX(card.emperor_access) ? 'X' : ''}</td>
+                    <td class="access-x access-guild">${hasX(card.spacing_guild_access) ? 'X' : ''}</td>
+                    <td class="access-x access-bg">${hasX(card.bene_gesserit_access) ? 'X' : ''}</td>
+                    <td class="access-x access-fremen">${hasX(card.fremen_access) ? 'X' : ''}</td>
+                    <td class="compact">${card.reveal_persuation || ''}</td>
+                    <td class="compact">${card.reveal_swords || ''}</td>
+                    <td title="${card.reveal_ability || ''}">${truncate(card.reveal_ability || '', 50)}</td>
+                    <td title="${card.agent_ability || ''}">${truncate(card.agent_ability || '', 80)}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('starter-available-count').textContent = cards.length;
+            initializeResizing();
+        }
+
+        function initializeConflictDetailed(cards) {
+            const tbody = document.getElementById('conflict-tbody');
+            tbody.innerHTML = '';
+
+            cards.forEach(card => {
+                const tr = document.createElement('tr');
+                tr.className = 'resource-row';
+                tr.ondblclick = () => addResource('conflict', card);
+
+                tr.innerHTML = `
+                    <td>${card.name || ''}</td>
+                    <td>${card.source || ''}</td>
+                    <td class="compact">${card.compatibility || ''}</td>
+                    <td class="compact">${card.conflict_level || ''}</td>
+                    <td class="compact">${card.vps_available || ''}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('conflict-available-count').textContent = cards.length;
+            initializeResizing();
+        }
 
         // Column resizing
         let isResizing = false;
         let currentColumn = null;
+        let currentColElement = null;
         let startX = 0;
         let startWidth = 0;
 
-        // Load cards from API
-        fetch('/api/cards')
-            .then(r => r.json())
-            .then(cards => {
-                allCards = cards;
-                filterCards();
-                initializeResizing();
-            })
-            .catch(err => {
-                console.error('Failed to load cards:', err);
-                alert('Failed to load card data. Please refresh the page.');
+        function initializeResizing() {
+            // Remove old listeners to avoid duplicates
+            const oldHandles = document.querySelectorAll('.resize-handle');
+            oldHandles.forEach(handle => {
+                handle.removeEventListener('mousedown', startResize);
             });
 
-        function initializeResizing() {
+            // Add listeners to all resize handles
             const handles = document.querySelectorAll('.resize-handle');
             handles.forEach(handle => {
                 handle.addEventListener('mousedown', startResize);
             });
 
-            document.addEventListener('mousemove', doResize);
-            document.addEventListener('mouseup', stopResize);
+            // Ensure document listeners are set (only once)
+            if (!window.resizeListenersAdded) {
+                document.addEventListener('mousemove', doResize);
+                document.addEventListener('mouseup', stopResize);
+                window.resizeListenersAdded = true;
+            }
         }
 
         function startResize(e) {
@@ -434,343 +1487,282 @@
             currentColumn = e.target.parentElement;
             startX = e.pageX;
             startWidth = currentColumn.offsetWidth;
-            document.body.classList.add('resizing');
+
+            // Find which actual column this header controls
+            const table = currentColumn.closest('table');
+            const colgroup = table.querySelector('colgroup');
+
+            if (!colgroup) {
+                currentColElement = null;
+                e.preventDefault();
+                return;
+            }
+
+            // Get all header rows
+            const thead = table.querySelector('thead');
+            const headerRows = Array.from(thead.querySelectorAll('tr'));
+            const currentRow = currentColumn.parentElement;
+            const rowIndex = headerRows.indexOf(currentRow);
+
+            // Build a map of which columns are occupied by which cells
+            // This accounts for both colspan and rowspan
+            const columnOccupancy = [];
+
+            // Process each row
+            for (let r = 0; r < headerRows.length; r++) {
+                if (!columnOccupancy[r]) columnOccupancy[r] = [];
+
+                const cells = Array.from(headerRows[r].children);
+                let colPos = 0;
+
+                for (let c = 0; c < cells.length; c++) {
+                    const cell = cells[c];
+
+                    // Find next available column position
+                    while (columnOccupancy[r][colPos]) {
+                        colPos++;
+                    }
+
+                    const colspan = parseInt(cell.getAttribute('colspan') || '1');
+                    const rowspan = parseInt(cell.getAttribute('rowspan') || '1');
+
+                    // Mark columns as occupied by this cell
+                    for (let rs = 0; rs < rowspan; rs++) {
+                        if (!columnOccupancy[r + rs]) columnOccupancy[r + rs] = [];
+                        for (let cs = 0; cs < colspan; cs++) {
+                            columnOccupancy[r + rs][colPos + cs] = cell;
+                        }
+                    }
+
+                    // If this is our target cell, remember its column position
+                    if (cell === currentColumn) {
+                        currentColElement = colgroup.children[colPos];
+                        e.preventDefault();
+                        return;
+                    }
+
+                    colPos += colspan;
+                }
+            }
+
+            currentColElement = null;
             e.preventDefault();
         }
 
         function doResize(e) {
             if (!isResizing) return;
             const diff = e.pageX - startX;
-            const newWidth = Math.max(30, startWidth + diff); // Minimum 30px
+            const newWidth = Math.max(30, startWidth + diff);
+
+            // Update the col element in colgroup (this controls the actual column width)
+            if (currentColElement) {
+                currentColElement.style.width = newWidth + 'px';
+            }
+
+            // Also update the th for visual consistency
             currentColumn.style.width = newWidth + 'px';
-            currentColumn.style.minWidth = newWidth + 'px';
         }
 
         function stopResize() {
             if (isResizing) {
                 isResizing = false;
-                currentColumn = null;
-                document.body.classList.remove('resizing');
             }
         }
 
-        function sortTable(column) {
-            // Toggle sort direction
-            if (currentSort.column === column) {
-                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+        // Sorting functions
+        function sortResourceTable(type, column) {
+            const state = sortState[type];
+
+            // Toggle direction if same column, otherwise start with ascending
+            if (state.column === column) {
+                state.direction = state.direction === 'asc' ? 'desc' : 'asc';
             } else {
-                currentSort.column = column;
-                currentSort.direction = 'asc';
+                state.column = column;
+                state.direction = 'asc';
             }
 
-            // Update header indicators
-            document.querySelectorAll('th.sortable').forEach(th => {
-                th.classList.remove('asc', 'desc');
+            // Re-render the table with sorted data
+            if (type === 'imperium') {
+                initializeImperiumDetailed(getSortedResources(type, column, state.direction));
+            } else {
+                initializeTab(type);
+            }
+        }
+
+        function getSortedResources(type, column, direction) {
+            const resources = [...(allResources[type] || [])];
+
+            resources.sort((a, b) => {
+                let aVal = a[column];
+                let bVal = b[column];
+
+                // Handle different data types
+                if (aVal === undefined || aVal === null || aVal === '') aVal = '';
+                if (bVal === undefined || bVal === null || bVal === '') bVal = '';
+
+                // Try to parse as numbers
+                const aNum = parseFloat(aVal);
+                const bNum = parseFloat(bVal);
+
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    return direction === 'asc' ? aNum - bNum : bNum - aNum;
+                }
+
+                // String comparison
+                const aStr = String(aVal).toLowerCase();
+                const bStr = String(bVal).toLowerCase();
+
+                if (direction === 'asc') {
+                    return aStr < bStr ? -1 : aStr > bStr ? 1 : 0;
+                } else {
+                    return aStr > bStr ? -1 : aStr < bStr ? 1 : 0;
+                }
             });
-            const header = document.querySelector(`th[data-column="${column}"]`);
-            if (header) {
-                header.classList.add(currentSort.direction);
-            }
 
-            // Re-render with sorting
-            filterCards();
+            return resources;
         }
 
-        function getSortValue(card, column) {
-            switch(column) {
-                case 'name': return card.name.toLowerCase();
-                case 'set': return card.source || card.card_set;
-                case 'count': return card.count || 0;
-                case 'cost': return parseFloat(card.cost) || 0;
-                case 'agent': return (card.agent_ability || '').toLowerCase();
-                case 'reveal_ability': return (card.reveal_ability || '').toLowerCase();
-                case 'reveal_persuasion': return parseFloat(card.reveal_persuasion) || 0;
-                case 'reveal_swords': return parseFloat(card.reveal_swords) || 0;
-                case 'compatibility': return card.compatibility || '';
-                default: return '';
-            }
+        function addResource(type, resource) {
+            selectedResources[type].push(resource);
+            updateSelectedDisplay(type);
+            updateBadge(type);
         }
 
-        function truncate(text, maxLength) {
-            if (!text) return '';
-            return text.length > maxLength ? text.substring(0, maxLength - 3) + '...' : text;
+        function removeResource(type, index) {
+            selectedResources[type].splice(index, 1);
+            updateSelectedDisplay(type);
+            updateBadge(type);
         }
 
-        function filterCards() {
-            const filter = document.getElementById('setFilter').value;
-            const search = document.getElementById('searchBox').value.toLowerCase();
-            const tbody = document.getElementById('availableCards');
+        function updateSelectedDisplay(type) {
+            const tbody = document.getElementById(`${type}-selected`);
+            if (!tbody) return;
+
             tbody.innerHTML = '';
+            const config = resourceConfigs[type];
 
-            let filtered = filter === 'all'
-                ? allCards
-                : allCards.filter(c => c.card_set === filter);
-
-            if (search) {
-                filtered = filtered.filter(c =>
-                    c.name.toLowerCase().includes(search)
-                );
-            }
-
-            // Apply sorting
-            if (currentSort.column) {
-                filtered.sort((a, b) => {
-                    const aVal = getSortValue(a, currentSort.column);
-                    const bVal = getSortValue(b, currentSort.column);
-
-                    if (aVal < bVal) return currentSort.direction === 'asc' ? -1 : 1;
-                    if (aVal > bVal) return currentSort.direction === 'asc' ? 1 : -1;
-                    return 0;
-                });
-            }
-
-            filtered.forEach(card => {
+            selectedResources[type].forEach((resource, idx) => {
                 const tr = document.createElement('tr');
-                tr.className = `card-row`;
-                tr.ondblclick = () => addCard(card);
+                tr.className = 'resource-row';
+                tr.ondblclick = () => removeResource(type, idx);
 
-                tr.innerHTML = `
-                    <td class="expansion-${card.card_set}" title="${card.name}">${card.name}</td>
-                    <td class="expansion-${card.card_set}">${card.source || card.card_set}</td>
-                    <td>${card.count}</td>
-                    <td>${parseFloat(card.cost) || 0}</td>
-                    <td title="${card.agent_ability}">${truncate(card.agent_ability, 50)}</td>
-                    <td title="${card.passive_ability}">${truncate(card.passive_ability, 50)}</td>
-                    <td title="${card.acquisition_bonus}">${truncate(card.acquisition_bonus, 50)}</td>
-                    <td>${card.reveal_persuasion !== '0' && card.reveal_persuasion !== '0.0' ? parseFloat(card.reveal_persuasion) : ''}</td>
-                    <td>${card.reveal_swords !== '0' && card.reveal_swords !== '0.0' ? parseFloat(card.reveal_swords) : ''}</td>
-                    <td title="${card.reveal_ability}">${truncate(card.reveal_ability, 50)}</td>
-                    <td>${card.tech}</td>
-                    <td>${card.shipping}</td>
-                    <td>${card.unload}</td>
-                    <td>${card.infiltration}</td>
-                    <td>${card.research}</td>
-                    <td>${card.grafting}</td>
-                    <td>${card.spies}</td>
-                    <td>${card.sandworms}</td>
-                    <td>${card.contracts}</td>
-                    <td>${card.battle_icons}</td>
-                    <td>${card.sardaukar}</td>
-                    <td class="access-x access-green">${card.green_access ? 'X' : ''}</td>
-                    <td class="access-x access-purple">${card.purple_access ? 'X' : ''}</td>
-                    <td class="access-x access-yellow">${card.yellow_access ? 'X' : ''}</td>
-                    <td class="access-x access-emperor">${card.emperor_access ? 'X' : ''}</td>
-                    <td class="access-x access-guild">${card.spacing_guild_access ? 'X' : ''}</td>
-                    <td class="access-x access-bg">${card.bene_gesserit_access ? 'X' : ''}</td>
-                    <td class="access-x access-fremen">${card.fremen_access ? 'X' : ''}</td>
-                    <td class="access-x access-spy">${card.spy_access ? 'X' : ''}</td>
-                    <td>${card.compatibility}</td>
-                    <td>${card.vps_available && card.vps_available !== '0' && card.vps_available !== '0.0' ? parseFloat(card.vps_available) : ''}</td>
-                `;
-
+                if (type === 'imperium') {
+                    // Show more details for Imperium cards
+                    tr.innerHTML = `
+                        <td class="expansion-${resource.card_set}">${resource.name}</td>
+                        <td class="expansion-${resource.card_set}">${resource.source || resource.card_set || ''}</td>
+                        <td>${resource.count || '1'}</td>
+                        <td>${parseFloat(resource.cost || resource.persuasion_cost || 0) || 0}</td>
+                    `;
+                } else {
+                    const td = document.createElement('td');
+                    if (config.hasSet && resource.card_set) {
+                        td.className = `expansion-${resource.card_set}`;
+                    }
+                    td.textContent = resource[config.nameProp] || resource.name;
+                    tr.appendChild(td);
+                }
                 tbody.appendChild(tr);
             });
 
-            document.getElementById('availableCount').textContent = filtered.length;
-        }
-
-        function addCard(card) {
-            // Count how many of this card are already in the deck
-            const currentCount = selectedCards.filter(c => c.name === card.name).length;
-
-            // Check if we've reached the limit
-            if (currentCount >= card.count) {
-                alert(`Cannot add more than ${card.count} copies of "${card.name}"`);
-                return;
+            const countSpan = document.getElementById(`${type}-count`);
+            if (countSpan) {
+                countSpan.textContent = selectedResources[type].length;
             }
 
-            selectedCards.push(card);
-            updateDeck();
-        }
-
-        function removeCard(index) {
-            selectedCards.splice(index, 1);
-            updateDeck();
-        }
-
-        function clearDeck() {
-            if (selectedCards.length === 0) return;
-            if (confirm('Remove all cards from blend?')) {
-                selectedCards = [];
-                updateDeck();
+            // Update stats for Imperium
+            if (type === 'imperium') {
+                updateImperiumStats();
             }
         }
 
-        function updateDeck() {
-            const tbody = document.getElementById('selectedCards');
-            tbody.innerHTML = '';
+        function updateImperiumStats() {
+            const statsDiv = document.getElementById('imperium-stats');
+            if (!statsDiv) return;
 
-            selectedCards.forEach((card, idx) => {
-                const tr = document.createElement('tr');
-                tr.className = `card-row`;
-                tr.ondblclick = () => removeCard(idx);
-                tr.innerHTML = `
-                    <td class="expansion-${card.card_set}">${card.name}</td>
-                    <td class="expansion-${card.card_set}">${card.source || card.card_set}</td>
-                    <td>${card.count}</td>
-                    <td>${parseFloat(card.cost) || 0}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            document.getElementById('deckCount').textContent = selectedCards.length;
-            updateStats();
-        }
-
-        function updateStats() {
-            const statsDiv = document.getElementById('stats');
-
-            if (selectedCards.length === 0) {
+            const cards = selectedResources.imperium;
+            if (cards.length === 0) {
                 statsDiv.innerHTML = '<p class="text-muted">No cards selected</p>';
                 return;
             }
 
-            const totalCost = selectedCards.reduce((sum, c) => sum + (parseFloat(c.cost) || 0), 0);
-            const avgCost = totalCost / selectedCards.length;
+            const totalCost = cards.reduce((sum, c) => sum + (parseFloat(c.cost || c.persuasion_cost || 0) || 0), 0);
+            const avgCost = (totalCost / cards.length).toFixed(1);
 
+            // Count by set
             const bySets = {};
-            selectedCards.forEach(c => {
-                const setName = c.source || c.card_set;
-                bySets[setName] = (bySets[setName] || 0) + 1;
+            cards.forEach(c => {
+                const set = c.source || c.card_set || 'Unknown';
+                bySets[set] = (bySets[set] || 0) + 1;
             });
 
             let html = `
-                <div class="row">
-                    <div class="col-6">
-                        <strong>Total Cards:</strong><br>
-                        <strong>Total Cost:</strong><br>
-                        <strong>Avg Cost:</strong>
-                    </div>
-                    <div class="col-6">
-                        ${selectedCards.length}<br>
-                        ${totalCost.toFixed(1)}<br>
-                        ${avgCost.toFixed(2)}
-                    </div>
-                </div>
-                <hr>
-                <strong>By Set:</strong>
-                <ul class="mb-0">
+                <p><strong>Total Cards:</strong> ${cards.length}</p>
+                <p><strong>Total Cost:</strong> ${totalCost}</p>
+                <p><strong>Average Cost:</strong> ${avgCost}</p>
+                <p><strong>By Set:</strong></p>
+                <ul class="list-unstyled mb-0">
             `;
 
-            for (const [set, count] of Object.entries(bySets).sort()) {
-                const pct = (count / selectedCards.length * 100).toFixed(1);
-                html += `<li>${set}: ${count} (${pct}%)</li>`;
+            for (const [set, count] of Object.entries(bySets).sort((a, b) => b[1] - a[1])) {
+                html += `<li>• ${set}: ${count}</li>`;
             }
 
             html += '</ul>';
             statsDiv.innerHTML = html;
         }
 
-        function showLoadDialog() {
-            // Load list of available blends
-            fetch('/api/blends')
-                .then(r => r.json())
-                .then(blends => {
-                    const listDiv = document.getElementById('blendList');
-                    if (blends.length === 0) {
-                        listDiv.innerHTML = '<p class="text-muted">No saved blends found</p>';
-                    } else {
-                        listDiv.innerHTML = '';
-                        blends.forEach(blend => {
-                            const btn = document.createElement('button');
-                            btn.className = 'list-group-item list-group-item-action';
-                            btn.textContent = blend.name;
-                            btn.onclick = () => loadBlend(blend.filename, blend.name);
-                            listDiv.appendChild(btn);
-                        });
-                    }
-                    // Show modal
-                    const modal = new bootstrap.Modal(document.getElementById('loadBlendModal'));
-                    modal.show();
-                })
-                .catch(err => {
-                    console.error('Failed to load blend list:', err);
-                    alert('Failed to load blend list');
-                });
+        function updateBadge(type) {
+            const badge = document.getElementById(`${type}-badge`);
+            if (badge) {
+                const count = selectedResources[type].length;
+                badge.textContent = count;
+                badge.className = count > 0 ? 'badge bg-primary' : 'badge bg-secondary';
+            }
         }
 
-        function loadBlend(filename, name) {
-            fetch(`/api/blend/load/${filename}`)
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        // Clear current deck
-                        selectedCards = [];
-
-                        // Find and add cards by name
-                        const cardNames = data.card_names;
-                        const notFound = [];
-                        const found = [];
-
-                        cardNames.forEach(cardName => {
-                            // Try exact match first
-                            let card = allCards.find(c => c.name === cardName);
-
-                            // If not found, try trimmed match
-                            if (!card) {
-                                card = allCards.find(c => c.name.trim() === cardName.trim());
-                            }
-
-                            // If still not found, try case-insensitive match
-                            if (!card) {
-                                card = allCards.find(c => c.name.toLowerCase() === cardName.toLowerCase());
-                            }
-
-                            if (card) {
-                                selectedCards.push(card);
-                                found.push(cardName);
-                            } else {
-                                notFound.push(cardName);
-                                console.warn(`Card not found: "${cardName}"`);
-                            }
-                        });
-
-                        // Update deck name
-                        document.getElementById('deckName').value = name;
-
-                        // Update display
-                        updateDeck();
-
-                        // Close modal
-                        bootstrap.Modal.getInstance(document.getElementById('loadBlendModal')).hide();
-
-                        // Show detailed message
-                        let message = `Loaded ${found.length} cards from "${name}"`;
-                        if (notFound.length > 0) {
-                            message += `\n\nWarning: ${notFound.length} cards not found in database:`;
-                            message += `\n${notFound.slice(0, 5).join(', ')}`;
-                            if (notFound.length > 5) {
-                                message += `\n... and ${notFound.length - 5} more`;
-                            }
-                        }
-                        alert(message);
-                    } else {
-                        alert('Failed to load blend: ' + (data.error || 'Unknown error'));
-                    }
-                })
-                .catch(err => {
-                    console.error('Failed to load blend:', err);
-                    alert('Failed to load blend');
-                });
+        function clearBlend() {
+            if (!confirm('Clear all selected resources?')) return;
+            for (let type in selectedResources) {
+                selectedResources[type] = [];
+                updateSelectedDisplay(type);
+                updateBadge(type);
+            }
         }
 
-        function saveDeck() {
-            const name = document.getElementById('deckName').value;
+        function saveBlend() {
+            let blendName = document.getElementById('blendName').value.trim();
 
-            if (selectedCards.length === 0) {
-                alert('Cannot save an empty blend.');
+            // Remove .md extension if present since backend will add it
+            if (blendName.endsWith('.md')) {
+                blendName = blendName.slice(0, -3);
+            }
+
+            const resources_by_type = {};
+
+            for (let type in selectedResources) {
+                if (selectedResources[type].length > 0) {
+                    const typeName = type.charAt(0).toUpperCase() + type.slice(1);
+                    resources_by_type[typeName + ' Cards'] = selectedResources[type];
+                }
+            }
+
+            if (Object.keys(resources_by_type).length === 0) {
+                alert('No resources selected to save!');
                 return;
             }
 
-            fetch('/api/deck/save', {
+            fetch('/api/blend/save', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({name, cards: selectedCards})
+                body: JSON.stringify({name: blendName, resources: resources_by_type})
             })
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    alert('Blend saved to: ' + data.filepath);
+                    // Update the filename field with the actual saved filename
+                    document.getElementById('blendName').value = data.filename;
+                    alert(`Blend saved as: ${data.filename}`);
                 } else {
                     alert('Failed to save blend');
                 }
@@ -779,6 +1771,311 @@
                 console.error('Save error:', err);
                 alert('Failed to save blend');
             });
+        }
+
+        function showLoadDialog() {
+            fetch('/api/blends')
+                .then(r => r.json())
+                .then(blends => {
+                    const listDiv = document.getElementById('blendFileList');
+                    if (blends.length === 0) {
+                        listDiv.innerHTML = '<p class="text-muted px-3 py-2">No blend files found</p>';
+                    } else {
+                        listDiv.innerHTML = '';
+                        blends.forEach(blend => {
+                            const item = document.createElement('button');
+                            item.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+                            item.onclick = () => loadBlendFromServer(blend.filename);
+
+                            const nameSpan = document.createElement('span');
+                            nameSpan.textContent = blend.filename;
+                            nameSpan.className = 'font-monospace';
+
+                            const badge = document.createElement('span');
+                            badge.className = 'badge bg-secondary';
+                            badge.textContent = '.md';
+
+                            item.appendChild(nameSpan);
+                            item.appendChild(badge);
+                            listDiv.appendChild(item);
+                        });
+                    }
+                    const modal = new bootstrap.Modal(document.getElementById('loadBlendModal'));
+                    modal.show();
+                })
+                .catch(err => {
+                    console.error('Error loading blend list:', err);
+                    alert('Failed to load blend file list');
+                });
+        }
+
+        function showSaveAsDialog() {
+            // Populate the filename field with current filename
+            const currentFilename = document.getElementById('blendName').value;
+            document.getElementById('saveAsFilename').value = currentFilename;
+
+            // Load and display existing files
+            fetch('/api/blends')
+                .then(r => r.json())
+                .then(blends => {
+                    const listDiv = document.getElementById('saveAsFileList');
+                    if (blends.length === 0) {
+                        listDiv.innerHTML = '<p class="text-muted px-3 py-2">No existing blend files</p>';
+                    } else {
+                        listDiv.innerHTML = '';
+                        blends.forEach(blend => {
+                            const item = document.createElement('div');
+                            item.className = 'list-group-item';
+                            item.innerHTML = `<span class="font-monospace">${blend.filename}</span>`;
+                            listDiv.appendChild(item);
+                        });
+                    }
+                    const modal = new bootstrap.Modal(document.getElementById('saveAsModal'));
+                    modal.show();
+                })
+                .catch(err => {
+                    console.error('Error loading blend list:', err);
+                    // Still show the modal even if file list fails to load
+                    const modal = new bootstrap.Modal(document.getElementById('saveAsModal'));
+                    modal.show();
+                });
+        }
+
+        function saveAsBlend() {
+            let blendName = document.getElementById('saveAsFilename').value.trim();
+
+            if (!blendName) {
+                alert('Please enter a filename');
+                return;
+            }
+
+            // Remove .md extension if present since backend will add it
+            if (blendName.endsWith('.md')) {
+                blendName = blendName.slice(0, -3);
+            }
+
+            const resources_by_type = {};
+
+            for (let type in selectedResources) {
+                if (selectedResources[type].length > 0) {
+                    const typeName = type.charAt(0).toUpperCase() + type.slice(1);
+                    resources_by_type[typeName + ' Cards'] = selectedResources[type];
+                }
+            }
+
+            if (Object.keys(resources_by_type).length === 0) {
+                alert('No resources selected to save!');
+                return;
+            }
+
+            fetch('/api/blend/save', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({name: blendName, resources: resources_by_type})
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the filename field with the actual saved filename
+                    document.getElementById('blendName').value = data.filename;
+
+                    // Close the modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('saveAsModal'));
+                    modal.hide();
+
+                    alert(`Blend saved as: ${data.filename}`);
+                } else {
+                    alert('Failed to save blend');
+                }
+            })
+            .catch(err => {
+                console.error('Save error:', err);
+                alert('Failed to save blend');
+            });
+        }
+
+        // Drag and drop handlers
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.target.closest('#dropZone').style.backgroundColor = '#e3f2fd';
+            e.target.closest('#dropZone').style.borderColor = '#2196F3';
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.target.closest('#dropZone').style.backgroundColor = '#f8f9fa';
+            e.target.closest('#dropZone').style.borderColor = '#dee2e6';
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const dropZone = e.target.closest('#dropZone');
+            dropZone.style.backgroundColor = '#f8f9fa';
+            dropZone.style.borderColor = '#dee2e6';
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.name.endsWith('.md')) {
+                    loadBlendFromFile(file);
+                } else {
+                    alert('Please drop a .md file');
+                }
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file && file.name.endsWith('.md')) {
+                loadBlendFromFile(file);
+            }
+        }
+
+        function loadBlendFromFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                parseAndLoadBlendContent(content, file.name);
+            };
+            reader.readAsText(file);
+        }
+
+        function parseAndLoadBlendContent(content, filename) {
+            // Parse markdown content in new "count name" format
+            const lines = content.split('\n');
+            const resources = {};
+            let currentSection = null;
+
+            for (const line of lines) {
+                const trimmed = line.trim();
+
+                if (trimmed.startsWith('## ')) {
+                    currentSection = trimmed.substring(3).trim();
+                    if (!resources[currentSection]) {
+                        resources[currentSection] = [];
+                    }
+                } else if (currentSection && trimmed && !trimmed.startsWith('#') && !trimmed.startsWith('*') && !trimmed.startsWith('-')) {
+                    // Parse "count name" format
+                    const parts = trimmed.split(' ', 1);
+                    if (parts.length > 0 && /^\d+$/.test(parts[0])) {
+                        const count = parseInt(parts[0]);
+                        const name = trimmed.substring(parts[0].length).trim();
+                        // Add this resource 'count' times
+                        for (let i = 0; i < count; i++) {
+                            resources[currentSection].push(name);
+                        }
+                    }
+                }
+            }
+
+            // Clear current selection
+            for (let type in selectedResources) {
+                selectedResources[type] = [];
+            }
+
+            // Load resources
+            for (let sectionName in resources) {
+                const resourceNames = resources[sectionName];
+                const type = detectResourceType(sectionName);
+
+                if (type && allResources[type]) {
+                    resourceNames.forEach(name => {
+                        const resource = allResources[type].find(r =>
+                            (r.name && r.name === name) ||
+                            (r.objective && r.objective === name)
+                        );
+                        if (resource) {
+                            selectedResources[type].push(resource);
+                        }
+                    });
+                }
+            }
+
+            // Update all displays
+            for (let type in selectedResources) {
+                updateSelectedDisplay(type);
+                updateBadge(type);
+            }
+
+            // Update filename field
+            document.getElementById('blendName').value = filename;
+
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('loadBlendModal'));
+            if (modal) modal.hide();
+
+            const totalLoaded = Object.values(selectedResources).reduce((sum, arr) => sum + arr.length, 0);
+            alert(`Loaded ${totalLoaded} items from "${filename}"`);
+        }
+
+        function loadBlendFromServer(filename) {
+            fetch(`/api/blend/load/${filename}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        // Clear current selection
+                        for (let type in selectedResources) {
+                            selectedResources[type] = [];
+                        }
+
+                        // Match and load resources
+                        const resources = data.resources;
+                        for (let sectionName in resources) {
+                            const resourceNames = resources[sectionName];
+                            const type = detectResourceType(sectionName);
+
+                            if (type && allResources[type]) {
+                                resourceNames.forEach(name => {
+                                    const resource = allResources[type].find(r =>
+                                        (r.name && r.name === name) ||
+                                        (r.objective && r.objective === name)
+                                    );
+                                    if (resource) {
+                                        selectedResources[type].push(resource);
+                                    }
+                                });
+                            }
+                        }
+
+                        // Update all displays
+                        for (let type in selectedResources) {
+                            updateSelectedDisplay(type);
+                            updateBadge(type);
+                        }
+
+                        // Update the filename field with the loaded blend's filename
+                        document.getElementById('blendName').value = filename;
+
+                        bootstrap.Modal.getInstance(document.getElementById('loadBlendModal')).hide();
+
+                        const totalLoaded = Object.values(selectedResources).reduce((sum, arr) => sum + arr.length, 0);
+                        alert(`Loaded ${totalLoaded} items from "${filename}"`);
+                    }
+                })
+                .catch(err => {
+                    console.error('Load error:', err);
+                    alert('Failed to load blend');
+                });
+        }
+
+
+        function detectResourceType(sectionName) {
+            const lower = sectionName.toLowerCase();
+            if (lower.includes('imperium')) return 'imperium';
+            if (lower.includes('intrigue')) return 'intrigue';
+            if (lower.includes('tleilax')) return 'tleilax';
+            if (lower.includes('reserve')) return 'reserve';
+            if (lower.includes('tech')) return 'tech';
+            if (lower.includes('contract')) return 'contracts';
+            if (lower.includes('leader')) return 'leader';
+            if (lower.includes('sardaukar')) return 'sardaukar';
+            if (lower.includes('starter')) return 'starter';
+            if (lower.includes('conflict')) return 'conflict';
+            return null;
         }
     </script>
 </body>

@@ -78,7 +78,7 @@ def load_all_resources_from_excel():
 @app.route('/')
 def index():
     """Serve the main page."""
-    return render_template('index_multi.html')
+    return render_template('index.html')
 
 
 @app.route('/api/resources')
