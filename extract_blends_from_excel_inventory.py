@@ -82,17 +82,19 @@ def regenerate_all_blends():
                     except (ValueError, TypeError):
                         pass
 
-    # Create Merakon's blend
+    # Create Merakon's blend (uses Uprising board)
     if any(merakon_resources.values()):
         filepath = blends_dir / "Merakons_House_Blend.md"
-        create_multi_resource_blend_file(filepath, "Merakon's House Blend", merakon_resources)
+        create_multi_resource_blend_file(filepath, "Merakon's House Blend", merakon_resources,
+                                        description="", board="uprising")
         total = sum(len(items) for items in merakon_resources.values())
         print(f"✓ Created Merakon's House Blend with {total} total items")
 
-    # Create TragicJonson's blend
+    # Create TragicJonson's blend (uses Uprising board)
     if any(tragic_resources.values()):
         filepath = blends_dir / "TragicJonsons_House_Blend.md"
-        create_multi_resource_blend_file(filepath, "TragicJonson's House Blend", tragic_resources)
+        create_multi_resource_blend_file(filepath, "TragicJonson's House Blend", tragic_resources,
+                                        description="", board="uprising")
         total = sum(len(items) for items in tragic_resources.values())
         print(f"✓ Created TragicJonson's House Blend with {total} total items")
 
@@ -142,26 +144,33 @@ def create_base_blends(wb, resource_sheets):
         if base_uprising_items:
             base_uprising_resources[display_name] = base_uprising_items
 
-    # Save Base Imperium
+    # Save Base Imperium (uses imperium board)
     if base_imperium_resources:
         filepath = Path(__file__).parent / "blends" / "Base_Imperium.md"
         create_multi_resource_blend_file(filepath, "Base Imperium", base_imperium_resources,
-                                        "All cards from the Base Game")
+                                        "All cards from the Base Game", board="imperium")
         total = sum(len(items) for items in base_imperium_resources.values())
         print(f"✓ Created Base Imperium with {total} total items")
 
-    # Save Base Uprising
+    # Save Base Uprising (uses uprising board)
     if base_uprising_resources:
         filepath = Path(__file__).parent / "blends" / "Base_Uprising.md"
         create_multi_resource_blend_file(filepath, "Base Uprising", base_uprising_resources,
-                                        "All cards from the Uprising expansion")
+                                        "All cards from the Uprising expansion", board="uprising")
         total = sum(len(items) for items in base_uprising_resources.values())
         print(f"✓ Created Base Uprising with {total} total items")
 
 
-def create_multi_resource_blend_file(filepath, blend_name, resources_by_type, description=""):
+def create_multi_resource_blend_file(filepath, blend_name, resources_by_type, description="", board="imperium", additional_boards=None):
     """Create a blend file with multiple resource types in simplified format."""
     md = f"# {blend_name}\n\n"
+
+    # Add board selection at the top
+    md += f"## Board\n\n"
+    md += f"- Main Board: {board}\n"
+    if additional_boards:
+        md += f"- Additional Boards: {', '.join(additional_boards)}\n"
+    md += "\n"
 
     if description:
         md += f"*{description}*\n\n"
@@ -182,7 +191,10 @@ def create_multi_resource_blend_file(filepath, blend_name, resources_by_type, de
         # Sort by name and output
         for item_name in sorted(item_counts.keys()):
             count = item_counts[item_name]
-            md += f"- {count}× {item_name}\n"
+            if count == 1:
+                md += f"- {item_name}\n"
+            else:
+                md += f"- {count}× {item_name}\n"
 
         md += "\n"
 

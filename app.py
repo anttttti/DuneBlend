@@ -129,17 +129,34 @@ def load_blend(filename):
             if line.startswith('## '):
                 current_section = line[3:].strip()
                 if current_section not in resources_by_type:
-                    resources_by_type[current_section] = []
+                    if current_section == 'Board':
+                        resources_by_type[current_section] = {
+                            'mainBoard': 'imperium',
+                            'additionalBoards': []
+                        }
+                    else:
+                        resources_by_type[current_section] = []
+
+            # Parse Board metadata
+            elif current_section == 'Board' and line.startswith('- '):
+                clean_line = line.lstrip('- ').strip()
+                if clean_line.startswith('Main Board:'):
+                    main_board = clean_line.split(':', 1)[1].strip()
+                    resources_by_type['Board']['mainBoard'] = main_board
+                elif clean_line.startswith('Additional Boards:'):
+                    boards_str = clean_line.split(':', 1)[1].strip()
+                    additional = [b.strip() for b in boards_str.split(',')]
+                    resources_by_type['Board']['additionalBoards'] = additional
 
             # Check for resource lines in format "- count× name" or legacy "count name"
-            elif current_section and line and not line.startswith('**') and not line.startswith('*Generated'):
+            elif current_section and current_section != 'Board' and line and not line.startswith('**') and not line.startswith('*Generated'):
                 # Remove leading "- " if present
                 clean_line = line.lstrip('- ').strip()
 
                 if not clean_line or clean_line.startswith('#'):
                     continue
 
-                # Parse "count× name" or "count name" format
+                # Parse "count× name" or "count name" or just "name" format
                 # Try with × first
                 if '×' in clean_line:
                     parts = clean_line.split('×', 1)
@@ -149,14 +166,20 @@ def load_blend(filename):
                         # Add this resource 'count' times
                         for _ in range(count):
                             resources_by_type[current_section].append(name)
-                else:
-                    # Fallback to space separator for backward compatibility
+                    else:
+                        # Just a name with × in it
+                        resources_by_type[current_section].append(clean_line)
+                elif clean_line and clean_line[0].isdigit() and ' ' in clean_line:
+                    # Fallback to space separator for backward compatibility "2 Card Name"
                     parts = clean_line.split(' ', 1)
-                    if len(parts) == 2 and parts[0].isdigit():
+                    if parts[0].isdigit():
                         count = int(parts[0])
                         name = parts[1].strip()
                         for _ in range(count):
                             resources_by_type[current_section].append(name)
+                else:
+                    # Just a name without count
+                    resources_by_type[current_section].append(clean_line)
 
     return jsonify({"success": True, "resources": resources_by_type})
 
@@ -174,11 +197,26 @@ def save_blend():
     # Build markdown
     md = f"# {blend_name}\n\n"
 
-    total_count = sum(len(items) for items in resources_by_type.values())
-    md += f"**Total Items:** {total_count}\n\n"
+    # Handle Board section first if present
+    if 'Board' in resources_by_type:
+        board_data = resources_by_type['Board']
+        md += f"## Board\n\n"
+        md += f"- Main Board: {board_data.get('mainBoard', 'imperium')}\n"
+        additional = board_data.get('additionalBoards', [])
+        if additional:
+            md += f"- Additional Boards: {', '.join(additional)}\n"
+        md += "\n"
+
+    # Count total items (excluding Board metadata)
+    total_count = sum(len(items) for key, items in resources_by_type.items()
+                     if key != 'Board' and isinstance(items, list))
+    if total_count > 0:
+        md += f"**Total Items:** {total_count}\n\n"
 
     # Add each resource type section
     for resource_type, items in resources_by_type.items():
+        if resource_type == 'Board':
+            continue  # Already handled
         if not items:
             continue
 
@@ -196,7 +234,10 @@ def save_blend():
         # Sort by name and output in "- count× name" format
         for item_name in sorted(item_counts.keys()):
             count = item_counts[item_name]
-            md += f"- {count}× {item_name}\n"
+            if count == 1:
+                md += f"- {item_name}\n"
+            else:
+                md += f"- {count}× {item_name}\n"
 
         md += "\n"
 

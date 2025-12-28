@@ -156,7 +156,12 @@
         <!-- Resource Type Tabs -->
         <ul class="nav nav-tabs" id="resourceTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="imperium-tab" data-bs-toggle="tab" data-bs-target="#imperium-panel" type="button">
+                <button class="nav-link active" id="board-tab" data-bs-toggle="tab" data-bs-target="#board-panel" type="button">
+                    Board
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="imperium-tab" data-bs-toggle="tab" data-bs-target="#imperium-panel" type="button">
                     Imperium <span id="imperium-badge" class="badge bg-secondary">0</span>
                 </button>
             </li>
@@ -209,8 +214,82 @@
 
         <!-- Tab Content Panels -->
         <div class="tab-content" id="resourceTabContent">
+            <!-- Board Panel -->
+            <div class="tab-pane fade show active" id="board-panel" role="tabpanel">
+                <div class="row">
+                    <div class="col-12">
+                        <h4>Board Selection</h4>
+
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h5>Main Game Boards (Choose One)</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="radio" name="mainBoard" id="board-imperium" value="imperium" checked>
+                                    <label class="form-check-label" for="board-imperium">
+                                        <strong>1. Dune: Imperium Board</strong>
+                                        <p class="text-muted mb-0">Features the Mentat token mechanic and Foldspace cards</p>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="mainBoard" id="board-uprising" value="uprising">
+                                    <label class="form-check-label" for="board-uprising">
+                                        <strong>2. Dune: Imperium - Uprising Board</strong>
+                                        <p class="text-muted mb-0">Features spies, sandworms, and observation posts</p>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Additional Boards & Overlays by Expansion</h5>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="mt-3"><strong>Rise of Ix:</strong></h6>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="board-choam" value="choam">
+                                    <label class="form-check-label" for="board-choam">
+                                        <strong>CHOAM Board Overlay</strong> - sits on top of and expands the original game's CHOAM area, replacing the spice-to-Solari conversion with an Interstellar Shipping track
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="board-ix" value="ix">
+                                    <label class="form-check-label" for="board-ix">
+                                        <strong>Ix Board</strong> - sits alongside the upper right side of the main board, featuring spaces for 18 Tech tiles organized in three stacks
+                                    </label>
+                                </div>
+
+                                <h6 class="mt-3"><strong>Immortality:</strong></h6>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="board-tleilax" value="tleilax">
+                                    <label class="form-check-label" for="board-tleilax">
+                                        <strong>Bene Tleilax Board</strong> - features two tracks: a research track (triggered by microscope icons) and a Tleilaxu track for genetic specimens
+                                    </label>
+                                </div>
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" id="board-research" value="research">
+                                    <label class="form-check-label" for="board-research">
+                                        <strong>Research Station Overlay</strong>
+                                    </label>
+                                </div>
+
+                                <h6 class="mt-3"><strong>Bloodlines:</strong></h6>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="board-embassy" value="embassy">
+                                    <label class="form-check-label" for="board-embassy">
+                                        <strong>Ixian Embassy Board</strong> - kept to the side of the main board, offering three stacks of Tech tiles available for purchase when sending agents to any Landsraad (green) space
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Imperium Panel -->
-            <div class="tab-pane fade show active" id="imperium-panel" role="tabpanel">
+            <div class="tab-pane fade" id="imperium-panel" role="tabpanel">
                 <div class="row">
                     <div class="col-12">
                         <h4>Available Imperium Cards <span class="badge bg-secondary" id="imperium-available-count">0</span></h4>
@@ -1301,8 +1380,8 @@
                 tr.ondblclick = () => addResource('tech', card);
 
                 tr.innerHTML = `
-                    <td>${card.name || ''}</td>
-                    <td>${card.source || ''}</td>
+                    <td class="expansion-${card.card_set}">${card.name || ''}</td>
+                    <td class="expansion-${card.card_set}">${card.source || ''}</td>
                     <td class="compact">${card.compatibility || ''}</td>
                     <td class="compact">${card.spice_cost || ''}</td>
                     <td class="compact">${card.shipping || ''}</td>
@@ -1332,8 +1411,8 @@
                 tr.ondblclick = () => addResource('contracts', card);
 
                 tr.innerHTML = `
-                    <td>${card.objective || card.name || ''}</td>
-                    <td>${card.source || ''}</td>
+                    <td class="expansion-${card.card_set}">${card.objective || card.name || ''}</td>
+                    <td class="expansion-${card.card_set}">${card.source || ''}</td>
                     <td class="compact">${card.count || '1'}</td>
                     <td title="${card.reward || ''}">${truncate(card.reward || '', 100)}</td>
                     <td class="compact">${card['rise_of_ix_-specific?'] || ''}</td>
@@ -1356,8 +1435,8 @@
                 tr.ondblclick = () => addResource('leader', card);
 
                 tr.innerHTML = `
-                    <td>${card.name || ''}</td>
-                    <td>${card.source || ''}</td>
+                    <td class="expansion-${card.card_set}">${card.name || ''}</td>
+                    <td class="expansion-${card.card_set}">${card.source || ''}</td>
                     <td class="compact">${card.compatibility || ''}</td>
                     <td>${card.house || ''}</td>
                     <td title="${card.starting_effect || ''}">${truncate(card.starting_effect || '', 100)}</td>
@@ -1406,8 +1485,8 @@
                 tr.ondblclick = () => addResource('starter', card);
 
                 tr.innerHTML = `
-                    <td>${card.name || ''}</td>
-                    <td>${card.source || ''}</td>
+                    <td class="expansion-${card.card_set}">${card.name || ''}</td>
+                    <td class="expansion-${card.card_set}">${card.source || ''}</td>
                     <td class="compact">${card.compatibility || ''}</td>
                     <td class="compact">${card.count_per_player || ''}</td>
                     <td class="access-x access-green">${hasX(card.green_access) ? 'X' : ''}</td>
@@ -1440,8 +1519,8 @@
                 tr.ondblclick = () => addResource('conflict', card);
 
                 tr.innerHTML = `
-                    <td>${card.name || ''}</td>
-                    <td>${card.source || ''}</td>
+                    <td class="expansion-${card.card_set}">${card.name || ''}</td>
+                    <td class="expansion-${card.card_set}">${card.source || ''}</td>
                     <td class="compact">${card.compatibility || ''}</td>
                     <td class="compact">${card.conflict_level || ''}</td>
                     <td class="compact">${card.vps_available || ''}</td>
@@ -1740,6 +1819,19 @@
 
             const resources_by_type = {};
 
+            // Get board selections first
+            const mainBoard = document.querySelector('input[name="mainBoard"]:checked')?.value || 'imperium';
+            const additionalBoards = [];
+            document.querySelectorAll('#board-panel input[type="checkbox"]:checked').forEach(cb => {
+                additionalBoards.push(cb.value);
+            });
+
+            // Add board info to resources (will be placed at top of file)
+            resources_by_type['Board'] = {
+                mainBoard: mainBoard,
+                additionalBoards: additionalBoards
+            };
+
             for (let type in selectedResources) {
                 if (selectedResources[type].length > 0) {
                     const typeName = type.charAt(0).toUpperCase() + type.slice(1);
@@ -1747,10 +1839,6 @@
                 }
             }
 
-            if (Object.keys(resources_by_type).length === 0) {
-                alert('No resources selected to save!');
-                return;
-            }
 
             fetch('/api/blend/save', {
                 method: 'POST',
@@ -2026,6 +2114,26 @@
                         const resources = data.resources;
                         for (let sectionName in resources) {
                             const resourceNames = resources[sectionName];
+
+                            // Handle Board section specially
+                            if (sectionName === 'Board') {
+                                const boardData = resourceNames;
+                                if (boardData.mainBoard) {
+                                    const mainRadio = document.querySelector(`input[name="mainBoard"][value="${boardData.mainBoard}"]`);
+                                    if (mainRadio) mainRadio.checked = true;
+                                }
+                                if (boardData.additionalBoards && Array.isArray(boardData.additionalBoards)) {
+                                    // Clear all checkboxes first
+                                    document.querySelectorAll('#board-panel input[type="checkbox"]').forEach(cb => cb.checked = false);
+                                    // Check the saved ones
+                                    boardData.additionalBoards.forEach(boardValue => {
+                                        const checkbox = document.querySelector(`#board-panel input[type="checkbox"][value="${boardValue}"]`);
+                                        if (checkbox) checkbox.checked = true;
+                                    });
+                                }
+                                continue;
+                            }
+
                             const type = detectResourceType(sectionName);
 
                             if (type && allResources[type]) {
