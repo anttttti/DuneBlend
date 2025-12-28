@@ -1,8 +1,7 @@
 """
-Dune Imperium Blend Builder - Web Version
-Flask backend serving card data and blend management
+Dune Imperium Blend Builder - Multi-Resource Version
+Handles all resource types: Imperium, Tleilax, Reserve, Intrigue, Tech, Contracts, etc.
 """
-
 from flask import Flask, render_template, jsonify, request
 from pathlib import Path
 import openpyxl
@@ -11,150 +10,201 @@ import threading
 
 app = Flask(__name__)
 
-# Global card data
-ALL_CARDS = []
+# Global resource data
+ALL_RESOURCES = {}
 
 
-def load_cards_from_excel():
-    """Load card data from Excel file."""
+def load_all_resources_from_excel():
+    """Load all resource types from all Excel worksheets."""
     excel_path = Path(__file__).parent / "Dune_Imperium_Card_Inventory.xlsx"
 
     if not excel_path.exists():
-        raise FileNotFoundError(
-            f"Could not find: {excel_path}\n\n"
-            "Please ensure Dune_Imperium_Card_Inventory.xlsx is in the project directory."
-        )
+        raise FileNotFoundError(f"Could not find: {excel_path}")
 
-    wb = openpyxl.load_workbook(excel_path, data_only=True)  # data_only=True evaluates formulas
-    ws = wb.active
-    headers = [cell.value for cell in ws[1]]
+    wb = openpyxl.load_workbook(excel_path, data_only=True)
 
-    cards = []
-    for row in ws.iter_rows(min_row=2, values_only=True):
-        if not row[0]:
-            continue
+    all_resources = {}
 
-        row_dict = dict(zip(headers, row))
-        card_name = str(row_dict.get("Card Name", "")).strip()
-        if not card_name:
-            continue
+    for sheet_name in wb.sheetnames:
+        ws = wb[sheet_name]
+        headers = [cell.value for cell in ws[1]]
 
-        source = str(row_dict.get("Source", "Base")).strip()
-        card_set_mapping = {
-            "Base": "base",
-            "Ix": "ix",
-            "Immortality": "immortality",
-            "Uprising": "uprising",
-            "Bloodlines": "bloodlines"
-        }
-        card_set = card_set_mapping.get(source, source.lower())
+        resources = []
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            if not row[0]:
+                continue
 
-        def has_x(val):
-            return val and str(val).strip().upper() == 'X'
+            row_dict = dict(zip(headers, row))
 
-        card = {
-            "name": card_name,
-            "card_set": card_set,
-            "source": source,
-            "count": int(float(row_dict.get("Count") or 1)),
-            "cost": str(row_dict.get("Persuasion Cost") or "0"),
-            "agent_ability": row_dict.get("Agent Ability") or "",
-            "acquisition_bonus": row_dict.get("Acquisition Bonus") or "",
-            "reveal_persuasion": str(row_dict.get("Reveal Persuasion") or "0"),
-            "reveal_swords": str(row_dict.get("Reveal Swords") or "0"),
-            "reveal_ability": row_dict.get("Reveal Ability") or "",
-            "passive_ability": row_dict.get("Passive Ability") or "",
-            "tech": row_dict.get("Tech") or "",
-            "shipping": row_dict.get("Shipping") or "",
-            "unload": row_dict.get("Unload") or "",
-            "infiltration": row_dict.get("Infiltration") or "",
-            "research": row_dict.get("Research") or "",
-            "grafting": row_dict.get("Grafting") or "",
-            "spies": row_dict.get("Spies") or "",
-            "sandworms": row_dict.get("Sandworms") or "",
-            "contracts": row_dict.get("Contracts") or "",
-            "battle_icons": row_dict.get("Battle Icons") or "",
-            "sardaukar": row_dict.get("Sardaukar") or "",
-            "compatibility": str(row_dict.get("Compatibility", "All") or "All"),
-            "vps_available": str(row_dict.get("VPs Available") or "0"),
-            "green_access": has_x(row_dict.get("Green Access")),
-            "purple_access": has_x(row_dict.get("Purple Access")),
-            "yellow_access": has_x(row_dict.get("Yellow Access")),
-            "emperor_access": has_x(row_dict.get("Emperor Access")),
-            "spacing_guild_access": has_x(row_dict.get("Spacing Guild Access")),
-            "bene_gesserit_access": has_x(row_dict.get("Bene Gesserit Access")),
-            "fremen_access": has_x(row_dict.get("Fremen Access")),
-            "spy_access": has_x(row_dict.get("Spy Access")),
-        }
-        cards.append(card)
+            # Get the name from first column
+            name_col = headers[0]
+            resource_name = str(row_dict.get(name_col, '')).strip()
+            if not resource_name:
+                continue
 
-    print(f"Loaded {len(cards)} cards")
-    return cards
+            # Create resource object
+            resource = {
+                'resource_type': sheet_name.lower(),
+                'name': resource_name
+            }
+
+            # Add all columns as properties
+            for key, value in row_dict.items():
+                if key and value is not None and key != name_col:
+                    col_key = key.lower().replace(' ', '_').replace('-', '_')
+                    resource[col_key] = str(value) if not isinstance(value, (int, float)) else value
+
+            # Add source/set mapping for color coding
+            source = resource.get('source', 'Base')
+            card_set_mapping = {
+                "Base": "base",
+                "Rise of Ix": "ix",
+                "Ix": "ix",
+                "Immortality": "immortality",
+                "Uprising": "uprising",
+                "Bloodlines": "bloodlines",
+                "Promo": "promo"
+            }
+            resource['card_set'] = card_set_mapping.get(source, str(source).lower() if source else 'base')
+
+            resources.append(resource)
+
+        all_resources[sheet_name.lower()] = resources
+        print(f"Loaded {len(resources)} items from {sheet_name}")
+
+    return all_resources
 
 
 @app.route('/')
 def index():
     """Serve the main page."""
-    return render_template('index.html')
+    return render_template('index_multi.html')
 
 
-@app.route('/api/cards')
-def get_cards():
-    """Return all cards as JSON."""
-    return jsonify(ALL_CARDS)
+@app.route('/api/resources')
+def get_resources():
+    """Return all resources grouped by type."""
+    return jsonify(ALL_RESOURCES)
 
 
-@app.route('/api/deck/save', methods=['POST'])
-def save_deck():
-    """Save blend to markdown file in blends folder."""
-    data = request.json
-    deck_name = data.get('name', 'Untitled Blend')
-    cards = data.get('cards', [])
+@app.route('/api/resources/<resource_type>')
+def get_resources_by_type(resource_type):
+    """Return resources of a specific type."""
+    return jsonify(ALL_RESOURCES.get(resource_type.lower(), []))
 
-    # Create blends folder if it doesn't exist
+
+@app.route('/api/blends')
+def list_blends():
+    """List all available blend files with their actual filenames."""
     blends_dir = Path(__file__).parent / 'blends'
     blends_dir.mkdir(exist_ok=True)
 
-    # Categorize cards by type
-    imperium_cards = []
-    intrigue_cards = []
+    blend_files = []
+    for filepath in sorted(blends_dir.glob('*.md')):
+        blend_files.append({
+            'filename': filepath.name  # Keep actual filename as-is
+        })
 
-    for card in cards:
-        # For now, assume all are Imperium cards (can be extended later)
-        imperium_cards.append(card)
+    return jsonify(blend_files)
 
-    # Build markdown with sections
-    md = f"# {deck_name}\n\n"
-    md += f"**Total Cards:** {len(cards)}\n\n"
 
-    # Imperium Cards section
-    if imperium_cards:
-        md += "## Imperium Cards\n\n"
+@app.route('/api/blend/load/<filename>')
+def load_blend(filename):
+    """Load a blend file and parse all resource types from simplified format."""
+    blends_dir = Path(__file__).parent / 'blends'
+    filepath = blends_dir / filename
 
-        by_set = {}
-        for card in imperium_cards:
-            card_set = card.get('source', card.get('card_set', 'Unknown'))
-            if card_set not in by_set:
-                by_set[card_set] = []
-            by_set[card_set].append(card)
+    if not filepath.exists():
+        return jsonify({"success": False, "error": "Blend file not found"}), 404
 
-        for card_set in sorted(by_set.keys()):
-            set_cards = by_set[card_set]
-            md += f"### {card_set}\n\n"
-            for card in set_cards:
-                md += f"- **{card['name']}** (Cost: {card.get('cost', '?')})\n"
-            md += "\n"
+    # Parse the markdown file
+    resources_by_type = {}
+    current_section = None
 
-    # Intrigue Cards section (placeholder for future use)
-    if intrigue_cards:
-        md += "## Intrigue Cards\n\n"
-        for card in intrigue_cards:
-            md += f"- **{card['name']}**\n"
+    with open(filepath, 'r', encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+
+            # Check for main sections (## Resource Type)
+            if line.startswith('## '):
+                current_section = line[3:].strip()
+                if current_section not in resources_by_type:
+                    resources_by_type[current_section] = []
+
+            # Check for resource lines in format "- count× name" or legacy "count name"
+            elif current_section and line and not line.startswith('**') and not line.startswith('*Generated'):
+                # Remove leading "- " if present
+                clean_line = line.lstrip('- ').strip()
+
+                if not clean_line or clean_line.startswith('#'):
+                    continue
+
+                # Parse "count× name" or "count name" format
+                # Try with × first
+                if '×' in clean_line:
+                    parts = clean_line.split('×', 1)
+                    if len(parts) == 2 and parts[0].strip().isdigit():
+                        count = int(parts[0].strip())
+                        name = parts[1].strip()
+                        # Add this resource 'count' times
+                        for _ in range(count):
+                            resources_by_type[current_section].append(name)
+                else:
+                    # Fallback to space separator for backward compatibility
+                    parts = clean_line.split(' ', 1)
+                    if len(parts) == 2 and parts[0].isdigit():
+                        count = int(parts[0])
+                        name = parts[1].strip()
+                        for _ in range(count):
+                            resources_by_type[current_section].append(name)
+
+    return jsonify({"success": True, "resources": resources_by_type})
+
+
+@app.route('/api/blend/save', methods=['POST'])
+def save_blend():
+    """Save blend with all resource types in simplified format."""
+    data = request.json
+    blend_name = data.get('name', 'Untitled Blend')
+    resources_by_type = data.get('resources', {})
+
+    blends_dir = Path(__file__).parent / 'blends'
+    blends_dir.mkdir(exist_ok=True)
+
+    # Build markdown
+    md = f"# {blend_name}\n\n"
+
+    total_count = sum(len(items) for items in resources_by_type.values())
+    md += f"**Total Items:** {total_count}\n\n"
+
+    # Add each resource type section
+    for resource_type, items in resources_by_type.items():
+        if not items:
+            continue
+
+        md += f"## {resource_type}\n\n"
+
+        # Count occurrences of each item
+        item_counts = {}
+        for item in items:
+            # Use 'name' for most resources, 'objective' for contracts
+            item_name = item.get('objective') or item.get('name', 'Unknown')
+            if item_name not in item_counts:
+                item_counts[item_name] = 0
+            item_counts[item_name] += 1
+
+        # Sort by name and output in "- count× name" format
+        for item_name in sorted(item_counts.keys()):
+            count = item_counts[item_name]
+            md += f"- {count}× {item_name}\n"
+
         md += "\n"
 
     md += "---\n*Generated by Dune Imperium Blend Builder*\n"
 
-    filename = f"{deck_name}.md".replace(' ', '_').replace('/', '_')
+    filename = f"{blend_name}.md".replace(' ', '_').replace('/', '_')
+    if not filename.endswith('.md'):
+        filename += '.md'
     filepath = blends_dir / filename
 
     with open(filepath, 'w', encoding='utf-8') as f:
@@ -163,54 +213,15 @@ def save_deck():
     return jsonify({"success": True, "filepath": str(filepath), "filename": filename})
 
 
-@app.route('/api/blends')
-def list_blends():
-    """List all available blend files."""
-    blends_dir = Path(__file__).parent / 'blends'
-    blends_dir.mkdir(exist_ok=True)
-
-    blend_files = []
-    for filepath in blends_dir.glob('*.md'):
-        blend_files.append({
-            'name': filepath.stem.replace('_', ' '),
-            'filename': filepath.name
-        })
-
-    return jsonify(blend_files)
-
-
-@app.route('/api/blend/load/<filename>')
-def load_blend(filename):
-    """Load a blend file and return the card names."""
-    blends_dir = Path(__file__).parent / 'blends'
-    filepath = blends_dir / filename
-
-    if not filepath.exists():
-        return jsonify({"success": False, "error": "Blend file not found"}), 404
-
-    # Parse the markdown file to extract card names
-    card_names = []
-    with open(filepath, 'r', encoding='utf-8') as f:
-        for line in f:
-            # Look for lines with card format: - **Card Name** (Cost: X)
-            if line.strip().startswith('- **'):
-                # Extract card name between ** **
-                start = line.find('**') + 2
-                end = line.find('**', start)
-                if end > start:
-                    card_name = line[start:end]
-                    card_names.append(card_name)
-
-    return jsonify({"success": True, "card_names": card_names})
-
-
 def open_browser():
     """Open browser after short delay."""
     webbrowser.open('http://localhost:5000')
 
 
 if __name__ == '__main__':
-    ALL_CARDS = load_cards_from_excel()
+    print("Loading all resources from Excel...")
+    ALL_RESOURCES = load_all_resources_from_excel()
+    print(f"\nTotal resource types loaded: {len(ALL_RESOURCES)}")
     threading.Timer(1.5, open_browser).start()
     app.run(debug=False, port=5000)
 
