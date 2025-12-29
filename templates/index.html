@@ -447,7 +447,7 @@
                         <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
                             <table class="table table-sm table-hover">
                                 <thead class="sticky-top bg-white">
-                                    <tr><th>Name</th><th>Set</th><th>Count</th><th>Cost</th></tr>
+                                    <tr><th>Name</th><th>Set</th><th>Selected</th><th>Cost</th></tr>
                                 </thead>
                                 <tbody id="imperium-selected"></tbody>
                             </table>
@@ -526,7 +526,7 @@
                         <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
                             <table class="table table-sm table-hover">
                                 <thead class="sticky-top bg-white">
-                                    <tr><th>Name</th><th>Set</th><th>Count</th></tr>
+                                    <tr><th>Name</th><th>Set</th><th>Selected</th></tr>
                                 </thead>
                                 <tbody id="intrigue-selected"></tbody>
                             </table>
@@ -631,7 +631,7 @@
                         <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
                             <table class="table table-sm table-hover">
                                 <thead class="sticky-top bg-white">
-                                    <tr><th>Name</th><th>Set</th><th>Count</th><th>Cost</th></tr>
+                                    <tr><th>Name</th><th>Set</th><th>Selected</th><th>Cost</th></tr>
                                 </thead>
                                 <tbody id="tleilax-selected"></tbody>
                             </table>
@@ -714,7 +714,7 @@
                         <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
                             <table class="table table-sm table-hover">
                                 <thead class="sticky-top bg-white">
-                                    <tr><th>Name</th><th>Set</th><th>Count</th><th>Cost</th></tr>
+                                    <tr><th>Name</th><th>Set</th><th>Selected</th><th>Cost</th></tr>
                                 </thead>
                                 <tbody id="reserve-selected"></tbody>
                             </table>
@@ -826,7 +826,7 @@
                         <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
                             <table class="table table-sm table-hover">
                                 <thead class="sticky-top bg-white">
-                                    <tr><th>Objective</th><th>Set</th></tr>
+                                    <tr><th>Objective</th><th>Set</th><th>Reward</th><th>Selected</th></tr>
                                 </thead>
                                 <tbody id="contracts-selected"></tbody>
                             </table>
@@ -915,7 +915,7 @@
                         <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
                             <table class="table table-sm table-hover">
                                 <thead class="sticky-top bg-white">
-                                    <tr><th>Name</th></tr>
+                                    <tr><th>Name</th><th>Selected</th></tr>
                                 </thead>
                                 <tbody id="sardaukar-selected"></tbody>
                             </table>
@@ -982,7 +982,7 @@
                         <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
                             <table class="table table-sm table-hover">
                                 <thead class="sticky-top bg-white">
-                                    <tr><th>Name</th><th>Set</th></tr>
+                                    <tr><th>Name</th><th>Set</th><th>Selected</th></tr>
                                 </thead>
                                 <tbody id="starter-selected"></tbody>
                             </table>
@@ -1005,6 +1005,7 @@
                                         <th style="width: 100px;">Compatibility</th>
                                         <th style="width: 80px;">Conflict Level</th>
                                         <th style="width: 80px;">VPs Available</th>
+                                        <th style="width: 200px;">First Place</th>
                                     </tr>
                                 </thead>
                                 <tbody id="conflict-tbody"></tbody>
@@ -1018,7 +1019,7 @@
                         <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
                             <table class="table table-sm table-hover">
                                 <thead class="sticky-top bg-white">
-                                    <tr><th>Name</th><th>Set</th></tr>
+                                    <tr><th>Name</th><th>Set</th><th>Level</th><th>First Place</th></tr>
                                 </thead>
                                 <tbody id="conflict-selected"></tbody>
                             </table>
@@ -1242,7 +1243,7 @@
                     <td class="access-x access-fremen">${hasX(card.fremen_access) ? 'X' : ''}</td>
                     <td class="access-x access-spy">${hasX(card.spy_access) ? 'X' : ''}</td>
                     <td class="compact">${card.compatibility || 'All'}</td>
-                    <td class="compact">${card.vps_available && card.vps_available !== '0' && card.vps_available !== '0.0' ? parseFloat(card.vps_available) : ''}</td>
+                    <td class="compact">${card.available_vps && card.available_vps !== '0' && card.available_vps !== '0.0' ? parseFloat(card.available_vps) : ''}</td>
                 `;
 
                 tbody.appendChild(tr);
@@ -1278,7 +1279,7 @@
                     <td title="${card.combat_effect || ''}">${truncate(card.combat_effect || '', 50)}</td>
                     <td title="${card.endgame_effect || ''}">${truncate(card.endgame_effect || '', 50)}</td>
                     <td class="compact">${card.twisted || ''}</td>
-                    <td class="compact">${card.vps_available || ''}</td>
+                    <td class="compact">${card.available_vps || ''}</td>
                 `;
 
                 tbody.appendChild(tr);
@@ -1324,7 +1325,7 @@
                     <td class="access-x access-bg">${hasX(card.bene_gesserit_access) ? 'X' : ''}</td>
                     <td class="access-x access-fremen">${hasX(card.fremen_access) ? 'X' : ''}</td>
                     <td class="access-x access-spy">${hasX(card.spy_access) ? 'X' : ''}</td>
-                    <td class="compact">${card.vps_available || ''}</td>
+                    <td class="compact">${card.available_vps || ''}</td>
                 `;
 
                 tbody.appendChild(tr);
@@ -1390,7 +1391,7 @@
                     <td class="compact">${card.contracts || ''}</td>
                     <td class="compact">${card.battle_icons || ''}</td>
                     <td class="compact">${card.sardaukar || ''}</td>
-                    <td class="compact">${card.vps_available || ''}</td>
+                    <td class="compact">${card.available_vps || ''}</td>
                     <td title="${card.effect || ''}">${truncate(card.effect || '', 80)}</td>
                 `;
 
@@ -1523,7 +1524,8 @@
                     <td class="expansion-${card.card_set}">${card.source || ''}</td>
                     <td class="compact">${card.compatibility || ''}</td>
                     <td class="compact">${card.conflict_level || ''}</td>
-                    <td class="compact">${card.vps_available || ''}</td>
+                    <td class="compact">${card.available_vps || ''}</td>
+                    <td title="${card.first_place || ''}">${card.first_place || ''}</td>
                 `;
 
                 tbody.appendChild(tr);
@@ -1702,13 +1704,64 @@
         }
 
         function addResource(type, resource) {
-            selectedResources[type].push(resource);
+            // Determine if this type should allow multiple selection
+            // Tech, leader, and conflict are unique; contracts allow counts but match by objective+reward
+            const uniqueTypes = ['tech', 'leader', 'conflict'];
+            const isUnique = uniqueTypes.includes(type);
+
+            // Check if resource already exists in selected list
+            const config = resourceConfigs[type];
+            const nameProp = config?.nameProp || 'name';
+            const resourceName = resource[nameProp] || resource.name;
+
+            const existing = selectedResources[type].find(r => {
+                const rName = r[nameProp] || r.name;
+                if (type === 'contracts') {
+                    // For contracts, match by objective AND reward
+                    return rName === resourceName && r.reward === resource.reward;
+                } else {
+                    return rName === resourceName;
+                }
+            });
+
+            if (existing) {
+                if (isUnique) {
+                    // For unique types, don't allow duplicates
+                    alert(`"${resourceName}" is already selected.`);
+                    return;
+                } else {
+                    // Increment count for non-unique types (including contracts)
+                    existing.selectedCount = (existing.selectedCount || 1) + 1;
+
+                    // Check max count if resource has a count field
+                    const maxCount = parseInt(resource.count || resource.count_per_player);
+                    if (maxCount && existing.selectedCount > maxCount) {
+                        alert(`Maximum ${maxCount} of "${resourceName}" available.`);
+                        existing.selectedCount = maxCount;
+                    }
+                }
+            } else {
+                // Add new resource with initial count
+                const newResource = {...resource, selectedCount: 1};
+                selectedResources[type].push(newResource);
+            }
+
             updateSelectedDisplay(type);
             updateBadge(type);
         }
 
         function removeResource(type, index) {
-            selectedResources[type].splice(index, 1);
+            const uniqueTypes = ['tech', 'leader', 'conflict'];
+            const isUnique = uniqueTypes.includes(type);
+
+            const resource = selectedResources[type][index];
+            if (!isUnique && resource && resource.selectedCount > 1) {
+                // Decrement count for non-unique types (including contracts)
+                resource.selectedCount--;
+            } else {
+                // Remove resource completely (unique types)
+                selectedResources[type].splice(index, 1);
+            }
             updateSelectedDisplay(type);
             updateBadge(type);
         }
@@ -1726,32 +1779,109 @@
                 tr.ondblclick = () => removeResource(type, idx);
 
                 if (type === 'imperium') {
-                    // Show more details for Imperium cards
+                    // Show more details for Imperium cards including selected count
                     tr.innerHTML = `
                         <td class="expansion-${resource.card_set}">${resource.name}</td>
                         <td class="expansion-${resource.card_set}">${resource.source || resource.card_set || ''}</td>
-                        <td>${resource.count || '1'}</td>
+                        <td>${resource.selectedCount || 1}</td>
                         <td>${parseFloat(resource.cost || resource.persuasion_cost || 0) || 0}</td>
                     `;
                 } else {
-                    const td = document.createElement('td');
+                    // For other types, show name and count if available
+                    const nameTd = document.createElement('td');
                     if (config.hasSet && resource.card_set) {
-                        td.className = `expansion-${resource.card_set}`;
+                        nameTd.className = `expansion-${resource.card_set}`;
                     }
-                    td.textContent = resource[config.nameProp] || resource.name;
-                    tr.appendChild(td);
+                    nameTd.textContent = resource[config.nameProp] || resource.name;
+                    tr.appendChild(nameTd);
+
+                    // Add Set column if type has hasSet
+                    if (config.hasSet) {
+                        const setTd = document.createElement('td');
+                        if (resource.card_set) {
+                            setTd.className = `expansion-${resource.card_set}`;
+                        }
+                        setTd.textContent = resource.source || resource.card_set || '';
+                        tr.appendChild(setTd);
+                    }
+
+                    // Add Reward column for contracts (before Selected)
+                    if (type === 'contracts') {
+                        const rewardTd = document.createElement('td');
+                        rewardTd.textContent = resource.reward || '';
+                        rewardTd.style.maxWidth = '200px';
+                        rewardTd.style.overflow = 'hidden';
+                        rewardTd.style.textOverflow = 'ellipsis';
+                        rewardTd.style.whiteSpace = 'nowrap';
+                        rewardTd.title = resource.reward || '';
+                        tr.appendChild(rewardTd);
+                    }
+
+                    // Determine if this type should allow multiple selection
+                    // Tech, leader, and conflict are unique; contracts can have counts
+                    const uniqueTypes = ['tech', 'leader', 'conflict'];
+                    const isUnique = uniqueTypes.includes(type);
+
+                    // Add selected count column (only for non-unique types, including contracts)
+                    if (!isUnique) {
+                        const countTd = document.createElement('td');
+                        countTd.textContent = resource.selectedCount || 1;
+                        tr.appendChild(countTd);
+                    }
+
+                    // Add other columns based on type
+                    if (type === 'tleilax') {
+                        const costTd = document.createElement('td');
+                        costTd.textContent = resource.specimen_cost || '';
+                        tr.appendChild(costTd);
+                    } else if (type === 'reserve') {
+                        const costTd = document.createElement('td');
+                        costTd.textContent = resource.persuasion_cost || '';
+                        tr.appendChild(costTd);
+                    } else if (type === 'tech') {
+                        const costTd = document.createElement('td');
+                        costTd.textContent = resource.spice_cost || '';
+                        tr.appendChild(costTd);
+                    } else if (type === 'leader') {
+                        const houseTd = document.createElement('td');
+                        houseTd.textContent = resource.house || '';
+                        tr.appendChild(houseTd);
+                    } else if (type === 'conflict') {
+                        const firstPlaceTd = document.createElement('td');
+                        firstPlaceTd.textContent = resource.first_place || '';
+                        firstPlaceTd.style.maxWidth = '250px';
+                        firstPlaceTd.style.overflow = 'hidden';
+                        firstPlaceTd.style.textOverflow = 'ellipsis';
+                        firstPlaceTd.style.whiteSpace = 'nowrap';
+                        firstPlaceTd.title = resource.first_place || '';
+                        tr.appendChild(firstPlaceTd);
+                    }
                 }
                 tbody.appendChild(tr);
             });
 
+            // Update total count badge (sum of all selected counts)
             const countSpan = document.getElementById(`${type}-count`);
             if (countSpan) {
-                countSpan.textContent = selectedResources[type].length;
+                const totalCount = selectedResources[type].reduce((sum, r) => sum + (r.selectedCount || 1), 0);
+                countSpan.textContent = totalCount;
             }
 
-            // Update stats for Imperium
+            // Update stats for various types
             if (type === 'imperium') {
                 updateImperiumStats();
+            } else if (type === 'intrigue') {
+                updateIntrigueStats();
+            } else if (type === 'tleilax') {
+                updateTleilaxStats();
+            } else if (type === 'reserve') {
+                updateReserveStats();
+            } else if (type === 'tech') {
+                updateTechStats();
+            } else if (type === 'contracts') {
+                updateContractsStats();
+            } else if (type === 'leader') {
+                updateLeaderStats();
             }
         }
 
@@ -1765,18 +1895,26 @@
                 return;
             }
 
-            const totalCost = cards.reduce((sum, c) => sum + (parseFloat(c.cost || c.persuasion_cost || 0) || 0), 0);
-            const avgCost = (totalCost / cards.length).toFixed(1);
-
-            // Count by set
+            // Calculate totals considering selectedCount
+            let totalCards = 0;
+            let totalCost = 0;
             const bySets = {};
+
             cards.forEach(c => {
+                const count = c.selectedCount || 1;
+                const cost = parseFloat(c.cost || c.persuasion_cost || 0) || 0;
+
+                totalCards += count;
+                totalCost += cost * count;
+
                 const set = c.source || c.card_set || 'Unknown';
-                bySets[set] = (bySets[set] || 0) + 1;
+                bySets[set] = (bySets[set] || 0) + count;
             });
 
+            const avgCost = (totalCost / totalCards).toFixed(1);
+
             let html = `
-                <p><strong>Total Cards:</strong> ${cards.length}</p>
+                <p><strong>Total Cards:</strong> ${totalCards}</p>
                 <p><strong>Total Cost:</strong> ${totalCost}</p>
                 <p><strong>Average Cost:</strong> ${avgCost}</p>
                 <p><strong>By Set:</strong></p>
@@ -1791,10 +1929,135 @@
             statsDiv.innerHTML = html;
         }
 
+        function updateIntrigueStats() {
+            const statsDiv = document.getElementById('intrigue-stats');
+            if (!statsDiv) return;
+            const cards = selectedResources.intrigue;
+            if (cards.length === 0) {
+                statsDiv.innerHTML = '<p class="text-muted">No cards selected</p>';
+                return;
+            }
+            const totalCards = cards.reduce((sum, c) => sum + (c.selectedCount || 1), 0);
+            const bySets = {};
+            cards.forEach(c => {
+                const count = c.selectedCount || 1;
+                const set = c.source || c.card_set || 'Unknown';
+                bySets[set] = (bySets[set] || 0) + count;
+            });
+            let html = `<p><strong>Total Cards:</strong> ${totalCards}</p><p><strong>By Set:</strong></p><ul class="list-unstyled mb-0">`;
+            for (const [set, count] of Object.entries(bySets).sort((a, b) => b[1] - a[1])) {
+                html += `<li>• ${set}: ${count}</li>`;
+            }
+            html += '</ul>';
+            statsDiv.innerHTML = html;
+        }
+
+        function updateTleilaxStats() {
+            const statsDiv = document.getElementById('tleilax-stats');
+            if (!statsDiv) return;
+            const cards = selectedResources.tleilax;
+            if (cards.length === 0) {
+                statsDiv.innerHTML = '<p class="text-muted">No cards selected</p>';
+                return;
+            }
+            let totalCards = 0;
+            let totalCost = 0;
+            cards.forEach(c => {
+                const count = c.selectedCount || 1;
+                const cost = parseFloat(c.specimen_cost || 0) || 0;
+                totalCards += count;
+                totalCost += cost * count;
+            });
+            const avgCost = totalCards > 0 ? (totalCost / totalCards).toFixed(1) : 0;
+            statsDiv.innerHTML = `<p><strong>Total Cards:</strong> ${totalCards}</p><p><strong>Total Cost:</strong> ${totalCost}</p><p><strong>Average Cost:</strong> ${avgCost}</p>`;
+        }
+
+        function updateReserveStats() {
+            const statsDiv = document.getElementById('reserve-stats');
+            if (!statsDiv) return;
+            const cards = selectedResources.reserve;
+            if (cards.length === 0) {
+                statsDiv.innerHTML = '<p class="text-muted">No cards selected</p>';
+                return;
+            }
+            let totalCards = 0;
+            let totalCost = 0;
+            cards.forEach(c => {
+                const count = c.selectedCount || 1;
+                const cost = parseFloat(c.persuasion_cost || 0) || 0;
+                totalCards += count;
+                totalCost += cost * count;
+            });
+            const avgCost = totalCards > 0 ? (totalCost / totalCards).toFixed(1) : 0;
+            statsDiv.innerHTML = `<p><strong>Total Cards:</strong> ${totalCards}</p><p><strong>Total Cost:</strong> ${totalCost}</p><p><strong>Average Cost:</strong> ${avgCost}</p>`;
+        }
+
+        function updateTechStats() {
+            const statsDiv = document.getElementById('tech-stats');
+            if (!statsDiv) return;
+            const tiles = selectedResources.tech;
+            if (tiles.length === 0) {
+                statsDiv.innerHTML = '<p class="text-muted">No tech selected</p>';
+                return;
+            }
+            const totalCost = tiles.reduce((sum, t) => sum + (parseFloat(t.spice_cost || 0) || 0), 0);
+            const avgCost = (totalCost / tiles.length).toFixed(1);
+            statsDiv.innerHTML = `<p><strong>Total Tech:</strong> ${tiles.length}</p><p><strong>Total Cost:</strong> ${totalCost}</p><p><strong>Average Cost:</strong> ${avgCost}</p>`;
+        }
+
+        function updateContractsStats() {
+            const statsDiv = document.getElementById('contracts-stats');
+            if (!statsDiv) return;
+            const contracts = selectedResources.contracts;
+            if (contracts.length === 0) {
+                statsDiv.innerHTML = '<p class="text-muted">No contracts selected</p>';
+                return;
+            }
+            const bySets = {};
+            contracts.forEach(c => {
+                const set = c.source || c.card_set || 'Unknown';
+                bySets[set] = (bySets[set] || 0) + 1;
+            });
+            let html = `<p><strong>Total Contracts:</strong> ${contracts.length}</p><p><strong>By Set:</strong></p><ul class="list-unstyled mb-0">`;
+            for (const [set, count] of Object.entries(bySets).sort((a, b) => b[1] - a[1])) {
+                html += `<li>• ${set}: ${count}</li>`;
+            }
+            html += '</ul>';
+            statsDiv.innerHTML = html;
+        }
+
+        function updateLeaderStats() {
+            const statsDiv = document.getElementById('leader-stats');
+            if (!statsDiv) return;
+            const leaders = selectedResources.leader;
+            if (leaders.length === 0) {
+                statsDiv.innerHTML = '<p class="text-muted">No leaders selected</p>';
+                return;
+            }
+            const byHouse = {};
+            leaders.forEach(l => {
+                const house = l.house || 'Unknown';
+                byHouse[house] = (byHouse[house] || 0) + 1;
+            });
+            let html = `<p><strong>Total Leaders:</strong> ${leaders.length}</p><p><strong>By House:</strong></p><ul class="list-unstyled mb-0">`;
+            for (const [house, count] of Object.entries(byHouse).sort((a, b) => b[1] - a[1])) {
+                html += `<li>• ${house}: ${count}</li>`;
+            }
+            html += '</ul>';
+            statsDiv.innerHTML = html;
+        }
+
         function updateBadge(type) {
             const badge = document.getElementById(`${type}-badge`);
             if (badge) {
-                const count = selectedResources[type].length;
+                const uniqueTypes = ['tech', 'leader', 'conflict'];
+                const isUnique = uniqueTypes.includes(type);
+
+                // For unique types, use length; for others (including contracts), sum selectedCount
+                const count = isUnique
+                    ? selectedResources[type].length
+                    : selectedResources[type].reduce((sum, r) => sum + (r.selectedCount || 1), 0);
+
                 badge.textContent = count;
                 badge.className = count > 0 ? 'badge bg-primary' : 'badge bg-secondary';
             }
@@ -1835,7 +2098,15 @@
             for (let type in selectedResources) {
                 if (selectedResources[type].length > 0) {
                     const typeName = type.charAt(0).toUpperCase() + type.slice(1);
-                    resources_by_type[typeName + ' Cards'] = selectedResources[type];
+                    // Expand resources based on selectedCount
+                    const expandedResources = [];
+                    selectedResources[type].forEach(resource => {
+                        const count = resource.selectedCount || 1;
+                        for (let i = 0; i < count; i++) {
+                            expandedResources.push(resource);
+                        }
+                    });
+                    resources_by_type[typeName + ' Cards'] = expandedResources;
                 }
             }
 
@@ -2137,15 +2408,48 @@
                             const type = detectResourceType(sectionName);
 
                             if (type && allResources[type]) {
+                                // Build a map to count occurrences
+                                const resourceMap = new Map();
+
                                 resourceNames.forEach(name => {
+                                    // For conflicts, strip #X suffix to find the base card
+                                    let baseName = name;
+                                    let displayName = name;
+                                    if (type === 'conflict' && name.includes(' #')) {
+                                        baseName = name.substring(0, name.lastIndexOf(' #'));
+                                        displayName = name;
+                                    }
+
                                     const resource = allResources[type].find(r =>
-                                        (r.name && r.name === name) ||
-                                        (r.objective && r.objective === name)
+                                        (r.name && r.name === baseName) ||
+                                        (r.objective && r.objective === baseName)
                                     );
                                     if (resource) {
-                                        selectedResources[type].push(resource);
+                                        if (type === 'conflict') {
+                                            // For conflicts, add each one individually with displayName
+                                            const conflictResource = {...resource, displayName: displayName};
+                                            selectedResources[type].push(conflictResource);
+                                        } else {
+                                            const config = resourceConfigs[type];
+                                            const nameProp = config?.nameProp || 'name';
+                                            const resourceName = resource[nameProp] || resource.name;
+
+                                            if (resourceMap.has(resourceName)) {
+                                                resourceMap.get(resourceName).count++;
+                                            } else {
+                                                resourceMap.set(resourceName, {resource: {...resource}, count: 1});
+                                            }
+                                        }
                                     }
                                 });
+
+                                // Add consolidated resources with selectedCount (skip for conflicts, already added)
+                                if (type !== 'conflict') {
+                                    resourceMap.forEach(({resource, count}) => {
+                                        resource.selectedCount = count;
+                                        selectedResources[type].push(resource);
+                                    });
+                                }
                             }
                         }
 
