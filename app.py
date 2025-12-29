@@ -41,6 +41,8 @@ def load_all_resources_from_excel():
             resource_name = str(row_dict.get(name_col, '')).strip()
             if not resource_name:
                 continue
+            # Normalize card names: replace (Base) with (Imperium)
+            resource_name = resource_name.replace("(Base)", "(Imperium)")
 
             # Create resource object
             resource = {
@@ -55,8 +57,13 @@ def load_all_resources_from_excel():
                     resource[col_key] = str(value) if not isinstance(value, (int, float)) else value
 
             # Add source/set mapping for color coding
-            source = resource.get('source', 'Base')
+            source = resource.get('source', 'Imperium')
+            # Normalize: replace 'Base' with 'Imperium'
+            if source == 'Base':
+                source = 'Imperium'
+                resource['source'] = 'Imperium'
             card_set_mapping = {
+                "Imperium": "base",
                 "Base": "base",
                 "Rise of Ix": "ix",
                 "Ix": "ix",

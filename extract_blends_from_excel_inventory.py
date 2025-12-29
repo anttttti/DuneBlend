@@ -58,6 +58,9 @@ def regenerate_all_blends():
             if not resource_name:
                 continue
 
+            # Normalize card names: replace (Base) with (Imperium)
+            resource_name = resource_name.replace('(Base)', '(Imperium)')
+
             # Add to Merakon's blend if count exists
             if merakon_idx is not None:
                 merakon_count = row_dict.get(merakon_col, 0)
@@ -124,7 +127,10 @@ def create_base_blends(wb, resource_sheets):
             if not resource_name:
                 continue
 
-            source = str(row_dict.get("Source", "Base")).strip()
+            # Normalize card names: replace (Base) with (Imperium)
+            resource_name = resource_name.replace('(Base)', '(Imperium)')
+
+            source = str(row_dict.get("Source", "Imperium")).strip()
             count = row_dict.get("Count", 1)
 
             try:
@@ -132,7 +138,7 @@ def create_base_blends(wb, resource_sheets):
             except (ValueError, TypeError):
                 item_count = 1
 
-            if source == "Base":
+            if source == "Imperium" or source == "Base":
                 for _ in range(item_count):
                     base_imperium_items.append(resource_name)
             elif source == "Uprising":
