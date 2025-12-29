@@ -61,6 +61,13 @@ def regenerate_all_blends():
             # Normalize card names: replace (Base) with (Imperium)
             resource_name = resource_name.replace('(Base)', '(Imperium)')
 
+            # Get source and append it in parentheses
+            source = str(row_dict.get("Source", "Imperium")).strip()
+            # Normalize Base to Imperium
+            if source == "Base":
+                source = "Imperium"
+            resource_name_with_source = f"{resource_name} ({source})"
+
             # Add to Merakon's blend if count exists
             if merakon_idx is not None:
                 merakon_count = row_dict.get(merakon_col, 0)
@@ -69,7 +76,7 @@ def regenerate_all_blends():
                         count = int(float(merakon_count))
                         if count > 0:
                             for _ in range(count):
-                                merakon_resources[display_name].append(resource_name)
+                                merakon_resources[display_name].append(resource_name_with_source)
                     except (ValueError, TypeError):
                         pass
 
@@ -81,7 +88,7 @@ def regenerate_all_blends():
                         count = int(float(tragic_count))
                         if count > 0:
                             for _ in range(count):
-                                tragic_resources[display_name].append(resource_name)
+                                tragic_resources[display_name].append(resource_name_with_source)
                     except (ValueError, TypeError):
                         pass
 
@@ -131,6 +138,13 @@ def create_base_blends(wb, resource_sheets):
             resource_name = resource_name.replace('(Base)', '(Imperium)')
 
             source = str(row_dict.get("Source", "Imperium")).strip()
+            # Normalize Base to Imperium
+            if source == "Base":
+                source = "Imperium"
+
+            # Append source in parentheses
+            resource_name_with_source = f"{resource_name} ({source})"
+
             # Handle different count column names (Starter uses "Count per Player")
             count = row_dict.get("Count") or row_dict.get("Count per Player") or 1
 
@@ -139,12 +153,12 @@ def create_base_blends(wb, resource_sheets):
             except (ValueError, TypeError):
                 item_count = 1
 
-            if source == "Imperium" or source == "Base":
+            if source == "Imperium":
                 for _ in range(item_count):
-                    base_imperium_items.append(resource_name)
+                    base_imperium_items.append(resource_name_with_source)
             elif source == "Uprising":
                 for _ in range(item_count):
-                    base_uprising_items.append(resource_name)
+                    base_uprising_items.append(resource_name_with_source)
 
         if base_imperium_items:
             base_imperium_resources[display_name] = base_imperium_items

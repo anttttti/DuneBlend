@@ -229,7 +229,7 @@ def save_blend():
 
         md += f"## {resource_type}\n\n"
 
-        # Count occurrences of each item
+        # Count occurrences of each item with set/source
         item_counts = {}
         for item in items:
             # Use displayName for conflicts (includes #X suffix), objective for contracts, otherwise name
@@ -237,17 +237,24 @@ def save_blend():
                 item_name = item.get('displayName')
             else:
                 item_name = item.get('objective') or item.get('name', 'Unknown')
-            if item_name not in item_counts:
-                item_counts[item_name] = 0
-            item_counts[item_name] += 1
 
-        # Sort by name and output in "- count× name" format
-        for item_name in sorted(item_counts.keys()):
-            count = item_counts[item_name]
+            # Get the set/source
+            item_source = item.get('source', 'Unknown')
+
+            # Create unique key with name and source
+            item_key = f"{item_name} ({item_source})"
+
+            if item_key not in item_counts:
+                item_counts[item_key] = 0
+            item_counts[item_key] += 1
+
+        # Sort by name and output in "- count× name (source)" format
+        for item_key in sorted(item_counts.keys()):
+            count = item_counts[item_key]
             if count == 1:
-                md += f"- {item_name}\n"
+                md += f"- {item_key}\n"
             else:
-                md += f"- {count}× {item_name}\n"
+                md += f"- {count}× {item_key}\n"
 
         md += "\n"
 

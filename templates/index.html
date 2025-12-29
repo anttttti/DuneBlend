@@ -1024,6 +1024,13 @@
                                 <tbody id="conflict-selected"></tbody>
                             </table>
                         </div>
+                        <small class="text-muted">Double-click to remove conflict from blend</small>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Statistics</h5>
+                        <div id="conflict-stats">
+                            <p class="text-muted">No conflicts selected</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1882,6 +1889,8 @@
                 updateContractsStats();
             } else if (type === 'leader') {
                 updateLeaderStats();
+            } else if (type === 'conflict') {
+                updateConflictStats();
             }
         }
 
@@ -2042,6 +2051,34 @@
             let html = `<p><strong>Total Leaders:</strong> ${leaders.length}</p><p><strong>By House:</strong></p><ul class="list-unstyled mb-0">`;
             for (const [house, count] of Object.entries(byHouse).sort((a, b) => b[1] - a[1])) {
                 html += `<li>• ${house}: ${count}</li>`;
+            }
+            html += '</ul>';
+            statsDiv.innerHTML = html;
+        }
+
+        function updateConflictStats() {
+            const statsDiv = document.getElementById('conflict-stats');
+            if (!statsDiv) return;
+            const conflicts = selectedResources.conflict;
+            if (conflicts.length === 0) {
+                statsDiv.innerHTML = '<p class="text-muted">No conflicts selected</p>';
+                return;
+            }
+            const byLevel = {};
+            conflicts.forEach(c => {
+                const level = c.conflict_level || 'Unknown';
+                byLevel[level] = (byLevel[level] || 0) + 1;
+            });
+            let html = `<p><strong>Total Conflicts:</strong> ${conflicts.length}</p><p><strong>By Level:</strong></p><ul class="list-unstyled mb-0">`;
+            // Sort by level (numerically if possible)
+            const sortedLevels = Object.keys(byLevel).sort((a, b) => {
+                const numA = parseInt(a);
+                const numB = parseInt(b);
+                if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+                return a.localeCompare(b);
+            });
+            for (const level of sortedLevels) {
+                html += `<li>• Level ${level}: ${byLevel[level]}</li>`;
             }
             html += '</ul>';
             statsDiv.innerHTML = html;
@@ -2412,44 +2449,49 @@
                                 const resourceMap = new Map();
 
                                 resourceNames.forEach(name => {
-                                    // For conflicts, strip #X suffix to find the base card
+                                    // Parse name and source from "Name (Source)" format
                                     let baseName = name;
-                                    let displayName = name;
-                                    if (type === 'conflict' && name.includes(' #')) {
-                                        baseName = name.substring(0, name.lastIndexOf(' #'));
-                                        displayName = name;
+                                    let sourceFilter = null;
+
+                                    // Extract (Source) suffix if present
+                                    const sourceMatch = name.match(/^(.+?)\s*\(([^)]+)\)$/);
+                                    if (sourceMatch) {
+                                        baseName = sourceMatch[1].trim();
+                                        sourceFilter = sourceMatch[2].trim();
                                     }
 
-                                    const resource = allResources[type].find(r =>
-                                        (r.name && r.name === baseName) ||
-                                        (r.objective && r.objective === baseName)
-                                    );
-                                    if (resource) {
-                                        if (type === 'conflict') {
-                                            // For conflicts, add each one individually with displayName
-                                            const conflictResource = {...resource, displayName: displayName};
-                                            selectedResources[type].push(conflictResource);
-                                        } else {
-                                            const config = resourceConfigs[type];
-                                            const nameProp = config?.nameProp || 'name';
-                                            const resourceName = resource[nameProp] || resource.name;
+                                    // Find matching resource by name AND source
+                                    const resource = allResources[type].find(r => {
+                                        const nameMatch = (r.name && r.name === baseName) ||
+                                                        (r.objective && r.objective === baseName);
+                                        const sourceMatch = !sourceFilter ||
+                                                          (r.source && r.source === sourceFilter) ||
+                                                          (r.card_set && r.card_set === sourceFilter);
+                                        return nameMatch && sourceMatch;
+                                    });
 
-                                            if (resourceMap.has(resourceName)) {
-                                                resourceMap.get(resourceName).count++;
-                                            } else {
-                                                resourceMap.set(resourceName, {resource: {...resource}, count: 1});
-                                            }
+                                    if (resource) {
+                                        const config = resourceConfigs[type];
+                                        const nameProp = config?.nameProp || 'name';
+                                        const resourceName = resource[nameProp] || resource.name;
+                                        const resourceSource = resource.source || resource.card_set || '';
+
+                                        // Create unique key combining name and source
+                                        const uniqueKey = `${resourceName}|${resourceSource}`;
+
+                                        if (resourceMap.has(uniqueKey)) {
+                                            resourceMap.get(uniqueKey).count++;
+                                        } else {
+                                            resourceMap.set(uniqueKey, {resource: {...resource}, count: 1});
                                         }
                                     }
                                 });
 
-                                // Add consolidated resources with selectedCount (skip for conflicts, already added)
-                                if (type !== 'conflict') {
-                                    resourceMap.forEach(({resource, count}) => {
-                                        resource.selectedCount = count;
-                                        selectedResources[type].push(resource);
-                                    });
-                                }
+                                // Add consolidated resources with selectedCount
+                                resourceMap.forEach(({resource, count}) => {
+                                    resource.selectedCount = count;
+                                    selectedResources[type].push(resource);
+                                });
                             }
                         }
 
