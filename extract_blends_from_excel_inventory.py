@@ -131,7 +131,8 @@ def create_base_blends(wb, resource_sheets):
             resource_name = resource_name.replace('(Base)', '(Imperium)')
 
             source = str(row_dict.get("Source", "Imperium")).strip()
-            count = row_dict.get("Count", 1)
+            # Handle different count column names (Starter uses "Count per Player")
+            count = row_dict.get("Count") or row_dict.get("Count per Player") or 1
 
             try:
                 item_count = int(float(count)) if count else 1

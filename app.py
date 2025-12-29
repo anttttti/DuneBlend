@@ -232,8 +232,11 @@ def save_blend():
         # Count occurrences of each item
         item_counts = {}
         for item in items:
-            # Use 'name' for most resources, 'objective' for contracts
-            item_name = item.get('objective') or item.get('name', 'Unknown')
+            # Use displayName for conflicts (includes #X suffix), objective for contracts, otherwise name
+            if 'displayName' in item:
+                item_name = item.get('displayName')
+            else:
+                item_name = item.get('objective') or item.get('name', 'Unknown')
             if item_name not in item_counts:
                 item_counts[item_name] = 0
             item_counts[item_name] += 1
