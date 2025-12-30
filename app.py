@@ -232,17 +232,21 @@ def save_blend():
         # Count occurrences of each item with set/source
         item_counts = {}
         for item in items:
-            # Use displayName for conflicts (includes #X suffix), objective for contracts, otherwise name
-            if 'displayName' in item:
-                item_name = item.get('displayName')
-            else:
-                item_name = item.get('objective') or item.get('name', 'Unknown')
+            # Extract the item name
+            # Priority: displayName (for conflicts) > objective (for contracts) > name
+            item_name = item.get('displayName') or item.get('objective') or item.get('name', 'Unknown')
 
             # Get the set/source
             item_source = item.get('source', 'Unknown')
 
-            # Create unique key with name and source
-            item_key = f"{item_name} ({item_source})"
+            # Check if the name already contains the source in parentheses
+            # to avoid duplicates like "Card (Source) (Source)"
+            if f"({item_source})" in item_name:
+                # Name already has source, use as-is
+                item_key = item_name
+            else:
+                # Add source to name
+                item_key = f"{item_name} ({item_source})"
 
             if item_key not in item_counts:
                 item_counts[item_key] = 0
