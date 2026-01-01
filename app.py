@@ -76,7 +76,8 @@ def load_all_resources_from_excel():
             # Create resource object
             resource = {
                 'resource_type': sheet_name.lower(),
-                'name': resource_name
+                'name': resource_name,
+                'selected': 0  # Add selected count column
             }
 
             # Add all columns as properties

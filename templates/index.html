@@ -343,6 +343,9 @@
                                 </colgroup>
                                 <thead class="sticky-top bg-white">
                                     <tr>
+                                        <th rowspan="2" class="resizable sortable" style="width: 60px; min-width: 60px; cursor: pointer;" onclick="sortResourceTable('imperium', 'selected')">
+                                            Selected<div class="resize-handle"></div>
+                                        </th>
                                         <th rowspan="2" class="resizable sortable" style="width: 150px; cursor: pointer;" onclick="sortResourceTable('imperium', 'name')">
                                             Name<div class="resize-handle"></div>
                                         </th>
@@ -465,23 +468,11 @@
                                 <tbody id="imperium-tbody"></tbody>
                             </table>
                         </div>
-                        <small class="text-muted">Double-click to add card to blend. Drag column borders to resize.</small>
+                        <small class="text-muted">Use +/- buttons to add/remove cards from blend.</small>
                     </div>
                 </div>
                 <div class="row mt-3">
-                    <div class="col-md-8">
-                        <h5>Selected Imperium Cards: <span id="imperium-count">0</span></h5>
-                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
-                            <table class="table table-sm table-hover">
-                                <thead class="sticky-top bg-white">
-                                    <tr><th>Name</th><th>Set</th><th>Selected</th><th>Cost</th></tr>
-                                </thead>
-                                <tbody id="imperium-selected"></tbody>
-                            </table>
-                        </div>
-                        <small class="text-muted">Double-click to remove card from blend</small>
-                    </div>
-                    <div class="col-md-4">
+                    <div class="col-12">
                         <h5>Statistics</h5>
                         <div id="imperium-stats">
                             <p class="text-muted">No cards selected</p>
@@ -1248,6 +1239,81 @@
             return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #0066cc; text-decoration: none;">${cardName}</a>`;
         }
 
+        // Increment/Decrement selected count functions
+        function incrementSelected(type, name, source, maxCount) {
+            const resource = allResources[type].find(r => r.name === name && (r.source === source || r.card_set === source));
+            if (!resource) return;
+
+            const currentCount = resource.selected || 0;
+            if (currentCount < maxCount) {
+                resource.selected = currentCount + 1;
+                updateSelectedCountDisplay(type, name, source);
+                updateStatsForType(type);
+                updateBadge(type);
+            } else {
+                alert(`Maximum ${maxCount} of "${name}" available.`);
+            }
+        }
+
+        function decrementSelected(type, name, source) {
+            const resource = allResources[type].find(r => r.name === name && (r.source === source || r.card_set === source));
+            if (!resource) return;
+
+            const currentCount = resource.selected || 0;
+            if (currentCount > 0) {
+                resource.selected = currentCount - 1;
+                updateSelectedCountDisplay(type, name, source);
+                updateStatsForType(type);
+                updateBadge(type);
+            }
+        }
+
+        function updateSelectedCountDisplay(type, name, source) {
+            const resource = allResources[type].find(r => r.name === name && (r.source === source || r.card_set === source));
+            if (!resource) return;
+
+            const id = `${type}-selected-${name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${source.replace(/\s+/g, '-')}`;
+            const elem = document.getElementById(id);
+            if (elem) {
+                elem.textContent = resource.selected || 0;
+            }
+        }
+
+        function updateStatsForType(type) {
+            switch(type) {
+                case 'imperium':
+                    updateImperiumStats();
+                    break;
+                case 'intrigue':
+                    updateIntrigueStats();
+                    break;
+                case 'tleilax':
+                    updateTleilaxStats();
+                    break;
+                case 'reserve':
+                    updateReserveStats();
+                    break;
+                case 'tech':
+                    updateTechStats();
+                    break;
+                case 'contracts':
+                    updateContractsStats();
+                    break;
+                case 'leader':
+                    updateLeaderStats();
+                    break;
+                case 'sardaukar':
+                    updateSardaukarStats();
+                    break;
+                case 'starter':
+                    updateStarterStats();
+                    break;
+                case 'conflict':
+                    updateConflictStats();
+                    break;
+            }
+        }
+
         function initializeImperiumDetailed(cards) {
             const tbody = document.getElementById('imperium-tbody');
             tbody.innerHTML = '';
@@ -1255,11 +1321,19 @@
             cards.forEach(card => {
                 const tr = document.createElement('tr');
                 tr.className = 'resource-row';
-                tr.ondblclick = () => addResource('imperium', card);
 
                 const cardNameLink = createCardNameLink(card.name || '', 'imperium', card.source || card.card_set || '');
+                const cardNameSafe = (card.name || '').replace(/'/g, "\\'");
+                const sourceSafe = (card.source || card.card_set || '').replace(/'/g, "\\'");
+                const countId = `imperium-selected-${card.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${(card.source || card.card_set || '').replace(/\s+/g, '-')}`;
 
+                // Build entire row with innerHTML
                 tr.innerHTML = `
+                    <td style="text-align: center; padding: 2px;">
+                        <button class="btn btn-sm btn-outline-danger" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="decrement" data-type="imperium" data-name="${cardNameSafe}" data-source="${sourceSafe}">-</button>
+                        <span id="${countId}" style="display: inline-block; min-width: 20px; text-align: center; font-weight: bold; font-size: 0.85rem;">${card.selected || 0}</span>
+                        <button class="btn btn-sm btn-outline-success" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="increment" data-type="imperium" data-name="${cardNameSafe}" data-source="${sourceSafe}" data-max="${card.count || 999}">+</button>
+                    </td>
                     <td class="expansion-${card.card_set}" title="${card.name || ''}">${cardNameLink}</td>
                     <td class="expansion-${card.card_set}">${card.source || card.card_set || ''}</td>
                     <td class="compact">${card.count || '1'}</td>
@@ -1298,6 +1372,24 @@
                 `;
 
                 tbody.appendChild(tr);
+            });
+
+            // Add event delegation for buttons
+            tbody.addEventListener('click', function(e) {
+                const btn = e.target.closest('[data-action]');
+                if (!btn) return;
+
+                const action = btn.dataset.action;
+                const type = btn.dataset.type;
+                const name = btn.dataset.name.replace(/\\'/g, "'");
+                const source = btn.dataset.source.replace(/\\'/g, "'");
+
+                if (action === 'increment') {
+                    const max = parseInt(btn.dataset.max) || 999;
+                    incrementSelected(type, name, source, max);
+                } else if (action === 'decrement') {
+                    decrementSelected(type, name, source);
+                }
             });
 
             document.getElementById('imperium-available-count').textContent = cards.length;
@@ -1772,206 +1864,18 @@
             return resources;
         }
 
-        function addResource(type, resource) {
-            // Determine if this type should allow multiple selection
-            // Tech, leader, and conflict are unique; contracts allow counts but match by objective+reward
-            const uniqueTypes = ['tech', 'leader', 'conflict'];
-            const isUnique = uniqueTypes.includes(type);
-
-            // Check if resource already exists in selected list
-            const config = resourceConfigs[type];
-            const nameProp = config?.nameProp || 'name';
-            const resourceName = resource[nameProp] || resource.name;
-
-            const existing = selectedResources[type].find(r => {
-                const rName = r[nameProp] || r.name;
-                if (type === 'contracts') {
-                    // For contracts, match by objective AND reward
-                    return rName === resourceName && r.reward === resource.reward;
-                } else {
-                    return rName === resourceName;
-                }
-            });
-
-            if (existing) {
-                if (isUnique) {
-                    // For unique types, don't allow duplicates
-                    alert(`"${resourceName}" is already selected.`);
-                    return;
-                } else {
-                    // Increment count for non-unique types (including contracts)
-                    existing.selectedCount = (existing.selectedCount || 1) + 1;
-
-                    // Check max count if resource has a count field
-                    const maxCount = parseInt(resource.count || resource.count_per_player);
-                    if (maxCount && existing.selectedCount > maxCount) {
-                        alert(`Maximum ${maxCount} of "${resourceName}" available.`);
-                        existing.selectedCount = maxCount;
-                    }
-                }
-            } else {
-                // Add new resource with initial count
-                const newResource = {...resource, selectedCount: 1};
-                selectedResources[type].push(newResource);
-            }
-
-            updateSelectedDisplay(type);
-            updateBadge(type);
-        }
-
-        function removeResource(type, index) {
-            const uniqueTypes = ['tech', 'leader', 'conflict'];
-            const isUnique = uniqueTypes.includes(type);
-
-            const resource = selectedResources[type][index];
-            if (!isUnique && resource && resource.selectedCount > 1) {
-                // Decrement count for non-unique types (including contracts)
-                resource.selectedCount--;
-            } else {
-                // Remove resource completely (unique types)
-                selectedResources[type].splice(index, 1);
-            }
-            updateSelectedDisplay(type);
-            updateBadge(type);
-        }
-
-        function updateSelectedDisplay(type) {
-            const tbody = document.getElementById(`${type}-selected`);
-            if (!tbody) return;
-
-            tbody.innerHTML = '';
-            const config = resourceConfigs[type];
-
-            selectedResources[type].forEach((resource, idx) => {
-                const tr = document.createElement('tr');
-                tr.className = 'resource-row';
-                tr.ondblclick = () => removeResource(type, idx);
-
-                if (type === 'imperium') {
-                    // Show more details for Imperium cards including selected count
-                    tr.innerHTML = `
-                        <td class="expansion-${resource.card_set}">${resource.name}</td>
-                        <td class="expansion-${resource.card_set}">${resource.source || resource.card_set || ''}</td>
-                        <td>${resource.selectedCount || 1}</td>
-                        <td>${parseFloat(resource.cost || resource.persuasion_cost || 0) || 0}</td>
-                    `;
-                } else {
-                    // For other types, show name and count if available
-                    const nameTd = document.createElement('td');
-                    if (config.hasSet && resource.card_set) {
-                        nameTd.className = `expansion-${resource.card_set}`;
-                    }
-                    nameTd.textContent = resource[config.nameProp] || resource.name;
-                    tr.appendChild(nameTd);
-
-                    // Add Set column if type has hasSet
-                    if (config.hasSet) {
-                        const setTd = document.createElement('td');
-                        if (resource.card_set) {
-                            setTd.className = `expansion-${resource.card_set}`;
-                        }
-                        setTd.textContent = resource.source || resource.card_set || '';
-                        tr.appendChild(setTd);
-                    }
-
-                    // Add Reward column for contracts (before Selected)
-                    if (type === 'contracts') {
-                        const rewardTd = document.createElement('td');
-                        rewardTd.textContent = resource.reward || '';
-                        rewardTd.style.maxWidth = '200px';
-                        rewardTd.style.overflow = 'hidden';
-                        rewardTd.style.textOverflow = 'ellipsis';
-                        rewardTd.style.whiteSpace = 'nowrap';
-                        rewardTd.title = resource.reward || '';
-                        tr.appendChild(rewardTd);
-                    }
-
-                    // Determine if this type should allow multiple selection
-                    // Tech, leader, and conflict are unique; contracts can have counts
-                    const uniqueTypes = ['tech', 'leader', 'conflict'];
-                    const isUnique = uniqueTypes.includes(type);
-
-                    // Add selected count column (only for non-unique types, including contracts)
-                    if (!isUnique) {
-                        const countTd = document.createElement('td');
-                        countTd.textContent = resource.selectedCount || 1;
-                        tr.appendChild(countTd);
-                    }
-
-                    // Add other columns based on type
-                    if (type === 'tleilax') {
-                        const costTd = document.createElement('td');
-                        costTd.textContent = resource.specimen_cost || '';
-                        tr.appendChild(costTd);
-                    } else if (type === 'reserve') {
-                        const costTd = document.createElement('td');
-                        costTd.textContent = resource.persuasion_cost || '';
-                        tr.appendChild(costTd);
-                    } else if (type === 'tech') {
-                        const costTd = document.createElement('td');
-                        costTd.textContent = resource.spice_cost || '';
-                        tr.appendChild(costTd);
-                    } else if (type === 'leader') {
-                        const houseTd = document.createElement('td');
-                        houseTd.textContent = resource.house || '';
-                        tr.appendChild(houseTd);
-                    } else if (type === 'conflict') {
-                        const levelTd = document.createElement('td');
-                        levelTd.textContent = resource.conflict_level || '';
-                        levelTd.className = 'compact';
-                        tr.appendChild(levelTd);
-
-                        const firstPlaceTd = document.createElement('td');
-                        firstPlaceTd.textContent = resource.first_place || '';
-                        firstPlaceTd.style.maxWidth = '250px';
-                        firstPlaceTd.style.overflow = 'hidden';
-                        firstPlaceTd.style.textOverflow = 'ellipsis';
-                        firstPlaceTd.style.whiteSpace = 'nowrap';
-                        firstPlaceTd.title = resource.first_place || '';
-                        tr.appendChild(firstPlaceTd);
-                    }
-                }
-                tbody.appendChild(tr);
-            });
-
-            // Update total count badge (sum of all selected counts)
-            const countSpan = document.getElementById(`${type}-count`);
-            if (countSpan) {
-                const totalCount = selectedResources[type].reduce((sum, r) => sum + (r.selectedCount || 1), 0);
-                countSpan.textContent = totalCount;
-            }
-
-            // Update stats for various types
-            if (type === 'imperium') {
-                updateImperiumStats();
-            } else if (type === 'intrigue') {
-                updateIntrigueStats();
-            } else if (type === 'tleilax') {
-                updateTleilaxStats();
-            } else if (type === 'reserve') {
-                updateReserveStats();
-            } else if (type === 'tech') {
-                updateTechStats();
-            } else if (type === 'contracts') {
-                updateContractsStats();
-            } else if (type === 'leader') {
-                updateLeaderStats();
-            } else if (type === 'conflict') {
-                updateConflictStats();
-            }
-        }
 
         function updateImperiumStats() {
             const statsDiv = document.getElementById('imperium-stats');
             if (!statsDiv) return;
 
-            const cards = selectedResources.imperium;
+            const cards = allResources.imperium.filter(c => c.selected > 0);
             if (cards.length === 0) {
                 statsDiv.innerHTML = '<p class="text-muted">No cards selected</p>';
                 return;
             }
 
-            // Calculate totals considering selectedCount
+            // Calculate totals considering selected count
             let totalCards = 0;
             const bySets = {};
             const byCosts = {};
@@ -1980,7 +1884,7 @@
             const affiliation = {};
 
             cards.forEach(c => {
-                const count = c.selectedCount || 1;
+                const count = c.selected || 0;
                 const cost = parseFloat(c.cost || c.persuasion_cost || 0) || 0;
 
                 totalCards += count;
@@ -2076,17 +1980,17 @@
         function updateIntrigueStats() {
             const statsDiv = document.getElementById('intrigue-stats');
             if (!statsDiv) return;
-            const cards = selectedResources.intrigue;
+            const cards = allResources.intrigue.filter(c => c.selected > 0);
             if (cards.length === 0) {
                 statsDiv.innerHTML = '<p class="text-muted">No cards selected</p>';
                 return;
             }
-            const totalCards = cards.reduce((sum, c) => sum + (c.selectedCount || 1), 0);
+            const totalCards = cards.reduce((sum, c) => sum + (c.selected || 0), 0);
             const bySets = {};
             const mechanics = {};
 
             cards.forEach(c => {
-                const count = c.selectedCount || 1;
+                const count = c.selected || 0;
                 const set = c.source || c.card_set || 'Unknown';
                 bySets[set] = (bySets[set] || 0) + count;
 
@@ -2122,7 +2026,7 @@
         function updateTleilaxStats() {
             const statsDiv = document.getElementById('tleilax-stats');
             if (!statsDiv) return;
-            const cards = selectedResources.tleilax;
+            const cards = allResources.tleilax.filter(c => c.selected > 0);
             if (cards.length === 0) {
                 statsDiv.innerHTML = '<p class="text-muted">No cards selected</p>';
                 return;
@@ -2133,7 +2037,7 @@
             const access = {};
 
             cards.forEach(c => {
-                const count = c.selectedCount || 1;
+                const count = c.selected || 0;
                 const cost = parseFloat(c.specimen_cost || 0) || 0;
                 totalCards += count;
 
@@ -2196,7 +2100,7 @@
         function updateReserveStats() {
             const statsDiv = document.getElementById('reserve-stats');
             if (!statsDiv) return;
-            const cards = selectedResources.reserve;
+            const cards = allResources.reserve.filter(c => c.selected > 0);
             if (cards.length === 0) {
                 statsDiv.innerHTML = '<p class="text-muted">No cards selected</p>';
                 return;
@@ -2204,7 +2108,7 @@
             let totalCards = 0;
             const byCosts = {};
             cards.forEach(c => {
-                const count = c.selectedCount || 1;
+                const count = c.selected || 0;
                 const cost = parseFloat(c.persuasion_cost || 0) || 0;
                 totalCards += count;
 
@@ -2228,7 +2132,7 @@
         function updateTechStats() {
             const statsDiv = document.getElementById('tech-stats');
             if (!statsDiv) return;
-            const tiles = selectedResources.tech;
+            const tiles = allResources.tech.filter(t => t.selected > 0);
             if (tiles.length === 0) {
                 statsDiv.innerHTML = '<p class="text-muted">No tech selected</p>';
                 return;
@@ -2256,7 +2160,7 @@
         function updateContractsStats() {
             const statsDiv = document.getElementById('contracts-stats');
             if (!statsDiv) return;
-            const contracts = selectedResources.contracts;
+            const contracts = allResources.contracts.filter(c => c.selected > 0);
             if (contracts.length === 0) {
                 statsDiv.innerHTML = '<p class="text-muted">No contracts selected</p>';
                 return;
@@ -2278,7 +2182,7 @@
         function updateLeaderStats() {
             const statsDiv = document.getElementById('leader-stats');
             if (!statsDiv) return;
-            const leaders = selectedResources.leader;
+            const leaders = allResources.leader.filter(l => l.selected > 0);
             if (leaders.length === 0) {
                 statsDiv.innerHTML = '<p class="text-muted">No leaders selected</p>';
                 return;
@@ -2300,7 +2204,7 @@
         function updateConflictStats() {
             const statsDiv = document.getElementById('conflict-stats');
             if (!statsDiv) return;
-            const conflicts = selectedResources.conflict;
+            const conflicts = allResources.conflict.filter(c => c.selected > 0);
             if (conflicts.length === 0) {
                 statsDiv.innerHTML = '<p class="text-muted">No conflicts selected</p>';
                 return;
@@ -2326,16 +2230,47 @@
             statsDiv.innerHTML = html;
         }
 
+        function updateSardaukarStats() {
+            const statsDiv = document.getElementById('sardaukar-stats');
+            if (!statsDiv) return;
+            const cards = allResources.sardaukar ? allResources.sardaukar.filter(c => c.selected > 0) : [];
+            if (cards.length === 0) {
+                statsDiv.innerHTML = '<p class="text-muted">No sardaukar selected</p>';
+                return;
+            }
+            let html = `<p><strong>Total Sardaukar:</strong> ${cards.length}</p>`;
+            statsDiv.innerHTML = html;
+        }
+
+        function updateStarterStats() {
+            const statsDiv = document.getElementById('starter-stats');
+            if (!statsDiv) return;
+            const cards = allResources.starter ? allResources.starter.filter(c => c.selected > 0) : [];
+            if (cards.length === 0) {
+                statsDiv.innerHTML = '<p class="text-muted">No starter cards selected</p>';
+                return;
+            }
+            const bySets = {};
+            cards.forEach(c => {
+                const set = c.source || c.card_set || 'Unknown';
+                bySets[set] = (bySets[set] || 0) + 1;
+            });
+            let html = `<p><strong>Total Starter:</strong> ${cards.length}</p><p><strong>By Set:</strong></p><ul class="list-unstyled mb-0">`;
+            for (const [set, count] of Object.entries(bySets).sort((a, b) => b[1] - a[1])) {
+                const percentage = ((count / cards.length) * 100).toFixed(1);
+                html += `<li>• ${set}: ${count} (${percentage}%)</li>`;
+            }
+            html += '</ul>';
+            statsDiv.innerHTML = html;
+        }
+
         function updateBadge(type) {
             const badge = document.getElementById(`${type}-badge`);
             if (badge) {
-                const uniqueTypes = ['tech', 'leader', 'conflict'];
-                const isUnique = uniqueTypes.includes(type);
-
-                // For unique types, use length; for others (including contracts), sum selectedCount
-                const count = isUnique
-                    ? selectedResources[type].length
-                    : selectedResources[type].reduce((sum, r) => sum + (r.selectedCount || 1), 0);
+                // Count total selected items from the allResources array
+                const count = allResources[type]
+                    ? allResources[type].reduce((sum, r) => sum + (r.selected || 0), 0)
+                    : 0;
 
                 badge.textContent = count;
                 badge.className = count > 0 ? 'badge bg-primary' : 'badge bg-secondary';
@@ -2344,10 +2279,21 @@
 
         function clearBlend() {
             if (!confirm('Clear all selected resources?')) return;
-            for (let type in selectedResources) {
-                selectedResources[type] = [];
-                updateSelectedDisplay(type);
+
+            // Reset all selected counts to 0
+            for (let type in allResources) {
+                allResources[type].forEach(resource => {
+                    resource.selected = 0;
+                });
+            }
+
+            // Reinitialize all tabs to update the display
+            initializeAllTabs();
+
+            // Update all badges and statistics
+            for (let type in allResources) {
                 updateBadge(type);
+                updateStatsForType(type);
             }
         }
 
@@ -2374,13 +2320,14 @@
                 additionalBoards: additionalBoards
             };
 
-            for (let type in selectedResources) {
-                if (selectedResources[type].length > 0) {
+            for (let type in allResources) {
+                const selectedItems = allResources[type].filter(r => r.selected > 0);
+                if (selectedItems.length > 0) {
                     const typeName = type.charAt(0).toUpperCase() + type.slice(1);
-                    // Expand resources based on selectedCount
+                    // Expand resources based on selected count
                     const expandedResources = [];
-                    selectedResources[type].forEach(resource => {
-                        const count = resource.selectedCount || 1;
+                    selectedItems.forEach(resource => {
+                        const count = resource.selected || 1;
                         for (let i = 0; i < count; i++) {
                             expandedResources.push(resource);
                         }
@@ -2492,16 +2439,38 @@
                 blendName = blendName.slice(0, -3);
             }
 
-            const resources_by_type = {};
+            // Get board selections first
+            const mainBoard = document.querySelector('input[name="mainBoard"]:checked')?.value || 'imperium';
+            const additionalBoards = [];
+            document.querySelectorAll('#board-panel input[type="checkbox"]:checked').forEach(cb => {
+                additionalBoards.push(cb.value);
+            });
 
-            for (let type in selectedResources) {
-                if (selectedResources[type].length > 0) {
+            const resources_by_type = {
+                'Board': {
+                    mainBoard: mainBoard,
+                    additionalBoards: additionalBoards
+                }
+            };
+
+            // Collect selected resources from allResources
+            for (let type in allResources) {
+                const selectedItems = allResources[type].filter(r => r.selected > 0);
+                if (selectedItems.length > 0) {
                     const typeName = type.charAt(0).toUpperCase() + type.slice(1);
-                    resources_by_type[typeName + ' Cards'] = selectedResources[type];
+                    // Expand resources based on selected count
+                    const expandedResources = [];
+                    selectedItems.forEach(resource => {
+                        const count = resource.selected || 1;
+                        for (let i = 0; i < count; i++) {
+                            expandedResources.push(resource);
+                        }
+                    });
+                    resources_by_type[typeName + ' Cards'] = expandedResources;
                 }
             }
 
-            if (Object.keys(resources_by_type).length === 0) {
+            if (Object.keys(resources_by_type).length <= 1) { // Only Board
                 alert('No resources selected to save!');
                 return;
             }
@@ -2729,18 +2698,26 @@
                                     }
                                 });
 
-                                // Add consolidated resources with selectedCount
+                                // Set the selected count directly in allResources
                                 resourceMap.forEach(({resource, count}) => {
-                                    resource.selectedCount = count;
-                                    selectedResources[type].push(resource);
+                                    // Find the actual resource in allResources and set its selected count
+                                    const actualResource = allResources[type].find(r => {
+                                        return r.name === resource.name && r.source === resource.source;
+                                    });
+                                    if (actualResource) {
+                                        actualResource.selected = count;
+                                    }
                                 });
                             }
                         }
 
-                        // Update all displays
-                        for (let type in selectedResources) {
-                            updateSelectedDisplay(type);
+                        // Reinitialize all tabs to update the display
+                        initializeAllTabs();
+
+                        // Update all badges and statistics
+                        for (let type in allResources) {
                             updateBadge(type);
+                            updateStatsForType(type);
                         }
 
                         // Update the filename field with the loaded blend's filename
@@ -2748,7 +2725,11 @@
 
                         bootstrap.Modal.getInstance(document.getElementById('loadBlendModal')).hide();
 
-                        const totalLoaded = Object.values(selectedResources).reduce((sum, arr) => sum + arr.length, 0);
+                        // Count total loaded items
+                        let totalLoaded = 0;
+                        for (let type in allResources) {
+                            totalLoaded += allResources[type].reduce((sum, r) => sum + (r.selected || 0), 0);
+                        }
                         alert(`Loaded ${totalLoaded} items from "${filename}"`);
                     }
                 })
