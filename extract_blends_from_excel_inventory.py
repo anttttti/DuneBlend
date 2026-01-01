@@ -41,6 +41,58 @@ def generate_dune_card_hub_url(card_name, resource_type, expansion):
 
     return url
 
+def get_starter_cards_for_source(source):
+    """Get all starter cards for a specific source (Imperium or Uprising)."""
+    excel_path = Path(__file__).parent / "Dune_Imperium_Card_Inventory.xlsx"
+    wb = openpyxl.load_workbook(excel_path, data_only=True)
+
+    if 'Starter' not in wb.sheetnames:
+        return []
+
+    ws = wb['Starter']
+    headers = [cell.value for cell in ws[1]]
+    name_col = headers[0] if headers else "Card Name"
+
+    starter_cards = []
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        row_dict = dict(zip(headers, row))
+        resource_name = str(row_dict.get(name_col, '')).strip()
+        if not resource_name:
+            continue
+
+        # Get source and normalize
+        card_source = str(row_dict.get("Source", "Imperium")).strip()
+        if card_source == "Base":
+            card_source = "Imperium"
+
+        # Only include cards from the specified source
+        if card_source != source:
+            continue
+
+        # Normalize name
+        resource_name = resource_name.replace('(Base)', '(Imperium)')
+
+        # Remove source suffix if present
+        source_suffix = f"({card_source})"
+        if resource_name.endswith(source_suffix):
+            resource_name = resource_name[:-len(source_suffix)].strip()
+
+        # Add with source
+        resource_name_with_source = f"{resource_name} ({card_source})"
+
+        # Get count
+        count = row_dict.get("Count") or row_dict.get("Count per Player") or 1
+        try:
+            item_count = int(float(count)) if count else 1
+        except (ValueError, TypeError):
+            item_count = 1
+
+        # Add the appropriate number of copies
+        for _ in range(item_count):
+            starter_cards.append(resource_name_with_source)
+
+    return starter_cards
+
 def regenerate_all_blends():
     excel_path = Path(__file__).parent / "Dune_Imperium_Card_Inventory.xlsx"
     blends_dir = Path(__file__).parent / "blends"
@@ -288,6 +340,12 @@ def create_base_blends(wb, resource_sheets):
 
 def create_multi_resource_blend_file(filepath, blend_name, resources_by_type, description="", board="imperium", additional_boards=None):
     """Create a blend file with multiple resource types in simplified format."""
+    # Auto-add Starter cards based on board
+    if 'Starter Cards' not in resources_by_type or not resources_by_type['Starter Cards']:
+        # Add starter cards based on board
+        starter_source = "Imperium" if board == "imperium" else "Uprising"
+        resources_by_type['Starter Cards'] = get_starter_cards_for_source(starter_source)
+
     md = f"# {blend_name}\n\n"
 
     # Add board selection at the top
@@ -319,6 +377,8 @@ def create_multi_resource_blend_file(filepath, blend_name, resources_by_type, de
             if count == 1:
                 md += f"- {item_name}\n"
             else:
+                # Multiple copies - use count× format
+                # The app will handle synonym detection at save time
                 md += f"- {count}× {item_name}\n"
 
         md += "\n"

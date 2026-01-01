@@ -557,10 +557,11 @@
             <div class="tab-pane fade" id="intrigue-panel" role="tabpanel">
                 <div class="row">
                     <div class="col-12">
-                        <h4>Available Intrigue Cards <span class="badge bg-secondary" id="intrigue-available-count">0</span></h4>
+                        <h4>Intrigue Cards <span class="badge bg-secondary" id="intrigue-available-count">0</span></h4>
                         <div class="table-responsive" style="max-height: 500px; overflow: auto;">
                             <table class="table table-sm table-hover table-bordered" style="table-layout: fixed;">
                                 <colgroup>
+                                    <col style="width: 68px;"><!-- Selected -->
                                     <col style="width: 100px;"><!-- Name -->
                                     <col style="width: 50px;"><!-- Set -->
                                     <col style="width: 45px;"><!-- Count -->
@@ -580,6 +581,7 @@
                                 </colgroup>
                                 <thead class="sticky-top bg-white">
                                     <tr>
+                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'selected')">Selected<div class="resize-handle"></div></th>
                                         <th rowspan="2" class="resizable sortable" style="width: 150px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'name')">Name<div class="resize-handle"></div></th>
                                         <th rowspan="2" class="resizable sortable" style="width: 80px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'source')">Set<div class="resize-handle"></div></th>
                                         <th rowspan="2" class="resizable sortable" style="width: 70px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'count')">Count<div class="resize-handle"></div></th>
@@ -607,23 +609,11 @@
                                 <tbody id="intrigue-tbody"></tbody>
                             </table>
                         </div>
-                        <small class="text-muted">Double-click to add card to blend. Drag column borders to resize.</small>
+                        <small class="text-muted">Use +/- buttons to add/remove cards from blend.</small>
                     </div>
                 </div>
                 <div class="row mt-3">
-                    <div class="col-md-8">
-                        <h5>Selected Intrigue Cards: <span id="intrigue-count">0</span></h5>
-                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
-                            <table class="table table-sm table-hover">
-                                <thead class="sticky-top bg-white">
-                                    <tr><th>Name</th><th>Set</th><th>Selected</th></tr>
-                                </thead>
-                                <tbody id="intrigue-selected"></tbody>
-                            </table>
-                        </div>
-                        <small class="text-muted">Double-click to remove card from blend</small>
-                    </div>
-                    <div class="col-md-4">
+                    <div class="col-12">
                         <h5>Statistics</h5>
                         <div id="intrigue-stats">
                             <p class="text-muted">No cards selected</p>
@@ -636,10 +626,11 @@
             <div class="tab-pane fade" id="tleilax-panel" role="tabpanel">
                 <div class="row">
                     <div class="col-12">
-                        <h4>Available Tleilax Cards <span class="badge bg-secondary" id="tleilax-available-count">0</span></h4>
+                        <h4>Tleilax Cards <span class="badge bg-secondary" id="tleilax-available-count">0</span></h4>
                         <div class="table-responsive" style="max-height: 500px; overflow: auto;">
                             <table class="table table-sm table-hover table-bordered" style="table-layout: fixed;">
                                 <colgroup>
+                                    <col style="width: 68px;"><!-- Selected -->
                                     <col style="width: 100px;"><!-- Name -->
                                     <col style="width: 50px;"><!-- Set -->
                                     <col style="width: 45px;"><!-- Count -->
@@ -670,6 +661,7 @@
                                 </colgroup>
                                 <thead class="sticky-top bg-white">
                                     <tr>
+                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('tleilax', 'selected')">Selected<div class="resize-handle"></div></th>
                                         <th rowspan="2" class="resizable" style="width: 150px;">Name<div class="resize-handle"></div></th>
                                         <th rowspan="2" class="resizable" style="width: 80px;">Set<div class="resize-handle"></div></th>
                                         <th rowspan="2" class="resizable" style="width: 70px;">Count<div class="resize-handle"></div></th>
@@ -712,23 +704,11 @@
                                 <tbody id="tleilax-tbody"></tbody>
                             </table>
                         </div>
-                        <small class="text-muted">Double-click to add card to blend. Drag column borders to resize.</small>
+                        <small class="text-muted">Use +/- buttons to add/remove cards from blend.</small>
                     </div>
                 </div>
                 <div class="row mt-3">
-                    <div class="col-md-8">
-                        <h5>Selected Tleilax Cards: <span id="tleilax-count">0</span></h5>
-                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
-                            <table class="table table-sm table-hover">
-                                <thead class="sticky-top bg-white">
-                                    <tr><th>Name</th><th>Set</th><th>Selected</th><th>Cost</th></tr>
-                                </thead>
-                                <tbody id="tleilax-selected"></tbody>
-                            </table>
-                        </div>
-                        <small class="text-muted">Double-click to remove card from blend</small>
-                    </div>
-                    <div class="col-md-4">
+                    <div class="col-12">
                         <h5>Statistics</h5>
                         <div id="tleilax-stats">
                             <p class="text-muted">No cards selected</p>
@@ -741,10 +721,11 @@
             <div class="tab-pane fade" id="reserve-panel" role="tabpanel">
                 <div class="row">
                     <div class="col-12">
-                        <h4>Available Reserve Cards <span class="badge bg-secondary" id="reserve-available-count">0</span></h4>
+                        <h4>Reserve Cards <span class="badge bg-secondary" id="reserve-available-count">0</span></h4>
                         <div class="table-responsive" style="max-height: 500px; overflow: auto;">
                             <table class="table table-sm table-hover table-bordered" style="table-layout: fixed;">
                                 <colgroup>
+                                    <col style="width: 68px;"><!-- Selected -->
                                     <col style="width: 100px;"><!-- Name -->
                                     <col style="width: 50px;"><!-- Set -->
                                     <col style="width: 45px;"><!-- Count -->
@@ -765,6 +746,7 @@
                                 </colgroup>
                                 <thead class="sticky-top bg-white">
                                     <tr>
+                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('reserve', 'selected')">Selected<div class="resize-handle"></div></th>
                                         <th rowspan="2" class="resizable" style="width: 150px;">Name<div class="resize-handle"></div></th>
                                         <th rowspan="2" class="resizable" style="width: 80px;">Set<div class="resize-handle"></div></th>
                                         <th rowspan="2" class="resizable" style="width: 70px;">Count<div class="resize-handle"></div></th>
@@ -795,23 +777,11 @@
                                 <tbody id="reserve-tbody"></tbody>
                             </table>
                         </div>
-                        <small class="text-muted">Double-click to add card to blend.</small>
+                        <small class="text-muted">Use +/- buttons to add/remove cards from blend.</small>
                     </div>
                 </div>
                 <div class="row mt-3">
-                    <div class="col-md-8">
-                        <h5>Selected Reserve Cards: <span id="reserve-count">0</span></h5>
-                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
-                            <table class="table table-sm table-hover">
-                                <thead class="sticky-top bg-white">
-                                    <tr><th>Name</th><th>Set</th><th>Selected</th><th>Cost</th></tr>
-                                </thead>
-                                <tbody id="reserve-selected"></tbody>
-                            </table>
-                        </div>
-                        <small class="text-muted">Double-click to remove card from blend</small>
-                    </div>
-                    <div class="col-md-4">
+                    <div class="col-12">
                         <h5>Statistics</h5>
                         <div id="reserve-stats">
                             <p class="text-muted">No cards selected</p>
@@ -824,10 +794,11 @@
             <div class="tab-pane fade" id="tech-panel" role="tabpanel">
                 <div class="row">
                     <div class="col-12">
-                        <h4>Available Tech Tiles <span class="badge bg-secondary" id="tech-available-count">0</span></h4>
+                        <h4>Tech Tiles <span class="badge bg-secondary" id="tech-available-count">0</span></h4>
                         <div class="table-responsive" style="max-height: 500px; overflow: auto;">
                             <table class="table table-sm table-hover table-bordered" style="table-layout: fixed;">
                                 <colgroup>
+                                    <col style="width: 68px;"><!-- Selected -->
                                     <col style="width: 100px;"><!-- Name -->
                                     <col style="width: 50px;"><!-- Set -->
                                     <col style="width: 50px;"><!-- Compat -->
@@ -843,6 +814,7 @@
                                 </colgroup>
                                 <thead class="sticky-top bg-white">
                                     <tr>
+                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('tech', 'selected')">Selected<div class="resize-handle"></div></th>
                                         <th rowspan="2" class="resizable" style="width: 150px;">Name<div class="resize-handle"></div></th>
                                         <th rowspan="2" class="resizable" style="width: 80px;">Set<div class="resize-handle"></div></th>
                                         <th rowspan="2" class="resizable" style="width: 80px;">Compat<div class="resize-handle"></div></th>
@@ -863,23 +835,11 @@
                                 <tbody id="tech-tbody"></tbody>
                             </table>
                         </div>
-                        <small class="text-muted">Double-click to add tech to blend.</small>
+                        <small class="text-muted">Use +/- buttons to add/remove tech from blend.</small>
                     </div>
                 </div>
                 <div class="row mt-3">
-                    <div class="col-md-8">
-                        <h5>Selected Tech Tiles: <span id="tech-count">0</span></h5>
-                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
-                            <table class="table table-sm table-hover">
-                                <thead class="sticky-top bg-white">
-                                    <tr><th>Name</th><th>Set</th><th>Cost</th></tr>
-                                </thead>
-                                <tbody id="tech-selected"></tbody>
-                            </table>
-                        </div>
-                        <small class="text-muted">Double-click to remove tech from blend</small>
-                    </div>
-                    <div class="col-md-4">
+                    <div class="col-12">
                         <h5>Statistics</h5>
                         <div id="tech-stats">
                             <p class="text-muted">No tech selected</p>
@@ -892,11 +852,20 @@
             <div class="tab-pane fade" id="contracts-panel" role="tabpanel">
                 <div class="row">
                     <div class="col-12">
-                        <h4>Available Contracts <span class="badge bg-secondary" id="contracts-available-count">0</span></h4>
+                        <h4>Contracts <span class="badge bg-secondary" id="contracts-available-count">0</span></h4>
                         <div class="table-responsive" style="max-height: 500px; overflow: auto;">
                             <table class="table table-sm table-hover table-bordered" style="table-layout: fixed;">
+                                <colgroup>
+                                    <col style="width: 68px;"><!-- Selected -->
+                                    <col style="width: 200px;"><!-- Objective -->
+                                    <col style="width: 80px;"><!-- Set -->
+                                    <col style="width: 70px;"><!-- Count -->
+                                    <col style="width: 150px;"><!-- Reward -->
+                                    <col style="width: 80px;"><!-- Ix Specific -->
+                                </colgroup>
                                 <thead class="sticky-top bg-white">
                                     <tr>
+                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('contracts', 'selected')">Selected<div class="resize-handle"></div></th>
                                         <th class="resizable" style="width: 200px;">Objective<div class="resize-handle"></div></th>
                                         <th class="resizable" style="width: 80px;">Set<div class="resize-handle"></div></th>
                                         <th class="resizable" style="width: 70px;">Count<div class="resize-handle"></div></th>
@@ -907,26 +876,14 @@
                                 <tbody id="contracts-tbody"></tbody>
                             </table>
                         </div>
-                        <small class="text-muted">Double-click to add contract to blend.</small>
+                        <small class="text-muted">Use +/- buttons to add/remove contracts from blend.</small>
                     </div>
                 </div>
                 <div class="row mt-3">
-                    <div class="col-md-10">
-                        <h5>Selected Contracts: <span id="contracts-count">0</span></h5>
-                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
-                            <table class="table table-sm table-hover">
-                                <thead class="sticky-top bg-white">
-                                    <tr><th>Objective</th><th>Set</th><th>Reward</th><th>Selected</th></tr>
-                                </thead>
-                                <tbody id="contracts-selected"></tbody>
-                            </table>
-                        </div>
-                        <small class="text-muted">Double-click to remove contract from blend</small>
-                    </div>
-                    <div class="col-md-2">
-                        <h5>Count</h5>
+                    <div class="col-12">
+                        <h5>Statistics</h5>
                         <div id="contracts-stats">
-                            <p id="contracts-count-display">0</p>
+                            <p class="text-muted">No contracts selected</p>
                         </div>
                     </div>
                 </div>
@@ -936,11 +893,23 @@
             <div class="tab-pane fade" id="leader-panel" role="tabpanel">
                 <div class="row">
                     <div class="col-12">
-                        <h4>Available Leaders <span class="badge bg-secondary" id="leader-available-count">0</span></h4>
+                        <h4>Leaders <span class="badge bg-secondary" id="leader-available-count">0</span></h4>
                         <div class="table-responsive" style="max-height: 500px; overflow: auto;">
                             <table class="table table-sm table-hover table-bordered" style="table-layout: fixed;">
+                                <colgroup>
+                                    <col style="width: 68px;"><!-- Selected -->
+                                    <col style="width: 150px;"><!-- Name -->
+                                    <col style="width: 80px;"><!-- Set -->
+                                    <col style="width: 80px;"><!-- Compat -->
+                                    <col style="width: 100px;"><!-- House -->
+                                    <col style="width: 150px;"><!-- Starting Effect -->
+                                    <col style="width: 150px;"><!-- Leader Ability -->
+                                    <col style="width: 150px;"><!-- Signet Ring -->
+                                    <col style="width: 80px;"><!-- Complexity -->
+                                </colgroup>
                                 <thead class="sticky-top bg-white">
                                     <tr>
+                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('leader', 'selected')">Selected<div class="resize-handle"></div></th>
                                         <th class="resizable" style="width: 150px;">Name<div class="resize-handle"></div></th>
                                         <th class="resizable" style="width: 80px;">Set<div class="resize-handle"></div></th>
                                         <th class="resizable" style="width: 80px;">Compat<div class="resize-handle"></div></th>
@@ -954,24 +923,12 @@
                                 <tbody id="leader-tbody"></tbody>
                             </table>
                         </div>
-                        <small class="text-muted">Double-click to add leader to blend.</small>
+                        <small class="text-muted">Use +/- buttons to add/remove leaders from blend.</small>
                     </div>
                 </div>
                 <div class="row mt-3">
-                    <div class="col-md-8">
-                        <h5>Selected Leaders: <span id="leader-count">0</span></h5>
-                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
-                            <table class="table table-sm table-hover">
-                                <thead class="sticky-top bg-white">
-                                    <tr><th>Name</th><th>Set</th><th>House</th></tr>
-                                </thead>
-                                <tbody id="leader-selected"></tbody>
-                            </table>
-                        </div>
-                        <small class="text-muted">Double-click to remove leader from blend</small>
-                    </div>
-                    <div class="col-md-4">
-                        <h5>By House</h5>
+                    <div class="col-12">
+                        <h5>Statistics</h5>
                         <div id="leader-stats">
                             <p class="text-muted">No leaders selected</p>
                         </div>
@@ -983,11 +940,19 @@
             <div class="tab-pane fade" id="sardaukar-panel" role="tabpanel">
                 <div class="row">
                     <div class="col-12">
-                        <h4>Available Sardaukar <span class="badge bg-secondary" id="sardaukar-available-count">0</span></h4>
+                        <h4>Sardaukar <span class="badge bg-secondary" id="sardaukar-available-count">0</span></h4>
                         <div class="table-responsive" style="max-height: 500px; overflow: auto;">
-                            <table class="table table-sm table-hover table-bordered">
+                            <table class="table table-sm table-hover table-bordered" style="table-layout: fixed;">
+                                <colgroup>
+                                    <col style="width: 68px;"><!-- Selected -->
+                                    <col style="width: 150px;"><!-- Name -->
+                                    <col style="width: 100px;"><!-- Compatibility -->
+                                    <col style="width: 60px;"><!-- Count -->
+                                    <col style="width: 250px;"><!-- Effect -->
+                                </colgroup>
                                 <thead class="sticky-top bg-white">
                                     <tr>
+                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('sardaukar', 'selected')">Selected<div class="resize-handle"></div></th>
                                         <th style="width: 150px;">Name</th>
                                         <th style="width: 100px;">Compatibility</th>
                                         <th style="width: 60px;">Count</th>
@@ -997,18 +962,14 @@
                                 <tbody id="sardaukar-tbody"></tbody>
                             </table>
                         </div>
+                        <small class="text-muted">Use +/- buttons to add/remove sardaukar from blend.</small>
                     </div>
                 </div>
                 <div class="row mt-3">
-                    <div class="col-md-8">
-                        <h5>Selected Sardaukar: <span id="sardaukar-count">0</span></h5>
-                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
-                            <table class="table table-sm table-hover">
-                                <thead class="sticky-top bg-white">
-                                    <tr><th>Name</th><th>Selected</th></tr>
-                                </thead>
-                                <tbody id="sardaukar-selected"></tbody>
-                            </table>
+                    <div class="col-12">
+                        <h5>Statistics</h5>
+                        <div id="sardaukar-stats">
+                            <p class="text-muted">No sardaukar selected</p>
                         </div>
                     </div>
                 </div>
@@ -1018,10 +979,11 @@
             <div class="tab-pane fade" id="starter-panel" role="tabpanel">
                 <div class="row">
                     <div class="col-12">
-                        <h4>Available Starter Cards <span class="badge bg-secondary" id="starter-available-count">0</span></h4>
+                        <h4>Starter Cards <span class="badge bg-secondary" id="starter-available-count">0</span></h4>
                         <div class="table-responsive" style="max-height: 500px; overflow: auto;">
                             <table class="table table-sm table-hover table-bordered" style="table-layout: fixed;">
                                 <colgroup>
+                                    <col style="width: 68px;"><!-- Selected -->
                                     <col style="width: 100px;"><!-- Name -->
                                     <col style="width: 50px;"><!-- Set -->
                                     <col style="width: 50px;"><!-- Compat -->
@@ -1040,6 +1002,7 @@
                                 </colgroup>
                                 <thead class="sticky-top bg-white">
                                     <tr>
+                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('starter', 'selected')">Selected<div class="resize-handle"></div></th>
                                         <th rowspan="2" class="resizable" style="width: 150px;">Name<div class="resize-handle"></div></th>
                                         <th rowspan="2" class="resizable" style="width: 80px;">Set<div class="resize-handle"></div></th>
                                         <th rowspan="2" class="resizable" style="width: 80px;">Compat<div class="resize-handle"></div></th>
@@ -1064,18 +1027,14 @@
                                 <tbody id="starter-tbody"></tbody>
                             </table>
                         </div>
+                        <small class="text-muted">Use +/- buttons to add/remove starter cards from blend.</small>
                     </div>
                 </div>
                 <div class="row mt-3">
-                    <div class="col-md-10">
-                        <h5>Selected Starter Cards: <span id="starter-count">0</span></h5>
-                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
-                            <table class="table table-sm table-hover">
-                                <thead class="sticky-top bg-white">
-                                    <tr><th>Name</th><th>Set</th><th>Selected</th></tr>
-                                </thead>
-                                <tbody id="starter-selected"></tbody>
-                            </table>
+                    <div class="col-12">
+                        <h5>Statistics</h5>
+                        <div id="starter-stats">
+                            <p class="text-muted">No starter cards selected</p>
                         </div>
                     </div>
                 </div>
@@ -1085,11 +1044,21 @@
             <div class="tab-pane fade" id="conflict-panel" role="tabpanel">
                 <div class="row">
                     <div class="col-12">
-                        <h4>Available Conflict Cards <span class="badge bg-secondary" id="conflict-available-count">0</span></h4>
+                        <h4>Conflict Cards <span class="badge bg-secondary" id="conflict-available-count">0</span></h4>
                         <div class="table-responsive" style="max-height: 500px; overflow: auto;">
-                            <table class="table table-sm table-hover table-bordered">
+                            <table class="table table-sm table-hover table-bordered" style="table-layout: fixed;">
+                                <colgroup>
+                                    <col style="width: 68px;"><!-- Selected -->
+                                    <col style="width: 150px;"><!-- Name -->
+                                    <col style="width: 80px;"><!-- Set -->
+                                    <col style="width: 100px;"><!-- Compatibility -->
+                                    <col style="width: 80px;"><!-- Conflict Level -->
+                                    <col style="width: 80px;"><!-- VPs Available -->
+                                    <col style="width: 200px;"><!-- First Place -->
+                                </colgroup>
                                 <thead class="sticky-top bg-white">
                                     <tr>
+                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('conflict', 'selected')">Selected<div class="resize-handle"></div></th>
                                         <th style="width: 150px;">Name</th>
                                         <th style="width: 80px;">Set</th>
                                         <th style="width: 100px;">Compatibility</th>
@@ -1101,22 +1070,11 @@
                                 <tbody id="conflict-tbody"></tbody>
                             </table>
                         </div>
+                        <small class="text-muted">Use +/- buttons to add/remove conflict cards from blend.</small>
                     </div>
                 </div>
                 <div class="row mt-3">
-                    <div class="col-md-8">
-                        <h5>Selected Conflict Cards: <span id="conflict-count">0</span></h5>
-                        <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
-                            <table class="table table-sm table-hover">
-                                <thead class="sticky-top bg-white">
-                                    <tr><th>Name</th><th>Set</th><th>Conflict Level</th><th>First Place</th></tr>
-                                </thead>
-                                <tbody id="conflict-selected"></tbody>
-                            </table>
-                        </div>
-                        <small class="text-muted">Double-click to remove conflict from blend</small>
-                    </div>
-                    <div class="col-md-4">
+                    <div class="col-12">
                         <h5>Statistics</h5>
                         <div id="conflict-stats">
                             <p class="text-muted">No conflicts selected</p>
@@ -1403,14 +1361,27 @@
         }
 
         // Increment/Decrement selected count functions
-        function incrementSelected(type, name, source, maxCount) {
-            const resource = allResources[type].find(r => r.name === name && (r.source === source || r.card_set === source));
+        function incrementSelected(type, name, source, maxCount, uniqueProps = {}) {
+            // Find the specific resource, considering unique properties for synonyms
+            const resource = allResources[type].find(r => {
+                const nameMatch = (r.name === name || r.objective === name);
+                const sourceMatch = (r.source === source || r.card_set === source);
+
+                if (!nameMatch || !sourceMatch) return false;
+
+                // If unique properties provided, match by those too (for synonyms)
+                if (uniqueProps.reward !== undefined && r.reward !== uniqueProps.reward) return false;
+                if (uniqueProps.first_place !== undefined && r.first_place !== uniqueProps.first_place) return false;
+
+                return true;
+            });
+
             if (!resource) return;
 
             const currentCount = resource.selected || 0;
             if (currentCount < maxCount) {
                 resource.selected = currentCount + 1;
-                updateSelectedCountDisplay(type, name, source);
+                updateSelectedCountDisplay(type, name, source, uniqueProps);
                 updateStatsForType(type);
                 updateBadge(type);
             } else {
@@ -1418,24 +1389,60 @@
             }
         }
 
-        function decrementSelected(type, name, source) {
-            const resource = allResources[type].find(r => r.name === name && (r.source === source || r.card_set === source));
+        function decrementSelected(type, name, source, uniqueProps = {}) {
+            // Find the specific resource, considering unique properties for synonyms
+            const resource = allResources[type].find(r => {
+                const nameMatch = (r.name === name || r.objective === name);
+                const sourceMatch = (r.source === source || r.card_set === source);
+
+                if (!nameMatch || !sourceMatch) return false;
+
+                // If unique properties provided, match by those too (for synonyms)
+                if (uniqueProps.reward !== undefined && r.reward !== uniqueProps.reward) return false;
+                if (uniqueProps.first_place !== undefined && r.first_place !== uniqueProps.first_place) return false;
+
+                return true;
+            });
+
             if (!resource) return;
 
             const currentCount = resource.selected || 0;
             if (currentCount > 0) {
                 resource.selected = currentCount - 1;
-                updateSelectedCountDisplay(type, name, source);
+                updateSelectedCountDisplay(type, name, source, uniqueProps);
                 updateStatsForType(type);
                 updateBadge(type);
             }
         }
 
-        function updateSelectedCountDisplay(type, name, source) {
-            const resource = allResources[type].find(r => r.name === name && (r.source === source || r.card_set === source));
+        function updateSelectedCountDisplay(type, name, source, uniqueProps = {}) {
+            // Find the specific resource, considering unique properties for synonyms
+            const resource = allResources[type].find(r => {
+                const nameMatch = (r.name === name || r.objective === name);
+                const sourceMatch = (r.source === source || r.card_set === source);
+
+                if (!nameMatch || !sourceMatch) return false;
+
+                // If unique properties provided, match by those too (for synonyms)
+                if (uniqueProps.reward !== undefined && r.reward !== uniqueProps.reward) return false;
+                if (uniqueProps.first_place !== undefined && r.first_place !== uniqueProps.first_place) return false;
+
+                return true;
+            });
+
             if (!resource) return;
 
-            const id = `${type}-selected-${name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${source.replace(/\s+/g, '-')}`;
+            // Build the same unique ID that was created during rendering
+            let idSuffix = '';
+            if (type === 'contracts' && resource.reward) {
+                const rewardHash = resource.reward.substring(0, 20).replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+                idSuffix = `-${rewardHash}`;
+            } else if (type === 'conflict' && resource.first_place) {
+                const firstPlaceHash = resource.first_place.substring(0, 20).replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+                idSuffix = `-${firstPlaceHash}`;
+            }
+
+            const id = `${type}-selected-${name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${source.replace(/\s+/g, '-')}${idSuffix}`;
             const elem = document.getElementById(id);
             if (elem) {
                 elem.textContent = resource.selected || 0;
@@ -1452,12 +1459,34 @@
             }
         }
 
-        function updateRowSelectionClass(type, name, source) {
+        function updateRowSelectionClass(type, name, source, uniqueProps = {}) {
             // Find the row and toggle has-selection class
-            const resource = allResources[type].find(r => r.name === name && (r.source === source || r.card_set === source));
+            const resource = allResources[type].find(r => {
+                const nameMatch = (r.name === name || r.objective === name);
+                const sourceMatch = (r.source === source || r.card_set === source);
+
+                if (!nameMatch || !sourceMatch) return false;
+
+                // If unique properties provided, match by those too (for synonyms)
+                if (uniqueProps.reward !== undefined && r.reward !== uniqueProps.reward) return false;
+                if (uniqueProps.first_place !== undefined && r.first_place !== uniqueProps.first_place) return false;
+
+                return true;
+            });
+
             if (!resource) return;
 
-            const id = `${type}-selected-${name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${source.replace(/\s+/g, '-')}`;
+            // Build the same unique ID that was created during rendering
+            let idSuffix = '';
+            if (type === 'contracts' && resource.reward) {
+                const rewardHash = resource.reward.substring(0, 20).replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+                idSuffix = `-${rewardHash}`;
+            } else if (type === 'conflict' && resource.first_place) {
+                const firstPlaceHash = resource.first_place.substring(0, 20).replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+                idSuffix = `-${firstPlaceHash}`;
+            }
+
+            const id = `${type}-selected-${name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${source.replace(/\s+/g, '-')}${idSuffix}`;
             const elem = document.getElementById(id);
             if (elem) {
                 // Find the parent tr
@@ -1572,22 +1601,22 @@
                 tbody.appendChild(tr);
             });
 
-            // Add event delegation for buttons
-            tbody.addEventListener('click', function(e) {
-                const btn = e.target.closest('[data-action]');
-                if (!btn) return;
+            // Add click event listeners for +/- buttons
+            tbody.querySelectorAll('button[data-action]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const action = btn.getAttribute('data-action');
+                    const type = btn.getAttribute('data-type');
+                    const name = btn.getAttribute('data-name').replace(/\\'/g, "'");
+                    const source = btn.getAttribute('data-source').replace(/\\'/g, "'");
+                    const maxCount = parseInt(btn.getAttribute('data-max')) || 999;
 
-                const action = btn.dataset.action;
-                const type = btn.dataset.type;
-                const name = btn.dataset.name.replace(/\\'/g, "'");
-                const source = btn.dataset.source.replace(/\\'/g, "'");
-
-                if (action === 'increment') {
-                    const max = parseInt(btn.dataset.max) || 999;
-                    incrementSelected(type, name, source, max);
-                } else if (action === 'decrement') {
-                    decrementSelected(type, name, source);
-                }
+                    if (action === 'increment') {
+                        incrementSelected(type, name, source, maxCount);
+                    } else if (action === 'decrement') {
+                        decrementSelected(type, name, source);
+                    }
+                });
             });
 
             document.getElementById('imperium-available-count').textContent = cards.length;
@@ -1603,11 +1632,23 @@
             cards.forEach(card => {
                 const tr = document.createElement('tr');
                 tr.className = 'resource-row';
-                tr.ondblclick = () => addResource('intrigue', card);
+
+                // Add has-selection class if selected
+                if (card.selected && card.selected > 0) {
+                    tr.classList.add('has-selection');
+                }
 
                 const cardNameLink = createCardNameLink(card.name || '', 'intrigue', card.source || card.card_set || '');
+                const cardNameSafe = (card.name || '').replace(/'/g, "\\'");
+                const sourceSafe = (card.source || card.card_set || '').replace(/'/g, "\\'");
+                const countId = `intrigue-selected-${card.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${(card.source || card.card_set || '').replace(/\s+/g, '-')}`;
 
                 tr.innerHTML = `
+                    <td style="text-align: center; padding: 2px;">
+                        <button class="btn btn-sm btn-outline-danger" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="decrement" data-type="intrigue" data-name="${cardNameSafe}" data-source="${sourceSafe}">-</button>
+                        <span id="${countId}" style="display: inline-block; min-width: 20px; text-align: center; font-weight: bold; font-size: 0.85rem;">${card.selected || 0}</span>
+                        <button class="btn btn-sm btn-outline-success" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="increment" data-type="intrigue" data-name="${cardNameSafe}" data-source="${sourceSafe}" data-max="${card.count || 999}">+</button>
+                    </td>
                     <td class="expansion-${card.card_set}">${cardNameLink}</td>
                     <td class="expansion-${card.card_set}">${card.source || card.card_set || ''}</td>
                     <td class="compact">${card.count || '1'}</td>
@@ -1629,6 +1670,24 @@
                 tbody.appendChild(tr);
             });
 
+            // Add click event listeners for +/- buttons
+            tbody.querySelectorAll('button[data-action]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const action = btn.getAttribute('data-action');
+                    const type = btn.getAttribute('data-type');
+                    const name = btn.getAttribute('data-name');
+                    const source = btn.getAttribute('data-source');
+                    const maxCount = parseInt(btn.getAttribute('data-max')) || 999;
+
+                    if (action === 'increment') {
+                        incrementSelected(type, name, source, maxCount);
+                    } else if (action === 'decrement') {
+                        decrementSelected(type, name, source);
+                    }
+                });
+            });
+
             document.getElementById('intrigue-available-count').textContent = cards.length;
             initializeResizing();
         }
@@ -1640,11 +1699,22 @@
             cards.forEach(card => {
                 const tr = document.createElement('tr');
                 tr.className = 'resource-row';
-                tr.ondblclick = () => addResource('tleilax', card);
+
+                if (card.selected && card.selected > 0) {
+                    tr.classList.add('has-selection');
+                }
 
                 const cardNameLink = createCardNameLink(card.name || '', 'tleilax', card.source || card.card_set || '');
+                const cardNameSafe = (card.name || '').replace(/'/g, "\\'");
+                const sourceSafe = (card.source || card.card_set || '').replace(/'/g, "\\'");
+                const countId = `tleilax-selected-${card.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${(card.source || card.card_set || '').replace(/\s+/g, '-')}`;
 
                 tr.innerHTML = `
+                    <td style="text-align: center; padding: 2px;">
+                        <button class="btn btn-sm btn-outline-danger" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="decrement" data-type="tleilax" data-name="${cardNameSafe}" data-source="${sourceSafe}">-</button>
+                        <span id="${countId}" style="display: inline-block; min-width: 20px; text-align: center; font-weight: bold; font-size: 0.85rem;">${card.selected || 0}</span>
+                        <button class="btn btn-sm btn-outline-success" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="increment" data-type="tleilax" data-name="${cardNameSafe}" data-source="${sourceSafe}" data-max="1">+</button>
+                    </td>
                     <td class="expansion-${card.card_set}">${cardNameLink}</td>
                     <td class="expansion-${card.card_set}">${card.source || card.card_set || ''}</td>
                     <td class="compact">${card.count || '1'}</td>
@@ -1677,6 +1747,23 @@
                 tbody.appendChild(tr);
             });
 
+            tbody.querySelectorAll('button[data-action]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const action = btn.getAttribute('data-action');
+                    const type = btn.getAttribute('data-type');
+                    const name = btn.getAttribute('data-name');
+                    const source = btn.getAttribute('data-source');
+                    const maxCount = parseInt(btn.getAttribute('data-max')) || 1;
+
+                    if (action === 'increment') {
+                        incrementSelected(type, name, source, maxCount);
+                    } else if (action === 'decrement') {
+                        decrementSelected(type, name, source);
+                    }
+                });
+            });
+
             document.getElementById('tleilax-available-count').textContent = cards.length;
             initializeResizing();
         }
@@ -1688,11 +1775,22 @@
             cards.forEach(card => {
                 const tr = document.createElement('tr');
                 tr.className = 'resource-row';
-                tr.ondblclick = () => addResource('reserve', card);
+
+                if (card.selected && card.selected > 0) {
+                    tr.classList.add('has-selection');
+                }
 
                 const cardNameLink = createCardNameLink(card.name || '', 'reserve', card.source || card.card_set || '');
+                const cardNameSafe = (card.name || '').replace(/'/g, "\\'");
+                const sourceSafe = (card.source || card.card_set || '').replace(/'/g, "\\'");
+                const countId = `reserve-selected-${card.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${(card.source || card.card_set || '').replace(/\s+/g, '-')}`;
 
                 tr.innerHTML = `
+                    <td style="text-align: center; padding: 2px;">
+                        <button class="btn btn-sm btn-outline-danger" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="decrement" data-type="reserve" data-name="${cardNameSafe}" data-source="${sourceSafe}">-</button>
+                        <span id="${countId}" style="display: inline-block; min-width: 20px; text-align: center; font-weight: bold; font-size: 0.85rem;">${card.selected || 0}</span>
+                        <button class="btn btn-sm btn-outline-success" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="increment" data-type="reserve" data-name="${cardNameSafe}" data-source="${sourceSafe}" data-max="${card.count || 999}">+</button>
+                    </td>
                     <td class="expansion-${card.card_set}">${cardNameLink}</td>
                     <td class="expansion-${card.card_set}">${card.source || card.card_set || ''}</td>
                     <td class="compact">${card.count || '1'}</td>
@@ -1715,6 +1813,23 @@
                 tbody.appendChild(tr);
             });
 
+            tbody.querySelectorAll('button[data-action]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const action = btn.getAttribute('data-action');
+                    const type = btn.getAttribute('data-type');
+                    const name = btn.getAttribute('data-name');
+                    const source = btn.getAttribute('data-source');
+                    const maxCount = parseInt(btn.getAttribute('data-max')) || 999;
+
+                    if (action === 'increment') {
+                        incrementSelected(type, name, source, maxCount);
+                    } else if (action === 'decrement') {
+                        decrementSelected(type, name, source);
+                    }
+                });
+            });
+
             document.getElementById('reserve-available-count').textContent = cards.length;
             initializeResizing();
         }
@@ -1726,11 +1841,22 @@
             cards.forEach(card => {
                 const tr = document.createElement('tr');
                 tr.className = 'resource-row';
-                tr.ondblclick = () => addResource('tech', card);
+
+                if (card.selected && card.selected > 0) {
+                    tr.classList.add('has-selection');
+                }
 
                 const cardNameLink = createCardNameLink(card.name || '', 'tech', card.source || card.card_set || '');
+                const cardNameSafe = (card.name || '').replace(/'/g, "\\'");
+                const sourceSafe = (card.source || card.card_set || '').replace(/'/g, "\\'");
+                const countId = `tech-selected-${card.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${(card.source || card.card_set || '').replace(/\s+/g, '-')}`;
 
                 tr.innerHTML = `
+                    <td style="text-align: center; padding: 2px;">
+                        <button class="btn btn-sm btn-outline-danger" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="decrement" data-type="tech" data-name="${cardNameSafe}" data-source="${sourceSafe}">-</button>
+                        <span id="${countId}" style="display: inline-block; min-width: 20px; text-align: center; font-weight: bold; font-size: 0.85rem;">${card.selected || 0}</span>
+                        <button class="btn btn-sm btn-outline-success" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="increment" data-type="tech" data-name="${cardNameSafe}" data-source="${sourceSafe}" data-max="1">+</button>
+                    </td>
                     <td class="expansion-${card.card_set}">${cardNameLink}</td>
                     <td class="expansion-${card.card_set}">${card.source || ''}</td>
                     <td class="compact">${card.compatibility || ''}</td>
@@ -1748,6 +1874,23 @@
                 tbody.appendChild(tr);
             });
 
+            tbody.querySelectorAll('button[data-action]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const action = btn.getAttribute('data-action');
+                    const type = btn.getAttribute('data-type');
+                    const name = btn.getAttribute('data-name');
+                    const source = btn.getAttribute('data-source');
+                    const maxCount = 1; // Tech tiles are unique
+
+                    if (action === 'increment') {
+                        incrementSelected(type, name, source, maxCount);
+                    } else if (action === 'decrement') {
+                        decrementSelected(type, name, source);
+                    }
+                });
+            });
+
             document.getElementById('tech-available-count').textContent = cards.length;
             initializeResizing();
         }
@@ -1759,11 +1902,25 @@
             cards.forEach(card => {
                 const tr = document.createElement('tr');
                 tr.className = 'resource-row';
-                tr.ondblclick = () => addResource('contracts', card);
+
+                if (card.selected && card.selected > 0) {
+                    tr.classList.add('has-selection');
+                }
 
                 const cardNameLink = createCardNameLink(card.objective || card.name || '', 'contracts', card.source || card.card_set || '');
+                const cardNameSafe = ((card.objective || card.name) || '').replace(/'/g, "\\'");
+                const sourceSafe = (card.source || card.card_set || '').replace(/'/g, "\\'");
+                const rewardSafe = (card.reward || '').replace(/'/g, "\\'");
+                // Create unique ID by including reward hash to differentiate synonyms
+                const rewardHash = card.reward ? card.reward.substring(0, 20).replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '') : '';
+                const countId = `contracts-selected-${(card.objective || card.name || '').replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${(card.source || card.card_set || '').replace(/\s+/g, '-')}-${rewardHash}`;
 
                 tr.innerHTML = `
+                    <td style="text-align: center; padding: 2px;">
+                        <button class="btn btn-sm btn-outline-danger" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="decrement" data-type="contracts" data-name="${cardNameSafe}" data-source="${sourceSafe}" data-reward="${rewardSafe}">-</button>
+                        <span id="${countId}" style="display: inline-block; min-width: 20px; text-align: center; font-weight: bold; font-size: 0.85rem;">${card.selected || 0}</span>
+                        <button class="btn btn-sm btn-outline-success" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="increment" data-type="contracts" data-name="${cardNameSafe}" data-source="${sourceSafe}" data-max="${card.count || 999}" data-reward="${rewardSafe}">+</button>
+                    </td>
                     <td class="expansion-${card.card_set}">${cardNameLink}</td>
                     <td class="expansion-${card.card_set}">${card.source || ''}</td>
                     <td class="compact">${card.count || '1'}</td>
@@ -1772,6 +1929,28 @@
                 `;
 
                 tbody.appendChild(tr);
+            });
+
+            tbody.querySelectorAll('button[data-action]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const action = btn.getAttribute('data-action');
+                    const type = btn.getAttribute('data-type');
+                    const name = btn.getAttribute('data-name');
+                    const source = btn.getAttribute('data-source');
+                    const maxCount = parseInt(btn.getAttribute('data-max')) || 999;
+                    const reward = btn.getAttribute('data-reward') || undefined;
+
+                    // Build unique props object for synonym differentiation
+                    const uniqueProps = {};
+                    if (reward) uniqueProps.reward = reward;
+
+                    if (action === 'increment') {
+                        incrementSelected(type, name, source, maxCount, uniqueProps);
+                    } else if (action === 'decrement') {
+                        decrementSelected(type, name, source, uniqueProps);
+                    }
+                });
             });
 
             document.getElementById('contracts-available-count').textContent = cards.length;
@@ -1785,11 +1964,22 @@
             cards.forEach(card => {
                 const tr = document.createElement('tr');
                 tr.className = 'resource-row';
-                tr.ondblclick = () => addResource('leader', card);
+
+                if (card.selected && card.selected > 0) {
+                    tr.classList.add('has-selection');
+                }
 
                 const cardNameLink = createCardNameLink(card.name || '', 'leader', card.source || card.card_set || '');
+                const cardNameSafe = (card.name || '').replace(/'/g, "\\'");
+                const sourceSafe = (card.source || card.card_set || '').replace(/'/g, "\\'");
+                const countId = `leader-selected-${card.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${(card.source || card.card_set || '').replace(/\s+/g, '-')}`;
 
                 tr.innerHTML = `
+                    <td style="text-align: center; padding: 2px;">
+                        <button class="btn btn-sm btn-outline-danger" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="decrement" data-type="leader" data-name="${cardNameSafe}" data-source="${sourceSafe}">-</button>
+                        <span id="${countId}" style="display: inline-block; min-width: 20px; text-align: center; font-weight: bold; font-size: 0.85rem;">${card.selected || 0}</span>
+                        <button class="btn btn-sm btn-outline-success" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="increment" data-type="leader" data-name="${cardNameSafe}" data-source="${sourceSafe}" data-max="1">+</button>
+                    </td>
                     <td class="expansion-${card.card_set}">${cardNameLink}</td>
                     <td class="expansion-${card.card_set}">${card.source || ''}</td>
                     <td class="compact">${card.compatibility || ''}</td>
@@ -1803,6 +1993,23 @@
                 tbody.appendChild(tr);
             });
 
+            tbody.querySelectorAll('button[data-action]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const action = btn.getAttribute('data-action');
+                    const type = btn.getAttribute('data-type');
+                    const name = btn.getAttribute('data-name');
+                    const source = btn.getAttribute('data-source');
+                    const maxCount = 1; // Leaders are unique
+
+                    if (action === 'increment') {
+                        incrementSelected(type, name, source, maxCount);
+                    } else if (action === 'decrement') {
+                        decrementSelected(type, name, source);
+                    }
+                });
+            });
+
             document.getElementById('leader-available-count').textContent = cards.length;
             initializeResizing();
         }
@@ -1814,11 +2021,22 @@
             cards.forEach(card => {
                 const tr = document.createElement('tr');
                 tr.className = 'resource-row';
-                tr.ondblclick = () => addResource('sardaukar', card);
+
+                if (card.selected && card.selected > 0) {
+                    tr.classList.add('has-selection');
+                }
 
                 const cardNameLink = createCardNameLink(card.name || '', 'sardaukar', card.source || card.card_set || '');
+                const cardNameSafe = (card.name || '').replace(/'/g, "\\'");
+                const sourceSafe = (card.source || card.card_set || '').replace(/'/g, "\\'");
+                const countId = `sardaukar-selected-${card.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${(card.source || card.card_set || '').replace(/\s+/g, '-')}`;
 
                 tr.innerHTML = `
+                    <td style="text-align: center; padding: 2px;">
+                        <button class="btn btn-sm btn-outline-danger" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="decrement" data-type="sardaukar" data-name="${cardNameSafe}" data-source="${sourceSafe}">-</button>
+                        <span id="${countId}" style="display: inline-block; min-width: 20px; text-align: center; font-weight: bold; font-size: 0.85rem;">${card.selected || 0}</span>
+                        <button class="btn btn-sm btn-outline-success" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="increment" data-type="sardaukar" data-name="${cardNameSafe}" data-source="${sourceSafe}" data-max="${card.count || 999}">+</button>
+                    </td>
                     <td>${cardNameLink}</td>
                     <td class="compact">${card.compatibility || ''}</td>
                     <td class="compact">${card.count || '1'}</td>
@@ -1826,6 +2044,23 @@
                 `;
 
                 tbody.appendChild(tr);
+            });
+
+            tbody.querySelectorAll('button[data-action]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const action = btn.getAttribute('data-action');
+                    const type = btn.getAttribute('data-type');
+                    const name = btn.getAttribute('data-name');
+                    const source = btn.getAttribute('data-source');
+                    const maxCount = parseInt(btn.getAttribute('data-max')) || 999;
+
+                    if (action === 'increment') {
+                        incrementSelected(type, name, source, maxCount);
+                    } else if (action === 'decrement') {
+                        decrementSelected(type, name, source);
+                    }
+                });
             });
 
             document.getElementById('sardaukar-available-count').textContent = cards.length;
@@ -1839,11 +2074,22 @@
             cards.forEach(card => {
                 const tr = document.createElement('tr');
                 tr.className = 'resource-row';
-                tr.ondblclick = () => addResource('starter', card);
+
+                if (card.selected && card.selected > 0) {
+                    tr.classList.add('has-selection');
+                }
 
                 const cardNameLink = createCardNameLink(card.name || '', 'starter', card.source || card.card_set || '');
+                const cardNameSafe = (card.name || '').replace(/'/g, "\\'");
+                const sourceSafe = (card.source || card.card_set || '').replace(/'/g, "\\'");
+                const countId = `starter-selected-${card.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${(card.source || card.card_set || '').replace(/\s+/g, '-')}`;
 
                 tr.innerHTML = `
+                    <td style="text-align: center; padding: 2px;">
+                        <button class="btn btn-sm btn-outline-danger" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="decrement" data-type="starter" data-name="${cardNameSafe}" data-source="${sourceSafe}">-</button>
+                        <span id="${countId}" style="display: inline-block; min-width: 20px; text-align: center; font-weight: bold; font-size: 0.85rem;">${card.selected || 0}</span>
+                        <button class="btn btn-sm btn-outline-success" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="increment" data-type="starter" data-name="${cardNameSafe}" data-source="${sourceSafe}" data-max="${card.count_per_player || 999}">+</button>
+                    </td>
                     <td class="expansion-${card.card_set}">${cardNameLink}</td>
                     <td class="expansion-${card.card_set}">${card.source || ''}</td>
                     <td class="compact">${card.compatibility || ''}</td>
@@ -1864,6 +2110,23 @@
                 tbody.appendChild(tr);
             });
 
+            tbody.querySelectorAll('button[data-action]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const action = btn.getAttribute('data-action');
+                    const type = btn.getAttribute('data-type');
+                    const name = btn.getAttribute('data-name');
+                    const source = btn.getAttribute('data-source');
+                    const maxCount = parseInt(btn.getAttribute('data-max')) || 999;
+
+                    if (action === 'increment') {
+                        incrementSelected(type, name, source, maxCount);
+                    } else if (action === 'decrement') {
+                        decrementSelected(type, name, source);
+                    }
+                });
+            });
+
             document.getElementById('starter-available-count').textContent = cards.length;
             initializeResizing();
         }
@@ -1875,11 +2138,25 @@
             cards.forEach(card => {
                 const tr = document.createElement('tr');
                 tr.className = 'resource-row';
-                tr.ondblclick = () => addResource('conflict', card);
+
+                if (card.selected && card.selected > 0) {
+                    tr.classList.add('has-selection');
+                }
 
                 const cardNameLink = createCardNameLink(card.name || '', 'conflict', card.source || card.card_set || '');
+                const cardNameSafe = (card.name || '').replace(/'/g, "\\'");
+                const sourceSafe = (card.source || card.card_set || '').replace(/'/g, "\\'");
+                const firstPlaceSafe = (card.first_place || '').replace(/'/g, "\\'");
+                // Create unique ID by including first_place hash to differentiate synonyms
+                const firstPlaceHash = card.first_place ? card.first_place.substring(0, 20).replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '') : '';
+                const countId = `conflict-selected-${card.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${(card.source || card.card_set || '').replace(/\s+/g, '-')}-${firstPlaceHash}`;
 
                 tr.innerHTML = `
+                    <td style="text-align: center; padding: 2px;">
+                        <button class="btn btn-sm btn-outline-danger" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="decrement" data-type="conflict" data-name="${cardNameSafe}" data-source="${sourceSafe}" data-first-place="${firstPlaceSafe}">-</button>
+                        <span id="${countId}" style="display: inline-block; min-width: 20px; text-align: center; font-weight: bold; font-size: 0.85rem;">${card.selected || 0}</span>
+                        <button class="btn btn-sm btn-outline-success" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="increment" data-type="conflict" data-name="${cardNameSafe}" data-source="${sourceSafe}" data-max="1" data-first-place="${firstPlaceSafe}">+</button>
+                    </td>
                     <td class="expansion-${card.card_set}">${cardNameLink}</td>
                     <td class="expansion-${card.card_set}">${card.source || ''}</td>
                     <td class="compact">${card.compatibility || ''}</td>
@@ -1889,6 +2166,28 @@
                 `;
 
                 tbody.appendChild(tr);
+            });
+
+            tbody.querySelectorAll('button[data-action]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const action = btn.getAttribute('data-action');
+                    const type = btn.getAttribute('data-type');
+                    const name = btn.getAttribute('data-name');
+                    const source = btn.getAttribute('data-source');
+                    const maxCount = 1; // Conflict cards are unique
+                    const firstPlace = btn.getAttribute('data-first-place') || undefined;
+
+                    // Build unique props object for synonym differentiation
+                    const uniqueProps = {};
+                    if (firstPlace) uniqueProps.first_place = firstPlace;
+
+                    if (action === 'increment') {
+                        incrementSelected(type, name, source, maxCount, uniqueProps);
+                    } else if (action === 'decrement') {
+                        decrementSelected(type, name, source, uniqueProps);
+                    }
+                });
             });
 
             document.getElementById('conflict-available-count').textContent = cards.length;
@@ -2130,6 +2429,7 @@
 
             // Calculate totals considering selected count
             let totalCards = 0;
+            const uniqueCards = cards.length; // Number of unique cards
             const bySets = {};
             const byCosts = {};
             const mechanics = {};
@@ -2178,7 +2478,7 @@
             });
 
             let html = `
-                <p><strong>Total Cards:</strong> ${totalCards}</p>
+                <p><strong>Total Cards:</strong> ${totalCards} &nbsp; <strong>Unique:</strong> ${uniqueCards}</p>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
             `;
 
@@ -2249,6 +2549,7 @@
                 return;
             }
             const totalCards = cards.reduce((sum, c) => sum + (c.selected || 0), 0);
+            const uniqueCards = cards.length;
             const bySets = {};
             const mechanics = {};
 
@@ -2267,7 +2568,7 @@
             });
 
             let html = `
-                <p><strong>Total Cards:</strong> ${totalCards}</p>
+                <p><strong>Total Cards:</strong> ${totalCards} &nbsp; <strong>Unique:</strong> ${uniqueCards}</p>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
             `;
 
@@ -2305,6 +2606,7 @@
                 return;
             }
             let totalCards = 0;
+            const uniqueCards = cards.length;
             const byCosts = {};
             const mechanics = {};
             const access = {};
@@ -2337,7 +2639,7 @@
             });
 
             let html = `
-                <p><strong>Total Cards:</strong> ${totalCards}</p>
+                <p><strong>Total Cards:</strong> ${totalCards} &nbsp; <strong>Unique:</strong> ${uniqueCards}</p>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
             `;
 
@@ -2387,6 +2689,7 @@
                 return;
             }
             let totalCards = 0;
+            const uniqueCards = cards.length;
             const byCosts = {};
             cards.forEach(c => {
                 const count = c.selected || 0;
@@ -2399,7 +2702,7 @@
             });
 
             let html = `
-                <p><strong>Total Cards:</strong> ${totalCards}</p>
+                <p><strong>Total Cards:</strong> ${totalCards} &nbsp; <strong>Unique:</strong> ${uniqueCards}</p>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
                     <div><p><strong>Cost:</strong></p>
             `;
@@ -2424,15 +2727,19 @@
                 return;
             }
 
+            const uniqueCards = tiles.length;
+            let totalCards = 0;
             const byCosts = {};
             tiles.forEach(t => {
+                const count = t.selected || 1;
+                totalCards += count;
                 const cost = parseFloat(t.spice_cost || 0) || 0;
                 const costKey = cost.toString();
-                byCosts[costKey] = (byCosts[costKey] || 0) + 1;
+                byCosts[costKey] = (byCosts[costKey] || 0) + count;
             });
 
             let html = `
-                <p><strong>Total Tech:</strong> ${tiles.length}</p>
+                <p><strong>Total Tech:</strong> ${totalCards} &nbsp; <strong>Unique:</strong> ${uniqueCards}</p>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
                     <div><p><strong>Cost:</strong></p>
             `;
@@ -2440,7 +2747,7 @@
             // Sort costs numerically
             const maxCostCount = Math.max(...Object.values(byCosts));
             for (const [cost, count] of Object.entries(byCosts).sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))) {
-                const percentage = ((count / tiles.length) * 100).toFixed(1);
+                const percentage = ((count / totalCards) * 100).toFixed(1);
                 html += createStatBarChart(`Cost ${cost}`, count, percentage, maxCostCount, null);
             }
             html += '</div></div>'; // Close div and grid
@@ -2456,19 +2763,26 @@
                 statsDiv.innerHTML = '<p class="text-muted">No contracts selected</p>';
                 return;
             }
+
+            let totalCards = 0;
+            const uniqueCards = contracts.length;
             const bySets = {};
+
             contracts.forEach(c => {
+                const count = c.selected || 1;
+                totalCards += count;
                 const set = c.source || c.card_set || 'Unknown';
-                bySets[set] = (bySets[set] || 0) + 1;
+                bySets[set] = (bySets[set] || 0) + count;
             });
+
             let html = `
-                <p><strong>Total Contracts:</strong> ${contracts.length}</p>
+                <p><strong>Total Contracts:</strong> ${totalCards} &nbsp; <strong>Unique:</strong> ${uniqueCards}</p>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
                     <div><p><strong>Set:</strong></p>
             `;
             const maxSetCount = Math.max(...Object.values(bySets));
             for (const [set, count] of Object.entries(bySets).sort((a, b) => b[1] - a[1])) {
-                const percentage = ((count / contracts.length) * 100).toFixed(1);
+                const percentage = ((count / totalCards) * 100).toFixed(1);
                 html += createStatBarChart(set, count, percentage, maxSetCount, 'set');
             }
             html += '</div></div>'; // Close div and grid
@@ -2483,19 +2797,24 @@
                 statsDiv.innerHTML = '<p class="text-muted">No leaders selected</p>';
                 return;
             }
+
+            const totalLeaders = leaders.length;
+            const uniqueCards = leaders.length;
             const byHouse = {};
+
             leaders.forEach(l => {
                 const house = l.house || 'Unknown';
                 byHouse[house] = (byHouse[house] || 0) + 1;
             });
+
             let html = `
-                <p><strong>Total Leaders:</strong> ${leaders.length}</p>
+                <p><strong>Total Leaders:</strong> ${totalLeaders} &nbsp; <strong>Unique:</strong> ${uniqueCards}</p>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
                     <div><p><strong>House:</strong></p>
             `;
             const maxHouseCount = Math.max(...Object.values(byHouse));
             for (const [house, count] of Object.entries(byHouse).sort((a, b) => b[1] - a[1])) {
-                const percentage = ((count / leaders.length) * 100).toFixed(1);
+                const percentage = ((count / totalLeaders) * 100).toFixed(1);
                 html += createStatBarChart(house, count, percentage, maxHouseCount, null); // House has no color theme
             }
             html += '</div></div>'; // Close div and grid
@@ -2510,13 +2829,20 @@
                 statsDiv.innerHTML = '<p class="text-muted">No conflicts selected</p>';
                 return;
             }
+
+            let totalCards = 0;
+            const uniqueCards = conflicts.length;
             const byLevel = {};
+
             conflicts.forEach(c => {
+                const count = c.selected || 1;
+                totalCards += count;
                 const level = c.conflict_level || 'Unknown';
-                byLevel[level] = (byLevel[level] || 0) + 1;
+                byLevel[level] = (byLevel[level] || 0) + count;
             });
+
             let html = `
-                <p><strong>Total Conflicts:</strong> ${conflicts.length}</p>
+                <p><strong>Total Conflicts:</strong> ${totalCards} &nbsp; <strong>Unique:</strong> ${uniqueCards}</p>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
                     <div><p><strong>Level:</strong></p>
             `;
@@ -2530,7 +2856,7 @@
             const maxLevelCount = Math.max(...Object.values(byLevel));
             for (const level of sortedLevels) {
                 const count = byLevel[level];
-                const percentage = ((count / conflicts.length) * 100).toFixed(1);
+                const percentage = ((count / totalCards) * 100).toFixed(1);
                 html += createStatBarChart(`Level ${level}`, count, percentage, maxLevelCount, null);
             }
             html += '</div></div>'; // Close div and grid
@@ -2545,7 +2871,14 @@
                 statsDiv.innerHTML = '<p class="text-muted">No sardaukar selected</p>';
                 return;
             }
-            let html = `<p><strong>Total Sardaukar:</strong> ${cards.length}</p>`;
+
+            let totalCards = 0;
+            const uniqueCards = cards.length;
+            cards.forEach(c => {
+                totalCards += (c.selected || 1);
+            });
+
+            let html = `<p><strong>Total Sardaukar:</strong> ${totalCards} &nbsp; <strong>Unique:</strong> ${uniqueCards}</p>`;
             statsDiv.innerHTML = html;
         }
 
@@ -2557,19 +2890,26 @@
                 statsDiv.innerHTML = '<p class="text-muted">No starter cards selected</p>';
                 return;
             }
+
+            let totalCards = 0;
+            const uniqueCards = cards.length;
             const bySets = {};
+
             cards.forEach(c => {
+                const count = c.selected || 1;
+                totalCards += count;
                 const set = c.source || c.card_set || 'Unknown';
-                bySets[set] = (bySets[set] || 0) + 1;
+                bySets[set] = (bySets[set] || 0) + count;
             });
+
             let html = `
-                <p><strong>Total Starter:</strong> ${cards.length}</p>
+                <p><strong>Total Starter:</strong> ${totalCards} &nbsp; <strong>Unique:</strong> ${uniqueCards}</p>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
                     <div><p><strong>Set:</strong></p>
             `;
             const maxSetCount = Math.max(...Object.values(bySets));
             for (const [set, count] of Object.entries(bySets).sort((a, b) => b[1] - a[1])) {
-                const percentage = ((count / cards.length) * 100).toFixed(1);
+                const percentage = ((count / totalCards) * 100).toFixed(1);
                 html += createStatBarChart(set, count, percentage, maxSetCount, 'set');
             }
             html += '</div></div>'; // Close div and grid
@@ -2638,12 +2978,41 @@
                     const typeName = type.charAt(0).toUpperCase() + type.slice(1);
                     // Expand resources based on selected count
                     const expandedResources = [];
+
+                    // Group resources by name and source to detect synonyms
+                    const nameSourceGroups = new Map();
                     selectedItems.forEach(resource => {
-                        const count = resource.selected || 1;
-                        for (let i = 0; i < count; i++) {
-                            expandedResources.push(resource);
+                        const name = resource.objective || resource.name;
+                        const source = resource.source || resource.card_set || '';
+                        const key = `${name}|${source}`;
+
+                        if (!nameSourceGroups.has(key)) {
+                            nameSourceGroups.set(key, []);
+                        }
+                        nameSourceGroups.get(key).push(resource);
+                    });
+
+                    // Process each group and add synonym identifiers if needed
+                    nameSourceGroups.forEach((resources, key) => {
+                        if (resources.length > 1) {
+                            // Multiple resources with same name/source - add identifiers
+                            resources.forEach((resource, index) => {
+                                const count = resource.selected || 1;
+                                const resourceWithId = {...resource, synonymId: index + 1};
+                                for (let i = 0; i < count; i++) {
+                                    expandedResources.push(resourceWithId);
+                                }
+                            });
+                        } else {
+                            // Single resource - no identifier needed
+                            const resource = resources[0];
+                            const count = resource.selected || 1;
+                            for (let i = 0; i < count; i++) {
+                                expandedResources.push(resource);
+                            }
                         }
                     });
+
                     resources_by_type[typeName + ' Cards'] = expandedResources;
                 }
             }
@@ -2941,6 +3310,15 @@
                             selectedResources[type] = [];
                         }
 
+                        // Reset all selected counts to 0 in allResources
+                        for (let type in allResources) {
+                            if (allResources[type] && Array.isArray(allResources[type])) {
+                                allResources[type].forEach(resource => {
+                                    resource.selected = 0;
+                                });
+                            }
+                        }
+
                         // Match and load resources
                         const resources = data.resources;
                         for (let sectionName in resources) {
@@ -2968,30 +3346,61 @@
                             const type = detectResourceType(sectionName);
 
                             if (type && allResources[type]) {
-                                // Build a map to count occurrences
+                                // Build a map to count occurrences and track synonym IDs
                                 const resourceMap = new Map();
 
-                                resourceNames.forEach(name => {
-                                    // Parse name and source from "Name (Source)" format
+                                resourceNames.forEach(item => {
+                                    // item is now {name: "...", count: X}
+                                    const name = item.name;
+                                    const desiredCount = item.count || 1;
+
+                                    // Parse name, source, and synonym ID from formats:
+                                    // "Name #X (Source)" or "Name (Source)"
                                     let baseName = name;
                                     let sourceFilter = null;
+                                    let synonymId = null;
 
-                                    // Extract (Source) suffix if present
-                                    const sourceMatch = name.match(/^(.+?)\s*\(([^)]+)\)$/);
-                                    if (sourceMatch) {
-                                        baseName = sourceMatch[1].trim();
-                                        sourceFilter = sourceMatch[2].trim();
+                                    // First, extract synonym ID if present (e.g., "Arakeen #2 (Uprising)")
+                                    const synonymMatch = name.match(/^(.+?)\s+#(\d+)\s*\(([^)]+)\)$/);
+                                    if (synonymMatch) {
+                                        baseName = synonymMatch[1].trim();
+                                        synonymId = parseInt(synonymMatch[2]);
+                                        sourceFilter = synonymMatch[3].trim();
+                                    } else {
+                                        // Extract (Source) suffix if present (no synonym ID)
+                                        const sourceMatch = name.match(/^(.+?)\s*\(([^)]+)\)$/);
+                                        if (sourceMatch) {
+                                            baseName = sourceMatch[1].trim();
+                                            sourceFilter = sourceMatch[2].trim();
+                                        }
                                     }
 
-                                    // Find matching resource by name AND source
-                                    const resource = allResources[type].find(r => {
+                                    // Find matching resource(s) by name AND source
+                                    const matchingResources = allResources[type].filter(r => {
                                         const nameMatch = (r.name && r.name === baseName) ||
                                                         (r.objective && r.objective === baseName);
-                                        const sourceMatch = !sourceFilter ||
-                                                          (r.source && r.source === sourceFilter) ||
-                                                          (r.card_set && r.card_set === sourceFilter);
+
+                                        // If no sourceFilter provided, match any source
+                                        if (!sourceFilter) {
+                                            return nameMatch;
+                                        }
+
+                                        // If sourceFilter provided, require exact source match
+                                        const resourceSource = r.source || r.card_set || '';
+                                        const sourceMatch = resourceSource === sourceFilter;
+
                                         return nameMatch && sourceMatch;
                                     });
+
+                                    // If we have a synonym ID, use it to select the correct resource
+                                    let resource = null;
+                                    if (synonymId !== null && matchingResources.length > 1) {
+                                        // Select the resource at the specified index (synonymId - 1)
+                                        resource = matchingResources[synonymId - 1] || matchingResources[0];
+                                    } else if (matchingResources.length > 0) {
+                                        // No synonym ID or single resource - use first match
+                                        resource = matchingResources[0];
+                                    }
 
                                     if (resource) {
                                         const config = resourceConfigs[type];
@@ -2999,13 +3408,20 @@
                                         const resourceName = resource[nameProp] || resource.name;
                                         const resourceSource = resource.source || resource.card_set || '';
 
-                                        // Create unique key combining name and source
-                                        const uniqueKey = `${resourceName}|${resourceSource}`;
+                                        // Create unique key combining name, source, and internal properties
+                                        // This ensures we track different variants separately
+                                        const uniqueKey = JSON.stringify({
+                                            name: resourceName,
+                                            source: resourceSource,
+                                            reward: resource.reward,
+                                            objective: resource.objective,
+                                            first_place: resource.first_place
+                                        });
 
                                         if (resourceMap.has(uniqueKey)) {
-                                            resourceMap.get(uniqueKey).count++;
+                                            resourceMap.get(uniqueKey).count += desiredCount;
                                         } else {
-                                            resourceMap.set(uniqueKey, {resource: {...resource}, count: 1});
+                                            resourceMap.set(uniqueKey, {resource: {...resource}, count: desiredCount});
                                         }
                                     }
                                 });
@@ -3014,7 +3430,22 @@
                                 resourceMap.forEach(({resource, count}) => {
                                     // Find the actual resource in allResources and set its selected count
                                     const actualResource = allResources[type].find(r => {
-                                        return r.name === resource.name && r.source === resource.source;
+                                        // Match by multiple properties to identify the exact resource
+                                        const nameMatch = r.name === resource.name ||
+                                                        (r.objective && r.objective === resource.objective);
+                                        const sourceMatch = r.source === resource.source;
+
+                                        // For contracts with same name/source, also match reward
+                                        if (type === 'contracts' && resource.reward) {
+                                            return nameMatch && sourceMatch && r.reward === resource.reward;
+                                        }
+
+                                        // For conflicts with same name/source, match first_place
+                                        if (type === 'conflict' && resource.first_place) {
+                                            return nameMatch && sourceMatch && r.first_place === resource.first_place;
+                                        }
+
+                                        return nameMatch && sourceMatch;
                                     });
                                     if (actualResource) {
                                         actualResource.selected = count;
@@ -3029,7 +3460,12 @@
                         // Update all badges and statistics
                         for (let type in allResources) {
                             updateBadge(type);
-                            updateStatsForType(type);
+                            try {
+                                updateStatsForType(type);
+                            } catch (error) {
+                                console.error(`Error updating stats for ${type}:`, error);
+                                throw new Error(`Failed to update stats for ${type}: ${error.message}`);
+                            }
                         }
 
                         // Update the filename field with the loaded blend's filename

@@ -200,23 +200,21 @@ def load_blend(filename):
                     if len(parts) == 2 and parts[0].strip().isdigit():
                         count = int(parts[0].strip())
                         name = parts[1].strip()
-                        # Add this resource 'count' times
-                        for _ in range(count):
-                            resources_by_type[current_section].append(name)
+                        # Store as dict with count
+                        resources_by_type[current_section].append({'name': name, 'count': count})
                     else:
                         # Just a name with × in it
-                        resources_by_type[current_section].append(clean_line)
+                        resources_by_type[current_section].append({'name': clean_line, 'count': 1})
                 elif clean_line and clean_line[0].isdigit() and ' ' in clean_line:
                     # Fallback to space separator for backward compatibility "2 Card Name"
                     parts = clean_line.split(' ', 1)
                     if parts[0].isdigit():
                         count = int(parts[0])
                         name = parts[1].strip()
-                        for _ in range(count):
-                            resources_by_type[current_section].append(name)
+                        resources_by_type[current_section].append({'name': name, 'count': count})
                 else:
                     # Just a name without count
-                    resources_by_type[current_section].append(clean_line)
+                    resources_by_type[current_section].append({'name': clean_line, 'count': 1})
 
     return jsonify({"success": True, "resources": resources_by_type})
 
@@ -259,7 +257,7 @@ def save_blend():
 
         md += f"## {resource_type}\n\n"
 
-        # Count occurrences of each item with set/source
+        # Count occurrences of each item with set/source and synonym ID
         item_counts = {}
         for item in items:
             # Extract the item name
@@ -269,14 +267,23 @@ def save_blend():
             # Get the set/source
             item_source = item.get('source', 'Unknown')
 
+            # Get synonym ID if present
+            synonym_id = item.get('synonymId')
+
             # Check if the name already contains the source in parentheses
             # to avoid duplicates like "Card (Source) (Source)"
             if f"({item_source})" in item_name:
                 # Name already has source, use as-is
-                item_key = item_name
+                base_key = item_name
             else:
                 # Add source to name
-                item_key = f"{item_name} ({item_source})"
+                base_key = f"{item_name} ({item_source})"
+
+            # Add synonym ID if present
+            if synonym_id:
+                item_key = f"{item_name} #{synonym_id} ({item_source})"
+            else:
+                item_key = base_key
 
             if item_key not in item_counts:
                 item_counts[item_key] = 0
