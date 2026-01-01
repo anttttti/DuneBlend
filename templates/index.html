@@ -1470,8 +1470,10 @@
                 tr.className = 'resource-row';
                 tr.ondblclick = () => addResource('contracts', card);
 
+                const cardNameLink = createCardNameLink(card.objective || card.name || '', 'contracts', card.source || card.card_set || '');
+
                 tr.innerHTML = `
-                    <td class="expansion-${card.card_set}">${card.objective || card.name || ''}</td>
+                    <td class="expansion-${card.card_set}">${cardNameLink}</td>
                     <td class="expansion-${card.card_set}">${card.source || ''}</td>
                     <td class="compact">${card.count || '1'}</td>
                     <td title="${card.reward || ''}">${truncate(card.reward || '', 100)}</td>
@@ -1523,8 +1525,10 @@
                 tr.className = 'resource-row';
                 tr.ondblclick = () => addResource('sardaukar', card);
 
+                const cardNameLink = createCardNameLink(card.name || '', 'sardaukar', card.source || card.card_set || '');
+
                 tr.innerHTML = `
-                    <td>${card.name || ''}</td>
+                    <td>${cardNameLink}</td>
                     <td class="compact">${card.compatibility || ''}</td>
                     <td class="compact">${card.count || '1'}</td>
                     <td title="${card.effect || ''}">${truncate(card.effect || '', 150)}</td>
@@ -1582,8 +1586,10 @@
                 tr.className = 'resource-row';
                 tr.ondblclick = () => addResource('conflict', card);
 
+                const cardNameLink = createCardNameLink(card.name || '', 'conflict', card.source || card.card_set || '');
+
                 tr.innerHTML = `
-                    <td class="expansion-${card.card_set}">${card.name || ''}</td>
+                    <td class="expansion-${card.card_set}">${cardNameLink}</td>
                     <td class="expansion-${card.card_set}">${card.source || ''}</td>
                     <td class="compact">${card.compatibility || ''}</td>
                     <td class="compact">${card.conflict_level || ''}</td>
