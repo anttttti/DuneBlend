@@ -33,6 +33,34 @@ def regenerate_all_blends():
     merakon_resources = {sheet: [] for sheet in resource_sheets.values()}
     tragic_resources = {sheet: [] for sheet in resource_sheets.values()}
 
+    # Merakon's special leader requirements
+    merakon_manual_leaders = {
+        '"Princess" Yuna Moritani': 'Rise of Ix',
+        'Glossu "The Beast" Rabban': 'Imperium'
+    }
+
+    merakon_uprising_leaders = [
+        "Feyd-Rautha Harkonnen",
+        "Gurney Halleck",
+        "Lady Amber Metulli",
+        "Lady Jessica",
+        "Lady Margot Fenring",
+        "Muad'Dib",
+        "Princess Irulan",
+        "Shaddam Corrino IV",
+        "Staban Tuek"
+    ]
+
+    merakon_other_leaders = [
+        "Archduke Armand Ecaz",
+        "Baron Vladimir Harkonnen",
+        "Count Ilban Richese",
+        "Countess Ariana Thorvald",
+        "Earl Memnon Thorvald",
+        "Ilesa Ecaz",
+        "Tessia Vernius"
+    ]
+
     # Process each worksheet
     for sheet_name, display_name in resource_sheets.items():
         if sheet_name not in wb.sheetnames:
@@ -68,17 +96,37 @@ def regenerate_all_blends():
                 source = "Imperium"
             resource_name_with_source = f"{resource_name} ({source})"
 
-            # Add to Merakon's blend if count exists
+            # Add to Merakon's blend if count exists OR special handling
+            merakon_count = 0
             if merakon_idx is not None:
-                merakon_count = row_dict.get(merakon_col, 0)
-                if merakon_count and str(merakon_count).strip() not in ['', '0', '0.0']:
+                merakon_val = row_dict.get(merakon_col, 0)
+                if merakon_val and str(merakon_val).strip() not in ['', '0', '0.0']:
                     try:
-                        count = int(float(merakon_count))
-                        if count > 0:
-                            for _ in range(count):
-                                merakon_resources[display_name].append(resource_name_with_source)
+                        merakon_count = int(float(merakon_val))
                     except (ValueError, TypeError):
-                        pass
+                        merakon_count = 0
+
+            # Add based on Excel count
+            if merakon_count > 0:
+                for _ in range(merakon_count):
+                    merakon_resources[display_name].append(resource_name_with_source)
+            # Special handling for Leaders - add Uprising and specified leaders
+            elif sheet_name == 'Leader':
+                if resource_name in merakon_uprising_leaders or resource_name in merakon_other_leaders:
+                    merakon_resources[display_name].append(resource_name_with_source)
+            # Special handling for Reserve, Starter, Conflict, Contracts - add all Uprising ones
+            elif sheet_name in ['Reserve', 'Starter', 'Conflict', 'Contracts'] and source == "Uprising":
+                # Get count from appropriate column
+                if sheet_name == 'Starter':
+                    count = row_dict.get("Count") or row_dict.get("Count per Player") or 1
+                else:
+                    count = row_dict.get("Count") or 1
+                try:
+                    item_count = int(float(count)) if count else 1
+                except (ValueError, TypeError):
+                    item_count = 1
+                for _ in range(item_count):
+                    merakon_resources[display_name].append(resource_name_with_source)
 
             # Add to TragicJonson's blend if count exists
             if tragic_idx is not None:
@@ -91,6 +139,12 @@ def regenerate_all_blends():
                                 tragic_resources[display_name].append(resource_name_with_source)
                     except (ValueError, TypeError):
                         pass
+
+    # Add manual leaders to Merakon's blend
+    for leader_name, leader_source in merakon_manual_leaders.items():
+        leader_with_source = f"{leader_name} ({leader_source})"
+        if leader_with_source not in merakon_resources['Leaders']:
+            merakon_resources['Leaders'].append(leader_with_source)
 
     # Create Merakon's blend (uses Uprising board)
     if any(merakon_resources.values()):

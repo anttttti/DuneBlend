@@ -1996,25 +1996,25 @@
 
             // Sort costs numerically
             for (const [cost, count] of Object.entries(byCosts).sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))) {
-                html += `<li>• Cost ${cost}: ${count}</li>`;
+                const percentage = ((count / totalCards) * 100).toFixed(1);
+                html += `<li>• Cost ${cost}: ${count} (${percentage}%)</li>`;
             }
 
             html += '</ul><p><strong>By Set:</strong></p><ul class="list-unstyled mb-0">';
 
             for (const [set, count] of Object.entries(bySets).sort((a, b) => b[1] - a[1])) {
-                html += `<li>• ${set}: ${count}</li>`;
+                const percentage = ((count / totalCards) * 100).toFixed(1);
+                html += `<li>• ${set}: ${count} (${percentage}%)</li>`;
             }
 
-            for (const [set, count] of Object.entries(bySets).sort((a, b) => b[1] - a[1])) {
-                html += `<li>• ${set}: ${count}</li>`;
-            }
 
             // Add mechanics counts
             if (Object.keys(mechanics).length > 0) {
                 html += '</ul><p><strong>Mechanics:</strong></p><ul class="list-unstyled mb-0">';
                 for (const [mech, count] of Object.entries(mechanics).sort((a, b) => b[1] - a[1])) {
                     const displayName = mech.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-                    html += `<li>• ${displayName}: ${count}</li>`;
+                    const percentage = ((count / totalCards) * 100).toFixed(1);
+                    html += `<li>• ${displayName}: ${count} (${percentage}%)</li>`;
                 }
             }
 
@@ -2023,7 +2023,8 @@
                 html += '</ul><p><strong>Access:</strong></p><ul class="list-unstyled mb-0">';
                 for (const [acc, count] of Object.entries(access).sort((a, b) => b[1] - a[1])) {
                     const displayName = acc.replace(/\b\w/g, l => l.toUpperCase());
-                    html += `<li>• ${displayName}: ${count}</li>`;
+                    const percentage = ((count / totalCards) * 100).toFixed(1);
+                    html += `<li>• ${displayName}: ${count} (${percentage}%)</li>`;
                 }
             }
 
@@ -2032,7 +2033,8 @@
                 html += '</ul><p><strong>Affiliation:</strong></p><ul class="list-unstyled mb-0">';
                 for (const [aff, count] of Object.entries(affiliation).sort((a, b) => b[1] - a[1])) {
                     const displayName = aff.replace(/\b\w/g, l => l.toUpperCase());
-                    html += `<li>• ${displayName}: ${count}</li>`;
+                    const percentage = ((count / totalCards) * 100).toFixed(1);
+                    html += `<li>• ${displayName}: ${count} (${percentage}%)</li>`;
                 }
             }
 
@@ -2068,7 +2070,8 @@
 
             let html = `<p><strong>Total Cards:</strong> ${totalCards}</p><p><strong>By Set:</strong></p><ul class="list-unstyled mb-0">`;
             for (const [set, count] of Object.entries(bySets).sort((a, b) => b[1] - a[1])) {
-                html += `<li>• ${set}: ${count}</li>`;
+                const percentage = ((count / totalCards) * 100).toFixed(1);
+                html += `<li>• ${set}: ${count} (${percentage}%)</li>`;
             }
 
             // Add mechanics counts
@@ -2076,7 +2079,8 @@
                 html += '</ul><p><strong>Mechanics:</strong></p><ul class="list-unstyled mb-0">';
                 for (const [mech, count] of Object.entries(mechanics).sort((a, b) => b[1] - a[1])) {
                     const displayName = mech.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-                    html += `<li>• ${displayName}: ${count}</li>`;
+                    const percentage = ((count / totalCards) * 100).toFixed(1);
+                    html += `<li>• ${displayName}: ${count} (${percentage}%)</li>`;
                 }
             }
 
@@ -2128,7 +2132,8 @@
 
             // Sort costs numerically
             for (const [cost, count] of Object.entries(byCosts).sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))) {
-                html += `<li>• Cost ${cost}: ${count}</li>`;
+                const percentage = ((count / totalCards) * 100).toFixed(1);
+                html += `<li>• Cost ${cost}: ${count} (${percentage}%)</li>`;
             }
             html += '</ul>';
 
@@ -2137,7 +2142,8 @@
                 html += '<p><strong>Mechanics:</strong></p><ul class="list-unstyled mb-0">';
                 for (const [mech, count] of Object.entries(mechanics).sort((a, b) => b[1] - a[1])) {
                     const displayName = mech.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-                    html += `<li>• ${displayName}: ${count}</li>`;
+                    const percentage = ((count / totalCards) * 100).toFixed(1);
+                    html += `<li>• ${displayName}: ${count} (${percentage}%)</li>`;
                 }
                 html += '</ul>';
             }
@@ -2147,7 +2153,8 @@
                 html += '<p><strong>Access:</strong></p><ul class="list-unstyled mb-0">';
                 for (const [acc, count] of Object.entries(access).sort((a, b) => b[1] - a[1])) {
                     const displayName = acc.replace(/\b\w/g, l => l.toUpperCase());
-                    html += `<li>• ${displayName}: ${count}</li>`;
+                    const percentage = ((count / totalCards) * 100).toFixed(1);
+                    html += `<li>• ${displayName}: ${count} (${percentage}%)</li>`;
                 }
                 html += '</ul>';
             }
@@ -2179,7 +2186,8 @@
 
             // Sort costs numerically
             for (const [cost, count] of Object.entries(byCosts).sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))) {
-                html += `<li>• Cost ${cost}: ${count}</li>`;
+                const percentage = ((count / totalCards) * 100).toFixed(1);
+                html += `<li>• Cost ${cost}: ${count} (${percentage}%)</li>`;
             }
             html += '</ul>';
 
@@ -2194,9 +2202,24 @@
                 statsDiv.innerHTML = '<p class="text-muted">No tech selected</p>';
                 return;
             }
-            const totalCost = tiles.reduce((sum, t) => sum + (parseFloat(t.spice_cost || 0) || 0), 0);
-            const avgCost = (totalCost / tiles.length).toFixed(1);
-            statsDiv.innerHTML = `<p><strong>Total Tech:</strong> ${tiles.length}</p><p><strong>Total Cost:</strong> ${totalCost}</p><p><strong>Average Cost:</strong> ${avgCost}</p>`;
+
+            const byCosts = {};
+            tiles.forEach(t => {
+                const cost = parseFloat(t.spice_cost || 0) || 0;
+                const costKey = cost.toString();
+                byCosts[costKey] = (byCosts[costKey] || 0) + 1;
+            });
+
+            let html = `<p><strong>Total Tech:</strong> ${tiles.length}</p><p><strong>By Cost:</strong></p><ul class="list-unstyled mb-0">`;
+
+            // Sort costs numerically
+            for (const [cost, count] of Object.entries(byCosts).sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))) {
+                const percentage = ((count / tiles.length) * 100).toFixed(1);
+                html += `<li>• Cost ${cost}: ${count} (${percentage}%)</li>`;
+            }
+            html += '</ul>';
+
+            statsDiv.innerHTML = html;
         }
 
         function updateContractsStats() {
@@ -2214,7 +2237,8 @@
             });
             let html = `<p><strong>Total Contracts:</strong> ${contracts.length}</p><p><strong>By Set:</strong></p><ul class="list-unstyled mb-0">`;
             for (const [set, count] of Object.entries(bySets).sort((a, b) => b[1] - a[1])) {
-                html += `<li>• ${set}: ${count}</li>`;
+                const percentage = ((count / contracts.length) * 100).toFixed(1);
+                html += `<li>• ${set}: ${count} (${percentage}%)</li>`;
             }
             html += '</ul>';
             statsDiv.innerHTML = html;
@@ -2235,7 +2259,8 @@
             });
             let html = `<p><strong>Total Leaders:</strong> ${leaders.length}</p><p><strong>By House:</strong></p><ul class="list-unstyled mb-0">`;
             for (const [house, count] of Object.entries(byHouse).sort((a, b) => b[1] - a[1])) {
-                html += `<li>• ${house}: ${count}</li>`;
+                const percentage = ((count / leaders.length) * 100).toFixed(1);
+                html += `<li>• ${house}: ${count} (${percentage}%)</li>`;
             }
             html += '</ul>';
             statsDiv.innerHTML = html;
@@ -2263,7 +2288,8 @@
                 return a.localeCompare(b);
             });
             for (const level of sortedLevels) {
-                html += `<li>• Level ${level}: ${byLevel[level]}</li>`;
+                const percentage = ((byLevel[level] / conflicts.length) * 100).toFixed(1);
+                html += `<li>• Level ${level}: ${byLevel[level]} (${percentage}%)</li>`;
             }
             html += '</ul>';
             statsDiv.innerHTML = html;
