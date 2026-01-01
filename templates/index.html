@@ -19,20 +19,20 @@
         }
         .nav-tabs .nav-link:hover { background-color: #f0f0f0; }
 
-        /* Expansion colors */
-        .expansion-base { background-color: #E7E6E6 !important; }
-        .expansion-ix { background-color: #FFE699 !important; }
-        .expansion-immortality { background-color: #E2EFDA !important; }
-        .expansion-uprising { background-color: #FCE4D6 !important; }
-        .expansion-bloodlines { background-color: #F4B084 !important; }
-        .expansion-promo { background-color: #E0CFFC !important; }
+        /* Expansion colors - light backgrounds with dark text */
+        .expansion-base { background-color: #F5DEB3 !important; color: #000 !important; }
+        .expansion-ix { background-color: #B0E0E6 !important; color: #000 !important; }
+        .expansion-immortality { background-color: #E2EFDA !important; color: #000 !important; }
+        .expansion-uprising { background-color: #DEB887 !important; color: #000 !important; }
+        .expansion-bloodlines { background-color: #FF6B6B !important; color: #000 !important; }
+        .expansion-promo { background-color: #E0CFFC !important; color: #000 !important; }
 
-        td.expansion-base { background-color: #E7E6E6 !important; }
-        td.expansion-ix { background-color: #FFE699 !important; }
-        td.expansion-immortality { background-color: #E2EFDA !important; }
-        td.expansion-uprising { background-color: #FCE4D6 !important; }
-        td.expansion-bloodlines { background-color: #F4B084 !important; }
-        td.expansion-promo { background-color: #E0CFFC !important; }
+        td.expansion-base { background-color: #F5DEB3 !important; color: #000 !important; }
+        td.expansion-ix { background-color: #B0E0E6 !important; color: #000 !important; }
+        td.expansion-immortality { background-color: #E2EFDA !important; color: #000 !important; }
+        td.expansion-uprising { background-color: #DEB887 !important; color: #000 !important; }
+        td.expansion-bloodlines { background-color: #FF6B6B !important; color: #000 !important; }
+        td.expansion-promo { background-color: #E0CFFC !important; color: #000 !important; }
 
         /* Table styling */
         .table-sm td, .table-sm th {
@@ -45,6 +45,15 @@
 
         .resource-row { cursor: pointer; }
         .resource-row:hover { background-color: #f8f9fa !important; }
+
+        /* Highlight rows with selected items - no background color to preserve expansion colors */
+        .resource-row.has-selection {
+            font-weight: 600;
+        }
+
+        .resource-row.has-selection td:first-child {
+            border-left: 4px solid #007acc;
+        }
 
         .sticky-top { position: sticky; top: 0; z-index: 10; }
 
@@ -62,14 +71,14 @@
             overflow: hidden;
         }
 
-        .access-green { background-color: #C6E0B4 !important; }
-        .access-purple { background-color: #D5A6BD !important; }
-        .access-yellow { background-color: #FFE699 !important; }
-        .access-emperor { background-color: #B4C7E7 !important; }
-        .access-guild { background-color: #FFC000 !important; }
-        .access-bg { background-color: #9966CC !important; }
-        .access-fremen { background-color: #F4B183 !important; }
-        .access-spy { background-color: #A6A6A6 !important; }
+        .access-green { background-color: #90EE90 !important; color: #000 !important; }
+        .access-purple { background-color: #DDA0DD !important; color: #000 !important; }
+        .access-yellow { background-color: #FFFF99 !important; color: #000 !important; }
+        .access-emperor { background-color: #C0C0C0 !important; color: #000 !important; }
+        .access-guild { background-color: #FFB6B6 !important; color: #000 !important; }
+        .access-bg { background-color: #E6D5E6 !important; color: #000 !important; }
+        .access-fremen { background-color: #ADD8E6 !important; color: #000 !important; }
+        .access-spy { background-color: #D3D3D3 !important; color: #000 !important; }
 
         /* Affiliation column styling - similar to access but with different sizing */
         .affiliation-x {
@@ -132,6 +141,68 @@
             background-color: #6c757d !important;
             color: white !important;
             font-weight: bold;
+        }
+
+        /* Statistics bar charts */
+        .stat-bar-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            gap: 8px;
+        }
+
+        /* Reduce spacing in statistics sections */
+        #imperium-stats p, #intrigue-stats p, #tleilax-stats p, #reserve-stats p,
+        #tech-stats p, #contracts-stats p, #leader-stats p, #conflict-stats p,
+        #starter-stats p, #sardaukar-stats p {
+            margin-bottom: 4px;
+            margin-top: 8px;
+        }
+
+        #imperium-stats p:first-child, #intrigue-stats p:first-child, #tleilax-stats p:first-child,
+        #reserve-stats p:first-child, #tech-stats p:first-child, #contracts-stats p:first-child,
+        #leader-stats p:first-child, #conflict-stats p:first-child, #starter-stats p:first-child,
+        #sardaukar-stats p:first-child {
+            margin-top: 0;
+        }
+
+        .stat-bar-label {
+            min-width: 120px;
+            font-size: 0.9em;
+        }
+
+        .stat-bar-wrapper {
+            flex: 1;
+            background-color: #f8f9fa;
+            border-radius: 3px;
+            height: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-bar {
+            height: 100%;
+            background: linear-gradient(90deg, rgba(77, 148, 255, 1), rgba(128, 179, 255, 0.6));
+            border-radius: 3px;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 6px;
+            min-width: 20px;
+        }
+
+        .stat-bar-value {
+            font-size: 0.85em;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .stat-bar-percentage {
+            font-size: 0.9em;
+            color: #000;
+            min-width: 50px;
+            text-align: right;
         }
 
         /* Sortable columns */
@@ -305,6 +376,7 @@
                         <div class="table-responsive" style="max-height: 500px; overflow: auto;">
                             <table class="table table-sm table-hover table-bordered" id="imperium-table" style="table-layout: fixed;">
                                 <colgroup>
+                                    <col style="width: 68px;"><!-- Selected -->
                                     <col style="width: 100px;"><!-- Name -->
                                     <col style="width: 50px;"><!-- Set -->
                                     <col style="width: 45px;"><!-- Count -->
@@ -343,7 +415,7 @@
                                 </colgroup>
                                 <thead class="sticky-top bg-white">
                                     <tr>
-                                        <th rowspan="2" class="resizable sortable" style="width: 60px; min-width: 60px; cursor: pointer;" onclick="sortResourceTable('imperium', 'selected')">
+                                        <th rowspan="2" class="resizable sortable" style="cursor: pointer;" onclick="sortResourceTable('imperium', 'selected')">
                                             Selected<div class="resize-handle"></div>
                                         </th>
                                         <th rowspan="2" class="resizable sortable" style="width: 150px; cursor: pointer;" onclick="sortResourceTable('imperium', 'name')">
@@ -1150,12 +1222,103 @@
             conflict: { nameProp: 'name', costProp: null, hasSet: true }
         };
 
+        // Centralized color scheme for all themed elements
+        const COLOR_SCHEME = {
+            // Expansion/Set colors - light backgrounds
+            sets: {
+                'Imperium': '#F5DEB3',        // Wheat (Sand color)
+                'Base': '#F5DEB3',            // Wheat (Sand color, same as Imperium)
+                'Ix': '#B0E0E6',              // Powder Blue
+                'Rise of Ix': '#B0E0E6',      // Powder Blue
+                'Immortality': '#E2EFDA',     // Light Green
+                'Uprising': '#DEB887',        // Burlywood (light brown)
+                'Bloodlines': '#FF6B6B',      // Coral Red
+                'Promo': '#E0CFFC'            // Light Purple
+            },
+            // Access colors - matching color names
+            access: {
+                'Green': '#90EE90',           // Light Green
+                'Purple': '#DDA0DD',          // Plum (Purple)
+                'Yellow': '#FFFF99',          // Light Yellow
+                'Emperor': '#C0C0C0',         // Silver (Gray)
+                'Spacing Guild': '#FFB6B6',   // Light Red
+                'Guild': '#FFB6B6',           // Light Red (alias)
+                'Bene Gesserit': '#E6D5E6',   // Lilac
+                'Bg': '#E6D5E6',              // Lilac (alias)
+                'Fremen': '#ADD8E6',          // Light Blue
+                'Spy': '#D3D3D3'              // Light Gray
+            },
+            // Affiliation colors - matching access colors
+            affiliation: {
+                'Emperor': '#C0C0C0',         // Silver (Gray)
+                'Spacing Guild': '#FFB6B6',   // Light Red
+                'Guild': '#FFB6B6',           // Light Red (alias)
+                'Bene Gesserit': '#E6D5E6',   // Lilac
+                'Bg': '#E6D5E6',              // Lilac (alias)
+                'Fremen': '#ADD8E6'           // Light Blue
+            },
+            // Default bar color
+            default: {
+                gradient: 'linear-gradient(90deg, rgba(77, 148, 255, 1), rgba(128, 179, 255, 0.6))'
+            }
+        };
+
+        // Helper function to get color for a category
+        function getColorForCategory(category, label) {
+            if (!category || !label) return null;
+
+            // Normalize label - trim and use for case-insensitive lookup
+            const normalizedLabel = label.trim();
+
+            // Check which category and return appropriate color
+            let colorMap = null;
+            if (category === 'set') {
+                colorMap = COLOR_SCHEME.sets;
+            } else if (category === 'access') {
+                colorMap = COLOR_SCHEME.access;
+            } else if (category === 'affiliation') {
+                colorMap = COLOR_SCHEME.affiliation;
+            }
+
+            if (!colorMap) return null;
+
+            // First try exact match
+            if (colorMap[normalizedLabel]) {
+                const color = colorMap[normalizedLabel];
+                console.log(`Color match (exact): category="${category}", label="${normalizedLabel}", color="${color}"`);
+                return color;
+            }
+
+            // Try case-insensitive match
+            for (const key in colorMap) {
+                if (key.toLowerCase() === normalizedLabel.toLowerCase()) {
+                    const color = colorMap[key];
+                    console.log(`Color match (case-insensitive): category="${category}", label="${normalizedLabel}", matched="${key}", color="${color}"`);
+                    return color;
+                }
+            }
+
+            console.log(`No color match: category="${category}", label="${normalizedLabel}"`);
+            return null;
+        }
+
         // Load all resources on page load
         fetch('/api/resources')
             .then(r => r.json())
             .then(resources => {
                 allResources = resources;
                 console.log('Loaded resources:', Object.keys(resources).map(k => `${k}: ${resources[k].length}`));
+
+                // Debug: Show sample resource to see field values
+                if (resources.imperium && resources.imperium.length > 0) {
+                    const sample = resources.imperium[0];
+                    console.log('Sample Imperium card:', {
+                        name: sample.name,
+                        source: sample.source,
+                        card_set: sample.card_set
+                    });
+                }
+
                 initializeAllTabs();
             });
 
@@ -1276,6 +1439,36 @@
             const elem = document.getElementById(id);
             if (elem) {
                 elem.textContent = resource.selected || 0;
+
+                // Update the row's has-selection class
+                const row = elem.closest('tr');
+                if (row) {
+                    if (resource.selected > 0) {
+                        row.classList.add('has-selection');
+                    } else {
+                        row.classList.remove('has-selection');
+                    }
+                }
+            }
+        }
+
+        function updateRowSelectionClass(type, name, source) {
+            // Find the row and toggle has-selection class
+            const resource = allResources[type].find(r => r.name === name && (r.source === source || r.card_set === source));
+            if (!resource) return;
+
+            const id = `${type}-selected-${name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${source.replace(/\s+/g, '-')}`;
+            const elem = document.getElementById(id);
+            if (elem) {
+                // Find the parent tr
+                const tr = elem.closest('tr');
+                if (tr) {
+                    if (resource.selected > 0) {
+                        tr.classList.add('has-selection');
+                    } else {
+                        tr.classList.remove('has-selection');
+                    }
+                }
             }
         }
 
@@ -1321,6 +1514,11 @@
             cards.forEach(card => {
                 const tr = document.createElement('tr');
                 tr.className = 'resource-row';
+
+                // Add has-selection class if this card is selected
+                if (card.selected && card.selected > 0) {
+                    tr.classList.add('has-selection');
+                }
 
                 const cardNameLink = createCardNameLink(card.name || '', 'imperium', card.source || card.card_set || '');
                 const cardNameSafe = (card.name || '').replace(/'/g, "\\'");
@@ -1395,6 +1593,7 @@
             document.getElementById('imperium-available-count').textContent = cards.length;
             initializeResizing();
         }
+
 
         // Detailed rendering functions for other resource types
         function initializeIntrigueDetailed(cards) {
@@ -1831,6 +2030,60 @@
             }
         }
 
+        // Helper function to create gradient from a base color
+        function createGradientFromColor(hexColor) {
+            if (!hexColor) return 'linear-gradient(90deg, rgba(77, 148, 255, 1), rgba(128, 179, 255, 0.6))';
+
+            // Remove # if present
+            const hex = hexColor.replace('#', '');
+            // Convert to RGB
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+
+            // Create a lighter version (add 30 to each channel, max 255)
+            const r2 = Math.min(255, r + 30);
+            const g2 = Math.min(255, g + 30);
+            const b2 = Math.min(255, b + 30);
+
+            const color1 = `rgb(${r}, ${g}, ${b})`;
+            const color2 = `rgb(${r2}, ${g2}, ${b2})`;
+
+            return `linear-gradient(90deg, ${color1}, ${color2})`;
+        }
+
+        // Helper function to create bar chart HTML for statistics
+        function createStatBarChart(label, count, percentage, maxCount, category = null) {
+            const barWidth = maxCount > 0 ? (count / maxCount * 100) : 0;
+
+            // Get color based on category and label
+            let barColor = null;
+            if (category) {
+                barColor = getColorForCategory(category, label);
+            }
+
+            // Create gradient from themed color or use default
+            let barStyle = '';
+            if (barColor) {
+                const gradient = createGradientFromColor(barColor);
+                barStyle = `background: ${gradient} !important;`;
+            } else {
+                barStyle = `background: linear-gradient(90deg, rgba(77, 148, 255, 1), rgba(128, 179, 255, 0.6)) !important;`;
+            }
+
+            return `
+                <div class="stat-bar-container">
+                    <div class="stat-bar-label">${label}</div>
+                    <div class="stat-bar-wrapper">
+                        <div class="stat-bar" style="width: ${barWidth}%; ${barStyle}">
+                            <span class="stat-bar-value" style="color: black;">${count}</span>
+                        </div>
+                    </div>
+                    <div class="stat-bar-percentage">${percentage}%</div>
+                </div>
+            `;
+        }
+
         function getSortedResources(type, column, direction) {
             const resources = [...(allResources[type] || [])];
 
@@ -1890,6 +2143,7 @@
                 totalCards += count;
 
                 const set = c.source || c.card_set || 'Unknown';
+                console.log(`Card: ${c.name}, source: ${c.source}, card_set: ${c.card_set}, using set: ${set}`);
                 bySets[set] = (bySets[set] || 0) + count;
 
                 // Count by cost
@@ -1925,55 +2179,64 @@
 
             let html = `
                 <p><strong>Total Cards:</strong> ${totalCards}</p>
-                <p><strong>By Cost:</strong></p>
-                <ul class="list-unstyled mb-0">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
             `;
 
-            // Sort costs numerically
+            // By Cost column
+            html += '<div><p><strong>Cost:</strong></p>';
+            const maxCostCount = Math.max(...Object.values(byCosts));
             for (const [cost, count] of Object.entries(byCosts).sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))) {
                 const percentage = ((count / totalCards) * 100).toFixed(1);
-                html += `<li>• Cost ${cost}: ${count} (${percentage}%)</li>`;
+                html += createStatBarChart(`Cost ${cost}`, count, percentage, maxCostCount, null); // Cost has no color theme
             }
+            html += '</div>';
 
-            html += '</ul><p><strong>By Set:</strong></p><ul class="list-unstyled mb-0">';
-
+            // By Set column
+            html += '<div><p><strong>Set:</strong></p>';
+            const maxSetCount = Math.max(...Object.values(bySets));
             for (const [set, count] of Object.entries(bySets).sort((a, b) => b[1] - a[1])) {
                 const percentage = ((count / totalCards) * 100).toFixed(1);
-                html += `<li>• ${set}: ${count} (${percentage}%)</li>`;
+                html += createStatBarChart(set, count, percentage, maxSetCount, 'set');
             }
+            html += '</div>';
 
-
-            // Add mechanics counts
+            // Mechanics column
             if (Object.keys(mechanics).length > 0) {
-                html += '</ul><p><strong>Mechanics:</strong></p><ul class="list-unstyled mb-0">';
+                html += '<div><p><strong>Mechanics:</strong></p>';
+                const maxMechCount = Math.max(...Object.values(mechanics));
                 for (const [mech, count] of Object.entries(mechanics).sort((a, b) => b[1] - a[1])) {
                     const displayName = mech.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
                     const percentage = ((count / totalCards) * 100).toFixed(1);
-                    html += `<li>• ${displayName}: ${count} (${percentage}%)</li>`;
+                    html += createStatBarChart(displayName, count, percentage, maxMechCount, null); // Mechanics have no color theme
                 }
+                html += '</div>';
             }
 
-            // Add access counts
+            // Access column
             if (Object.keys(access).length > 0) {
-                html += '</ul><p><strong>Access:</strong></p><ul class="list-unstyled mb-0">';
+                html += '<div><p><strong>Access:</strong></p>';
+                const maxAccessCount = Math.max(...Object.values(access));
                 for (const [acc, count] of Object.entries(access).sort((a, b) => b[1] - a[1])) {
                     const displayName = acc.replace(/\b\w/g, l => l.toUpperCase());
                     const percentage = ((count / totalCards) * 100).toFixed(1);
-                    html += `<li>• ${displayName}: ${count} (${percentage}%)</li>`;
+                    html += createStatBarChart(displayName, count, percentage, maxAccessCount, 'access');
                 }
+                html += '</div>';
             }
 
-            // Add affiliation counts
+            // Affiliation column
             if (Object.keys(affiliation).length > 0) {
-                html += '</ul><p><strong>Affiliation:</strong></p><ul class="list-unstyled mb-0">';
+                html += '<div><p><strong>Affiliation:</strong></p>';
+                const maxAffCount = Math.max(...Object.values(affiliation));
                 for (const [aff, count] of Object.entries(affiliation).sort((a, b) => b[1] - a[1])) {
                     const displayName = aff.replace(/\b\w/g, l => l.toUpperCase());
                     const percentage = ((count / totalCards) * 100).toFixed(1);
-                    html += `<li>• ${displayName}: ${count} (${percentage}%)</li>`;
+                    html += createStatBarChart(displayName, count, percentage, maxAffCount, 'affiliation');
                 }
+                html += '</div>';
             }
 
-            html += '</ul>';
+            html += '</div>'; // Close grid container
             statsDiv.innerHTML = html;
         }
 
@@ -2003,23 +2266,33 @@
                 });
             });
 
-            let html = `<p><strong>Total Cards:</strong> ${totalCards}</p><p><strong>By Set:</strong></p><ul class="list-unstyled mb-0">`;
+            let html = `
+                <p><strong>Total Cards:</strong> ${totalCards}</p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
+            `;
+
+            // By Set column
+            html += '<div><p><strong>Set:</strong></p>';
+            const maxSetCount = Math.max(...Object.values(bySets));
             for (const [set, count] of Object.entries(bySets).sort((a, b) => b[1] - a[1])) {
                 const percentage = ((count / totalCards) * 100).toFixed(1);
-                html += `<li>• ${set}: ${count} (${percentage}%)</li>`;
+                html += createStatBarChart(set, count, percentage, maxSetCount, 'set');
             }
+            html += '</div>';
 
-            // Add mechanics counts
+            // Mechanics column
             if (Object.keys(mechanics).length > 0) {
-                html += '</ul><p><strong>Mechanics:</strong></p><ul class="list-unstyled mb-0">';
+                html += '<div><p><strong>Mechanics:</strong></p>';
+                const maxMechCount = Math.max(...Object.values(mechanics));
                 for (const [mech, count] of Object.entries(mechanics).sort((a, b) => b[1] - a[1])) {
                     const displayName = mech.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
                     const percentage = ((count / totalCards) * 100).toFixed(1);
-                    html += `<li>• ${displayName}: ${count} (${percentage}%)</li>`;
+                    html += createStatBarChart(displayName, count, percentage, maxMechCount, null);
                 }
+                html += '</div>';
             }
 
-            html += '</ul>';
+            html += '</div>'; // Close grid container
             statsDiv.innerHTML = html;
         }
 
@@ -2063,37 +2336,45 @@
                 });
             });
 
-            let html = `<p><strong>Total Cards:</strong> ${totalCards}</p><p><strong>By Cost:</strong></p><ul class="list-unstyled mb-0">`;
+            let html = `
+                <p><strong>Total Cards:</strong> ${totalCards}</p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
+            `;
 
-            // Sort costs numerically
+            // By Cost column
+            html += '<div><p><strong>Cost:</strong></p>';
+            const maxCostCount = Math.max(...Object.values(byCosts));
             for (const [cost, count] of Object.entries(byCosts).sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))) {
                 const percentage = ((count / totalCards) * 100).toFixed(1);
-                html += `<li>• Cost ${cost}: ${count} (${percentage}%)</li>`;
+                html += createStatBarChart(`Cost ${cost}`, count, percentage, maxCostCount, null);
             }
-            html += '</ul>';
+            html += '</div>';
 
-            // Add mechanics counts
+            // Mechanics column
             if (Object.keys(mechanics).length > 0) {
-                html += '<p><strong>Mechanics:</strong></p><ul class="list-unstyled mb-0">';
+                html += '<div><p><strong>Mechanics:</strong></p>';
+                const maxMechCount = Math.max(...Object.values(mechanics));
                 for (const [mech, count] of Object.entries(mechanics).sort((a, b) => b[1] - a[1])) {
                     const displayName = mech.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
                     const percentage = ((count / totalCards) * 100).toFixed(1);
-                    html += `<li>• ${displayName}: ${count} (${percentage}%)</li>`;
+                    html += createStatBarChart(displayName, count, percentage, maxMechCount, null);
                 }
-                html += '</ul>';
+                html += '</div>';
             }
 
-            // Add access counts
+            // Access column
             if (Object.keys(access).length > 0) {
-                html += '<p><strong>Access:</strong></p><ul class="list-unstyled mb-0">';
+                html += '<div><p><strong>Access:</strong></p>';
+                const maxAccessCount = Math.max(...Object.values(access));
                 for (const [acc, count] of Object.entries(access).sort((a, b) => b[1] - a[1])) {
                     const displayName = acc.replace(/\b\w/g, l => l.toUpperCase());
                     const percentage = ((count / totalCards) * 100).toFixed(1);
-                    html += `<li>• ${displayName}: ${count} (${percentage}%)</li>`;
+                    html += createStatBarChart(displayName, count, percentage, maxAccessCount, 'access');
                 }
-                html += '</ul>';
+                html += '</div>';
             }
 
+            html += '</div>'; // Close grid container
             statsDiv.innerHTML = html;
         }
 
@@ -2117,14 +2398,19 @@
                 byCosts[costKey] = (byCosts[costKey] || 0) + count;
             });
 
-            let html = `<p><strong>Total Cards:</strong> ${totalCards}</p><p><strong>By Cost:</strong></p><ul class="list-unstyled mb-0">`;
+            let html = `
+                <p><strong>Total Cards:</strong> ${totalCards}</p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
+                    <div><p><strong>Cost:</strong></p>
+            `;
 
             // Sort costs numerically
+            const maxCostCount = Math.max(...Object.values(byCosts));
             for (const [cost, count] of Object.entries(byCosts).sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))) {
                 const percentage = ((count / totalCards) * 100).toFixed(1);
-                html += `<li>• Cost ${cost}: ${count} (${percentage}%)</li>`;
+                html += createStatBarChart(`Cost ${cost}`, count, percentage, maxCostCount, null);
             }
-            html += '</ul>';
+            html += '</div></div>'; // Close div and grid
 
             statsDiv.innerHTML = html;
         }
@@ -2145,14 +2431,19 @@
                 byCosts[costKey] = (byCosts[costKey] || 0) + 1;
             });
 
-            let html = `<p><strong>Total Tech:</strong> ${tiles.length}</p><p><strong>By Cost:</strong></p><ul class="list-unstyled mb-0">`;
+            let html = `
+                <p><strong>Total Tech:</strong> ${tiles.length}</p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
+                    <div><p><strong>Cost:</strong></p>
+            `;
 
             // Sort costs numerically
+            const maxCostCount = Math.max(...Object.values(byCosts));
             for (const [cost, count] of Object.entries(byCosts).sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))) {
                 const percentage = ((count / tiles.length) * 100).toFixed(1);
-                html += `<li>• Cost ${cost}: ${count} (${percentage}%)</li>`;
+                html += createStatBarChart(`Cost ${cost}`, count, percentage, maxCostCount, null);
             }
-            html += '</ul>';
+            html += '</div></div>'; // Close div and grid
 
             statsDiv.innerHTML = html;
         }
@@ -2170,12 +2461,17 @@
                 const set = c.source || c.card_set || 'Unknown';
                 bySets[set] = (bySets[set] || 0) + 1;
             });
-            let html = `<p><strong>Total Contracts:</strong> ${contracts.length}</p><p><strong>By Set:</strong></p><ul class="list-unstyled mb-0">`;
+            let html = `
+                <p><strong>Total Contracts:</strong> ${contracts.length}</p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
+                    <div><p><strong>Set:</strong></p>
+            `;
+            const maxSetCount = Math.max(...Object.values(bySets));
             for (const [set, count] of Object.entries(bySets).sort((a, b) => b[1] - a[1])) {
                 const percentage = ((count / contracts.length) * 100).toFixed(1);
-                html += `<li>• ${set}: ${count} (${percentage}%)</li>`;
+                html += createStatBarChart(set, count, percentage, maxSetCount, 'set');
             }
-            html += '</ul>';
+            html += '</div></div>'; // Close div and grid
             statsDiv.innerHTML = html;
         }
 
@@ -2192,12 +2488,17 @@
                 const house = l.house || 'Unknown';
                 byHouse[house] = (byHouse[house] || 0) + 1;
             });
-            let html = `<p><strong>Total Leaders:</strong> ${leaders.length}</p><p><strong>By House:</strong></p><ul class="list-unstyled mb-0">`;
+            let html = `
+                <p><strong>Total Leaders:</strong> ${leaders.length}</p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
+                    <div><p><strong>House:</strong></p>
+            `;
+            const maxHouseCount = Math.max(...Object.values(byHouse));
             for (const [house, count] of Object.entries(byHouse).sort((a, b) => b[1] - a[1])) {
                 const percentage = ((count / leaders.length) * 100).toFixed(1);
-                html += `<li>• ${house}: ${count} (${percentage}%)</li>`;
+                html += createStatBarChart(house, count, percentage, maxHouseCount, null); // House has no color theme
             }
-            html += '</ul>';
+            html += '</div></div>'; // Close div and grid
             statsDiv.innerHTML = html;
         }
 
@@ -2214,7 +2515,11 @@
                 const level = c.conflict_level || 'Unknown';
                 byLevel[level] = (byLevel[level] || 0) + 1;
             });
-            let html = `<p><strong>Total Conflicts:</strong> ${conflicts.length}</p><p><strong>By Level:</strong></p><ul class="list-unstyled mb-0">`;
+            let html = `
+                <p><strong>Total Conflicts:</strong> ${conflicts.length}</p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
+                    <div><p><strong>Level:</strong></p>
+            `;
             // Sort by level (numerically if possible)
             const sortedLevels = Object.keys(byLevel).sort((a, b) => {
                 const numA = parseInt(a);
@@ -2222,11 +2527,13 @@
                 if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
                 return a.localeCompare(b);
             });
+            const maxLevelCount = Math.max(...Object.values(byLevel));
             for (const level of sortedLevels) {
-                const percentage = ((byLevel[level] / conflicts.length) * 100).toFixed(1);
-                html += `<li>• Level ${level}: ${byLevel[level]} (${percentage}%)</li>`;
+                const count = byLevel[level];
+                const percentage = ((count / conflicts.length) * 100).toFixed(1);
+                html += createStatBarChart(`Level ${level}`, count, percentage, maxLevelCount, null);
             }
-            html += '</ul>';
+            html += '</div></div>'; // Close div and grid
             statsDiv.innerHTML = html;
         }
 
@@ -2255,12 +2562,17 @@
                 const set = c.source || c.card_set || 'Unknown';
                 bySets[set] = (bySets[set] || 0) + 1;
             });
-            let html = `<p><strong>Total Starter:</strong> ${cards.length}</p><p><strong>By Set:</strong></p><ul class="list-unstyled mb-0">`;
+            let html = `
+                <p><strong>Total Starter:</strong> ${cards.length}</p>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
+                    <div><p><strong>Set:</strong></p>
+            `;
+            const maxSetCount = Math.max(...Object.values(bySets));
             for (const [set, count] of Object.entries(bySets).sort((a, b) => b[1] - a[1])) {
                 const percentage = ((count / cards.length) * 100).toFixed(1);
-                html += `<li>• ${set}: ${count} (${percentage}%)</li>`;
+                html += createStatBarChart(set, count, percentage, maxSetCount, 'set');
             }
-            html += '</ul>';
+            html += '</div></div>'; // Close div and grid
             statsDiv.innerHTML = html;
         }
 
@@ -2723,19 +3035,19 @@
                         // Update the filename field with the loaded blend's filename
                         document.getElementById('blendName').value = filename;
 
-                        bootstrap.Modal.getInstance(document.getElementById('loadBlendModal')).hide();
+                        // Close the modal
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('loadBlendModal'));
+                        if (modal) modal.hide();
 
-                        // Count total loaded items
-                        let totalLoaded = 0;
-                        for (let type in allResources) {
-                            totalLoaded += allResources[type].reduce((sum, r) => sum + (r.selected || 0), 0);
-                        }
-                        alert(`Loaded ${totalLoaded} items from "${filename}"`);
+                        // No success alert - silent load
+                    } else {
+                        // Show error if loading failed
+                        alert(`Failed to load blend: ${data.error || 'Unknown error'}`);
                     }
                 })
                 .catch(err => {
                     console.error('Load error:', err);
-                    alert('Failed to load blend');
+                    alert('Failed to load blend: ' + err.message);
                 });
         }
 
