@@ -6,6 +6,40 @@ Format: "- count× name" for all resource types
 import openpyxl
 from pathlib import Path
 from collections import Counter
+from urllib.parse import quote
+
+def generate_dune_card_hub_url(card_name, resource_type, expansion):
+    """Generate a dunecardshub.com search URL for a card."""
+    # Map resource types to dunecardshub.com types
+    type_mapping = {
+        'Imperium Cards': 'Imperium',
+        'Intrigue Cards': 'Intrigue',
+        'Reserve Cards': 'Reserve',
+        'Tech Tiles': 'Tech',
+        'Contracts': 'Contract',
+        'Leaders': 'Leader',
+        'Starter Cards': 'Starter',
+        'Conflict Cards': 'Conflict',
+        'Sardaukar': 'Sardaukar',
+        'Tleilax Cards': 'Tleilax'
+    }
+
+    # Clean card name (remove count prefix and source suffix)
+    clean_name = card_name
+    if '×' in clean_name:
+        clean_name = clean_name.split('×', 1)[1].strip()
+    if '(' in clean_name and ')' in clean_name:
+        clean_name = clean_name.rsplit('(', 1)[0].strip()
+
+    card_type_param = type_mapping.get(resource_type, resource_type)
+    search_term = quote(clean_name.lower())
+    expansion_param = quote(expansion)
+
+    url = f"https://dunecardshub.com/?search={search_term}&types={card_type_param}"
+    if expansion and expansion != 'Unknown':
+        url += f"&expansions={expansion_param}"
+
+    return url
 
 def regenerate_all_blends():
     excel_path = Path(__file__).parent / "Dune_Imperium_Card_Inventory.xlsx"
@@ -89,11 +123,20 @@ def regenerate_all_blends():
             # Normalize card names: replace (Base) with (Imperium)
             resource_name = resource_name.replace('(Base)', '(Imperium)')
 
-            # Get source and append it in parentheses
+            # Get source
             source = str(row_dict.get("Source", "Imperium")).strip()
             # Normalize Base to Imperium
             if source == "Base":
                 source = "Imperium"
+
+            # Check if the card name already has the source in parentheses
+            # If so, remove it to avoid duplication
+            source_suffix = f"({source})"
+            if resource_name.endswith(source_suffix):
+                # Remove the suffix from the name
+                resource_name = resource_name[:-len(source_suffix)].strip()
+
+            # Now add the source in parentheses
             resource_name_with_source = f"{resource_name} ({source})"
 
             # Add to Merakon's blend if count exists OR special handling
@@ -195,6 +238,13 @@ def create_base_blends(wb, resource_sheets):
             # Normalize Base to Imperium
             if source == "Base":
                 source = "Imperium"
+
+            # Check if the card name already has the source in parentheses
+            # If so, remove it to avoid duplication
+            source_suffix = f"({source})"
+            if resource_name.endswith(source_suffix):
+                # Remove the suffix from the name
+                resource_name = resource_name[:-len(source_suffix)].strip()
 
             # Append source in parentheses
             resource_name_with_source = f"{resource_name} ({source})"

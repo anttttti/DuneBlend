@@ -10,6 +10,23 @@ import threading
 
 app = Flask(__name__)
 
+def generate_dune_card_hub_url(card_name, resource_type, expansion):
+    """Generate a dunecardshub.com search URL for a card."""
+    # Clean card name (remove count prefix and source suffix)
+    clean_name = card_name
+    if '×' in clean_name:
+        clean_name = clean_name.split('×', 1)[1].strip()
+    if '(' in clean_name and ')' in clean_name:
+        clean_name = clean_name.rsplit('(', 1)[0].strip()
+
+    # Use + for spaces instead of %20 for cleaner URLs
+    search_term = clean_name.lower().replace(' ', '+')
+
+    url = f"https://dunecardshub.com/?search={search_term}"
+
+    return url
+
+
 # Global resource data
 ALL_RESOURCES = {}
 
@@ -43,6 +60,18 @@ def load_all_resources_from_excel():
                 continue
             # Normalize card names: replace (Base) with (Imperium)
             resource_name = resource_name.replace("(Base)", "(Imperium)")
+
+            # Get source early to check for duplication
+            source = str(row_dict.get('Source', 'Imperium')).strip()
+            if source == 'Base':
+                source = 'Imperium'
+
+            # Check if the card name already has the source in parentheses
+            # If so, remove it to avoid duplication (e.g., "The Spice Must Flow (Uprising)")
+            source_suffix = f"({source})"
+            if resource_name.endswith(source_suffix):
+                # Remove the suffix from the name
+                resource_name = resource_name[:-len(source_suffix)].strip()
 
             # Create resource object
             resource = {

@@ -1237,6 +1237,17 @@
             return val === true || val === 'X' || val === 'x' || val === '1';
         }
 
+        function generateDuneCardHubUrl(cardName, resourceType, expansion) {
+            // Use + for spaces instead of %20 for cleaner URLs
+            const searchTerm = cardName.toLowerCase().replace(/ /g, '+');
+            return `https://dunecardshub.com/?search=${searchTerm}`;
+        }
+
+        function createCardNameLink(cardName, resourceType, expansion) {
+            const url = generateDuneCardHubUrl(cardName, resourceType, expansion);
+            return `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #0066cc; text-decoration: none;">${cardName}</a>`;
+        }
+
         function initializeImperiumDetailed(cards) {
             const tbody = document.getElementById('imperium-tbody');
             tbody.innerHTML = '';
@@ -1246,8 +1257,10 @@
                 tr.className = 'resource-row';
                 tr.ondblclick = () => addResource('imperium', card);
 
+                const cardNameLink = createCardNameLink(card.name || '', 'imperium', card.source || card.card_set || '');
+
                 tr.innerHTML = `
-                    <td class="expansion-${card.card_set}" title="${card.name || ''}">${card.name || ''}</td>
+                    <td class="expansion-${card.card_set}" title="${card.name || ''}">${cardNameLink}</td>
                     <td class="expansion-${card.card_set}">${card.source || card.card_set || ''}</td>
                     <td class="compact">${card.count || '1'}</td>
                     <td class="compact">${parseFloat(card.cost || card.persuasion_cost || 0) || 0}</td>
@@ -1301,8 +1314,10 @@
                 tr.className = 'resource-row';
                 tr.ondblclick = () => addResource('intrigue', card);
 
+                const cardNameLink = createCardNameLink(card.name || '', 'intrigue', card.source || card.card_set || '');
+
                 tr.innerHTML = `
-                    <td class="expansion-${card.card_set}">${card.name || ''}</td>
+                    <td class="expansion-${card.card_set}">${cardNameLink}</td>
                     <td class="expansion-${card.card_set}">${card.source || card.card_set || ''}</td>
                     <td class="compact">${card.count || '1'}</td>
                     <td class="compact" style="max-width: 50px !important;">${card.tech || ''}</td>
@@ -1336,8 +1351,10 @@
                 tr.className = 'resource-row';
                 tr.ondblclick = () => addResource('tleilax', card);
 
+                const cardNameLink = createCardNameLink(card.name || '', 'tleilax', card.source || card.card_set || '');
+
                 tr.innerHTML = `
-                    <td class="expansion-${card.card_set}">${card.name || ''}</td>
+                    <td class="expansion-${card.card_set}">${cardNameLink}</td>
                     <td class="expansion-${card.card_set}">${card.source || card.card_set || ''}</td>
                     <td class="compact">${card.count || '1'}</td>
                     <td class="compact">${parseFloat(card.specimen_cost || 0) || 0}</td>
@@ -1382,8 +1399,10 @@
                 tr.className = 'resource-row';
                 tr.ondblclick = () => addResource('reserve', card);
 
+                const cardNameLink = createCardNameLink(card.name || '', 'reserve', card.source || card.card_set || '');
+
                 tr.innerHTML = `
-                    <td class="expansion-${card.card_set}">${card.name || ''}</td>
+                    <td class="expansion-${card.card_set}">${cardNameLink}</td>
                     <td class="expansion-${card.card_set}">${card.source || card.card_set || ''}</td>
                     <td class="compact">${card.count || '1'}</td>
                     <td class="compact">${parseFloat(card.persuasion_cost || 0) || 0}</td>
@@ -1418,8 +1437,10 @@
                 tr.className = 'resource-row';
                 tr.ondblclick = () => addResource('tech', card);
 
+                const cardNameLink = createCardNameLink(card.name || '', 'tech', card.source || card.card_set || '');
+
                 tr.innerHTML = `
-                    <td class="expansion-${card.card_set}">${card.name || ''}</td>
+                    <td class="expansion-${card.card_set}">${cardNameLink}</td>
                     <td class="expansion-${card.card_set}">${card.source || ''}</td>
                     <td class="compact">${card.compatibility || ''}</td>
                     <td class="compact">${card.spice_cost || ''}</td>
@@ -1473,8 +1494,10 @@
                 tr.className = 'resource-row';
                 tr.ondblclick = () => addResource('leader', card);
 
+                const cardNameLink = createCardNameLink(card.name || '', 'leader', card.source || card.card_set || '');
+
                 tr.innerHTML = `
-                    <td class="expansion-${card.card_set}">${card.name || ''}</td>
+                    <td class="expansion-${card.card_set}">${cardNameLink}</td>
                     <td class="expansion-${card.card_set}">${card.source || ''}</td>
                     <td class="compact">${card.compatibility || ''}</td>
                     <td>${card.house || ''}</td>
@@ -1523,8 +1546,10 @@
                 tr.className = 'resource-row';
                 tr.ondblclick = () => addResource('starter', card);
 
+                const cardNameLink = createCardNameLink(card.name || '', 'starter', card.source || card.card_set || '');
+
                 tr.innerHTML = `
-                    <td class="expansion-${card.card_set}">${card.name || ''}</td>
+                    <td class="expansion-${card.card_set}">${cardNameLink}</td>
                     <td class="expansion-${card.card_set}">${card.source || ''}</td>
                     <td class="compact">${card.compatibility || ''}</td>
                     <td class="compact">${card.count_per_player || ''}</td>
