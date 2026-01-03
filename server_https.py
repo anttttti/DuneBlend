@@ -105,7 +105,7 @@ class BlendServerHandler(http.server.SimpleHTTPRequestHandler):
             for f in BLENDS_DIR.glob("*.md"):
                 stat = f.stat()
                 files.append({
-                    'name': f.name,
+                    'filename': f.name,  # Changed from 'name' to 'filename' to match client expectations
                     'size': stat.st_size,
                     'modified': stat.st_mtime
                 })

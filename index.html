@@ -1190,16 +1190,16 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">🔑 Gemini API Key</h5>
+                    <h5 class="modal-title">🔑 image AI API Key</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="alert alert-warning">
-                        <strong>API Key Required:</strong> This feature uses Google Gemini AI to scan cards from photos. You need a free API key from Google AI Studio.
+                        <strong>API Key Required:</strong> This feature uses Google's image AI to scan cards from photos. You need a free API key from Google AI Studio.
                     </div>
 
                     <div class="mb-3">
-                        <label for="geminiApiKeyInput" class="form-label">Gemini API Key:</label>
+                        <label for="geminiApiKeyInput" class="form-label">image AI API Key:</label>
                         <input type="text" class="form-control font-monospace" id="geminiApiKeyInput" placeholder="AIzaSy...">
                         <small class="text-muted">
                             <strong>Get your free API key:</strong><br>
@@ -1248,11 +1248,28 @@
                 </div>
                 <div class="modal-body">
                     <div class="alert alert-info">
-                        <strong>How to use:</strong> Upload a photo of your <span id="resourceTypeName">resources</span>. Gemini AI will identify names and automatically select them.
+                        <strong>How to use:</strong> Upload a photo of your <span id="resourceTypeName">resources</span>. Image AI will identify names and automatically select them.
                         <br><small>
                             Model: <strong id="currentModelDisplay">gemini-2.5-flash</strong> |
                             <a href="#" onclick="showApiKeyDialog(); return false;">Change model</a>
                         </small>
+                    </div>
+
+                    <!-- Resource Type Selection -->
+                    <div class="mb-3">
+                        <label class="form-label"><strong>Select resource type to scan:</strong></label>
+                        <select id="scanResourceTypeSelect" class="form-select" onchange="changeScanResourceType()">
+                            <option value="imperium">Imperium Cards</option>
+                            <option value="intrigue">Intrigue Cards</option>
+                            <option value="tleilax">Tleilax Cards</option>
+                            <option value="reserve">Reserve Cards</option>
+                            <option value="tech">Tech Tiles</option>
+                            <option value="contracts">Contracts</option>
+                            <option value="leader">Leaders</option>
+                            <option value="sardaukar">Sardaukar</option>
+                            <option value="starter">Starter Cards</option>
+                            <option value="conflict">Conflict Cards</option>
+                        </select>
                     </div>
 
                     <!-- Input Method Selection -->
@@ -1333,13 +1350,16 @@
 
                     <!-- Results -->
                     <div id="scanResults" style="display: none;" class="mt-3">
-                        <h6>Detected Cards:</h6>
+                        <h6 class="mb-2">Detected Resources:</h6>
                         <div id="detectedCardsList" class="list-group">
-                            <!-- Dynamically populated -->
+                            <!-- Dynamically populated with checkboxes -->
                         </div>
-                        <div class="mt-3">
-                            <button type="button" class="btn btn-success" onclick="applyDetectedCards()">
-                                ✅ Select All Detected Cards
+                        <div class="mt-3 d-flex gap-2">
+                            <button type="button" class="btn btn-success" onclick="addSelectedDetectedResources()">
+                                ✅ Add Detected Resources
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="removeSelectedDetectedResources()">
+                                ❌ Remove Selected Resources
                             </button>
                         </div>
                     </div>
@@ -3742,7 +3762,7 @@
         }
 
         // ========================================
-        // Photo Scanning with Gemini Flash 2.5
+        // Photo Scanning with image AI (Gemini Flash 2.5)
         // ========================================
 
         let geminiApiKey = localStorage.getItem('geminiApiKey') || '';
@@ -3760,8 +3780,14 @@
             // Store the resource type
             currentResourceType = resourceType;
 
-            // Reset dialog state
-            resetPhotoScanDialog();
+            // DON'T reset dialog - preserve previous scan results
+            // Only reset when modal is closed or new input is provided
+
+            // Update resource type selector dropdown
+            const resourceTypeSelect = document.getElementById('scanResourceTypeSelect');
+            if (resourceTypeSelect) {
+                resourceTypeSelect.value = resourceType;
+            }
 
             // Update dialog title and text based on resource type
             const resourceNames = {
@@ -3783,12 +3809,56 @@
             const modelDisplayName = geminiModel === 'gemini-2.5-flash-lite' ? 'gemini-2.5-flash-lite' : 'gemini-2.5-flash';
             document.getElementById('currentModelDisplay').textContent = modelDisplayName;
 
-            const modal = new bootstrap.Modal(document.getElementById('photoScanModal'));
+            // Show modal - reuse existing instance if available
+            const modalElement = document.getElementById('photoScanModal');
+            let modal = bootstrap.Modal.getInstance(modalElement);
+            if (!modal) {
+                modal = new bootstrap.Modal(modalElement);
+            }
             modal.show();
         }
         window.showPhotoScanDialog = showPhotoScanDialog;
 
+        function changeScanResourceType() {
+            const resourceTypeSelect = document.getElementById('scanResourceTypeSelect');
+            if (resourceTypeSelect) {
+                currentResourceType = resourceTypeSelect.value;
+
+                // Update the description text
+                const resourceNames = {
+                    'imperium': 'Imperium Cards',
+                    'intrigue': 'Intrigue Cards',
+                    'tleilax': 'Tleilax Cards',
+                    'reserve': 'Reserve Cards',
+                    'tech': 'Tech Tiles',
+                    'contracts': 'Contracts',
+                    'leader': 'Leaders',
+                    'sardaukar': 'Sardaukar',
+                    'starter': 'Starter Cards',
+                    'conflict': 'Conflict Cards'
+                };
+
+                document.getElementById('resourceTypeName').textContent = resourceNames[currentResourceType] || 'resources';
+            }
+        }
+        window.changeScanResourceType = changeScanResourceType;
+
         let cameraStream = null; // Store camera stream for cleanup
+
+        function resetScanResults() {
+            // Reset status
+            document.getElementById('scanStatus').innerHTML = '<p class="text-muted mb-0"><em>Processing...</em></p>';
+
+            // Hide preview
+            document.getElementById('photoPreviewContainer').style.display = 'none';
+
+            // Hide results
+            document.getElementById('scanResults').style.display = 'none';
+            document.getElementById('detectedCardsList').innerHTML = '';
+
+            // Clear detected cards
+            detectedCardsGlobal = [];
+        }
 
         function resetPhotoScanDialog() {
             // Clear file input
@@ -3937,6 +4007,9 @@
                     captureBtn.style.display = 'none';
                     retakeBtn.style.display = 'block';
 
+                    // Reset previous scan results when new photo is captured
+                    resetScanResults();
+
                     // Process the captured photo
                     await processPhotoForCards(file);
                 }
@@ -4058,6 +4131,9 @@
                 type: clipboardImageBlob.type
             });
 
+            // Reset previous scan results when new clipboard image is processed
+            resetScanResults();
+
             // Process the image
             processPhotoForCards(file);
         }
@@ -4102,7 +4178,7 @@
             if (apiKey) {
                 // Validate API key format (should start with AIza)
                 if (!apiKey.startsWith('AIza')) {
-                    alert('Invalid API key format. Gemini API keys should start with "AIza".\n\nGet your API key from: https://aistudio.google.com/app/apikey');
+                    alert('Invalid API key format. image AI API keys should start with "AIza".\n\nGet your API key from: https://aistudio.google.com/app/apikey');
                     return;
                 }
                 geminiApiKey = apiKey;
@@ -4133,23 +4209,27 @@
             if (photoInput) {
                 photoInput.addEventListener('change', async (e) => {
                     if (e.target.files[0]) {
+                        // Reset previous scan results when new file is selected
+                        resetScanResults();
                         await processPhotoForCards(e.target.files[0]);
                     }
                 });
             }
 
-            // Reset dialog when closed
+            // DON'T reset dialog when closed - preserve scan results
+            // User can reopen and continue adding/removing resources
+            // Results only reset when new input is provided
             const photoScanModal = document.getElementById('photoScanModal');
-            if (photoScanModal) {
-                photoScanModal.addEventListener('hidden.bs.modal', () => {
-                    resetPhotoScanDialog();
-                });
-            }
+            // if (photoScanModal) {
+            //     photoScanModal.addEventListener('hidden.bs.modal', () => {
+            //         resetPhotoScanDialog();
+            //     });
+            // }
         });
 
         async function processPhotoForCards(file) {
             if (!geminiApiKey) {
-                alert('Please set your Gemini API key first');
+                alert('Please set your image AI API key first');
                 closeModal('photoScanModal');
                 showApiKeyDialog();
                 return;
@@ -4160,7 +4240,7 @@
             const previewImg = document.getElementById('photoPreview');
             const resultsDiv = document.getElementById('scanResults');
 
-            statusEl.innerHTML = '<p class="text-info"><strong>Processing image with Gemini AI...</strong></p>';
+            statusEl.innerHTML = '<p class="text-info"><strong>Processing image with image AI...</strong></p>';
             resultsDiv.style.display = 'none';
 
             try {
@@ -4203,9 +4283,9 @@
                     description: `List of all ${currentResourceType} resource names visible in the image`
                 };
 
-                statusEl.innerHTML = '<p class="text-info"><strong>Analyzing with Gemini AI...</strong></p>';
+                statusEl.innerHTML = '<p class="text-info"><strong>Analyzing with image AI...</strong></p>';
 
-                // Call Gemini API
+                // Call image AI API
                 const detectedNames = await callGeminiVision(imageBase64, resourceNames, schema);
 
                 if (detectedNames && detectedNames.length > 0) {
@@ -4276,33 +4356,22 @@
                                 type: currentResourceType,
                                 resource: bestMatch,
                                 detectedAs: detectedName,
-                                confidence: confidence
+                                confidence: confidence,
+                                checked: true  // Default to checked
                             });
                         }
                     });
 
                     if (matchedCards.length > 0) {
-                        const listHtml = matchedCards.map(card => {
-                            // Get name based on resource type
-                            const name = currentResourceType === 'contracts' ? card.resource.objective : card.resource.name;
-                            const source = card.resource.source || card.resource.card_set || '';
-                            const confidenceBadge = card.confidence === 'high' ? 'success' :
-                                                   card.confidence === 'medium' ? 'warning' : 'secondary';
-                            return `
-                                <div class="list-group-item">
-                                    <strong>${name}</strong>
-                                    ${source ? `<span class="badge bg-secondary">${source}</span>` : ''}
-                                    <span class="badge bg-${confidenceBadge}">${card.confidence}</span>
-                                    <br>
-                                    <small class="text-muted">Detected: "${card.detectedAs}"</small>
-                                </div>
-                            `;
-                        }).join('');
+                        // Store matched cards globally and set all to checked by default
+                        detectedCardsGlobal = matchedCards;
 
-                        document.getElementById('detectedCardsList').innerHTML = listHtml;
+
+                        // Render the list with checkboxes
+                        renderDetectedCardsList();
+
                         resultsDiv.style.display = 'block';
                         statusEl.innerHTML = `<p class="text-success"><strong>✅ Found ${matchedCards.length} resource(s)!</strong></p>`;
-                        detectedCardsGlobal = matchedCards;
                     } else {
                         statusEl.innerHTML = '<p class="text-warning">Cards detected but could not match to database</p>';
                     }
@@ -4369,38 +4438,158 @@
             const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
             if (!textResponse) {
-                throw new Error('No response from Gemini API');
+                throw new Error('No response from image AI API');
             }
 
             return JSON.parse(textResponse);
         }
 
-        function applyDetectedCards() {
-            if (detectedCardsGlobal.length === 0) {
-                alert('No resources detected to apply');
+        function updateResourceTypeFilter() {
+            renderDetectedCardsList();
+        }
+        window.updateResourceTypeFilter = updateResourceTypeFilter;
+
+        function renderDetectedCardsList() {
+            // Display all detected cards (no filtering needed since resource type is already known)
+            const listHtml = detectedCardsGlobal.map((card, index) => {
+                // Get name based on resource type
+                const name = card.type === 'contracts' ? card.resource.objective : card.resource.name;
+                const source = card.resource.source || card.resource.card_set || '';
+                const confidenceBadge = card.confidence === 'high' ? 'success' :
+                                       card.confidence === 'medium' ? 'warning' : 'secondary';
+
+                // Check if this card is already selected in the checkbox state (default to true)
+                const isChecked = card.checked !== false; // Default to checked unless explicitly set to false
+
+                return `
+                    <div class="list-group-item d-flex align-items-center">
+                        <input type="checkbox" class="form-check-input me-3" id="detectedCard_${index}"
+                               ${isChecked ? 'checked' : ''}
+                               onchange="toggleDetectedCard(${index})">
+                        <label class="flex-grow-1" for="detectedCard_${index}" style="cursor: pointer;">
+                            <strong>${name}</strong>
+                            ${source ? `<span class="badge bg-secondary ms-2">${source}</span>` : ''}
+                            <span class="badge bg-${confidenceBadge} ms-2">${card.confidence}</span>
+                            <br>
+                            <small class="text-muted">Detected: "${card.detectedAs}"</small>
+                        </label>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('detectedCardsList').innerHTML = listHtml || '<p class="text-muted">No resources detected</p>';
+        }
+
+        function toggleDetectedCard(index) {
+            if (detectedCardsGlobal[index]) {
+                detectedCardsGlobal[index].checked = !detectedCardsGlobal[index].checked;
+            }
+        }
+        window.toggleDetectedCard = toggleDetectedCard;
+
+        function addSelectedDetectedResources() {
+            const selectedCards = detectedCardsGlobal.filter(card => card.checked);
+
+            if (selectedCards.length === 0) {
+                alert('No resources selected. Check the boxes next to resources you want to add.');
                 return;
             }
 
-            // Add detected resources to selection
-            detectedCardsGlobal.forEach(card => {
+            // Add selected resources to their respective types
+            const addedByType = {};
+            const skippedResources = [];
+
+            selectedCards.forEach(card => {
                 const resource = card.resource;
-                // Increment selected count
-                resource.selected = (resource.selected || 0) + 1;
+                const type = card.type;
+
+                // Check Count limit (or count_per_player for starter cards)
+                const maxCount = resource.count || resource.count_per_player || 999;
+                const currentSelected = resource.selected || 0;
+
+                if (currentSelected >= maxCount) {
+                    // Already at maximum count, skip this resource
+                    const resourceName = type === 'contracts' ? resource.objective : resource.name;
+                    skippedResources.push(`${resourceName} (already at max ${maxCount})`);
+                    return;
+                }
+
+                // Increment selected count (respecting max limit)
+                resource.selected = currentSelected + 1;
+
+                // Track how many added per type
+                addedByType[type] = (addedByType[type] || 0) + 1;
             });
 
-            // Update the tab for current resource type
-            try {
-                initializeTab(currentResourceType);
-                updateBadge(currentResourceType);
-                updateStatsForType(currentResourceType);
-            } catch (error) {
-                console.error(`Error updating ${currentResourceType} tab:`, error);
+            // Update all affected tabs
+            Object.keys(addedByType).forEach(type => {
+                try {
+                    initializeTab(type);
+                    updateBadge(type);
+                    updateStatsForType(type);
+                } catch (error) {
+                    console.error(`Error updating ${type} tab:`, error);
+                }
+            });
+
+            // DON'T close modal or clear results - user may want to add/remove more
+            // Modal stays open with same scan results for further operations
+
+            const totalAdded = Object.values(addedByType).reduce((sum, count) => sum + count, 0);
+            console.log(`✅ Added ${totalAdded} resource(s) to blend`);
+
+            // Log skipped resources to console (no popup)
+            if (skippedResources.length > 0) {
+                console.log(`⚠️ Skipped ${skippedResources.length} resource(s) already at max count:`, skippedResources);
+            }
+        }
+        window.addSelectedDetectedResources = addSelectedDetectedResources;
+
+        function removeSelectedDetectedResources() {
+            const selectedCards = detectedCardsGlobal.filter(card => card.checked);
+
+            if (selectedCards.length === 0) {
+                alert('No resources selected. Check the boxes next to resources you want to remove.');
+                return;
             }
 
-            // Close modal
-            closeModal('photoScanModal');
+            // Remove selected resources from their respective types
+            const removedByType = {};
 
-            detectedCardsGlobal = [];
+            selectedCards.forEach(card => {
+                const resource = card.resource;
+                const type = card.type;
+
+                // Decrement selected count (don't go below 0)
+                if (resource.selected && resource.selected > 0) {
+                    resource.selected = resource.selected - 1;
+                    removedByType[type] = (removedByType[type] || 0) + 1;
+                }
+            });
+
+            // Update all affected tabs
+            Object.keys(removedByType).forEach(type => {
+                try {
+                    initializeTab(type);
+                    updateBadge(type);
+                    updateStatsForType(type);
+                } catch (error) {
+                    console.error(`Error updating ${type} tab:`, error);
+                }
+            });
+
+            // DON'T close modal or clear results - user may want to add/remove more
+            // Modal stays open with same scan results for further operations
+
+            console.log(`✅ Removed ${selectedCards.length} resource(s) from blend`);
+        }
+        window.removeSelectedDetectedResources = removeSelectedDetectedResources;
+
+        function applyDetectedCards() {
+            // Legacy function - redirect to new function
+            // Select all cards first
+            detectedCardsGlobal.forEach(card => card.checked = true);
+            addSelectedDetectedResources();
         }
         window.applyDetectedCards = applyDetectedCards;
 
