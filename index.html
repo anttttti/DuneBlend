@@ -242,6 +242,11 @@
                 </button>
             </li>
             <li class="nav-item" role="presentation">
+                <button class="nav-link" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview-panel" type="button">
+                    Overview
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
                 <button class="nav-link" id="imperium-tab" data-bs-toggle="tab" data-bs-target="#imperium-panel" type="button">
                     Imperium <span id="imperium-badge" class="badge bg-secondary">0</span>
                 </button>
@@ -369,6 +374,33 @@
                 </div>
             </div>
 
+            <!-- Overview Panel -->
+            <div class="tab-pane fade" id="overview-panel" role="tabpanel">
+                <div class="row">
+                    <div class="col-12">
+                        <h4>Overview</h4>
+
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h5>Description</h5>
+                            </div>
+                            <div class="card-body">
+                                <textarea class="form-control" id="overview-description" rows="6" placeholder="Describe your blend: what makes it unique, what gameplay style it emphasizes, recommended player count, etc."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>House Rules</h5>
+                            </div>
+                            <div class="card-body">
+                                <textarea class="form-control" id="overview-house-rules" rows="8" placeholder="Any special rules, modifications, or clarifications for playing with this blend."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Imperium Panel -->
             <div class="tab-pane fade" id="imperium-panel" role="tabpanel">
                 <div class="row">
@@ -398,18 +430,17 @@
                                     <col style="width: 35px;"><!-- Spies -->
                                     <col style="width: 50px;"><!-- Sandworms -->
                                     <col style="width: 50px;"><!-- Contracts -->
-                                    <col style="width: 40px;"><!-- Battle Icons -->
                                     <col style="width: 50px;"><!-- Sardaukar -->
                                     <col style="width: 35px;"><!-- Green Access -->
                                     <col style="width: 35px;"><!-- Purple Access -->
                                     <col style="width: 35px;"><!-- Yellow Access -->
                                     <col style="width: 45px;"><!-- Emperor Access -->
-                                    <col style="width: 35px;"><!-- Guild Access -->
+                                    <col style="width: 35px;"><!-- Spacing Guild Access -->
                                     <col style="width: 70px;"><!-- Bene Gesserit Access -->
                                     <col style="width: 40px;"><!-- Fremen Access -->
                                     <col style="width: 30px;"><!-- Spy Access -->
                                     <col style="width: 45px;"><!-- Emperor Affiliation -->
-                                    <col style="width: 45px;"><!-- Guild Affiliation -->
+                                    <col style="width: 45px;"><!-- Spacing Guild Affiliation -->
                                     <col style="width: 70px;"><!-- Bene Gesserit Affiliation -->
                                     <col style="width: 45px;"><!-- Fremen Affiliation -->
                                     <col style="width: 50px;"><!-- Compatibility -->
@@ -418,7 +449,10 @@
                                 <thead class="sticky-top bg-white">
                                     <tr>
                                         <th rowspan="2" class="resizable sortable" style="cursor: pointer;" onclick="sortResourceTable('imperium', 'selected')">
-                                            Selected<div class="resize-handle"></div>
+                                            Selected
+                                            <button class="btn btn-sm btn-outline-success" style="padding: 0px 3px; font-size: 0.7rem; margin-left: 2px;" onclick="event.stopPropagation(); selectAllResources('imperium');" title="Select all to Count">+</button>
+                                            <button class="btn btn-sm btn-outline-danger" style="padding: 0px 3px; font-size: 0.7rem;" onclick="event.stopPropagation(); deselectAllResources('imperium');" title="Deselect all">-</button>
+                                            <div class="resize-handle"></div>
                                         </th>
                                         <th rowspan="2" class="resizable sortable" style="width: 150px; cursor: pointer;" onclick="sortResourceTable('imperium', 'name')">
                                             Name<div class="resize-handle"></div>
@@ -434,25 +468,25 @@
                                         </th>
                                         <th colspan="3" class="group-header">Abilities</th>
                                         <th colspan="3" class="group-header">Reveal</th>
-                                        <th colspan="11" class="group-header">Mechanics</th>
+                                        <th colspan="10" class="group-header">Mechanics</th>
                                         <th colspan="8" class="group-header">Access</th>
                                         <th colspan="4" class="group-header">Affiliation</th>
-                                        <th rowspan="2" class="resizable" style="width: 80px;">
+                                        <th rowspan="2" class="resizable sortable" style="width: 80px; cursor: pointer;" onclick="sortResourceTable('imperium', 'compatibility')">
                                             Compat<div class="resize-handle"></div>
                                         </th>
-                                        <th rowspan="2" class="resizable" style="width: 50px;">
+                                        <th rowspan="2" class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('imperium', 'vps_available')">
                                             VPs<div class="resize-handle"></div>
                                         </th>
                                     </tr>
                                     <tr>
                                         <!-- Ability columns -->
-                                        <th class="resizable" style="width: 50px;">
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('imperium', 'agent')">
                                             Agent<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 55px;">
+                                        <th class="resizable sortable" style="width: 55px; cursor: pointer;" onclick="sortResourceTable('imperium', 'passive')">
                                             Passive<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 80px;">
+                                        <th class="resizable sortable" style="width: 80px; cursor: pointer;" onclick="sortResourceTable('imperium', 'acquisition')">
                                             Acquisition<div class="resize-handle"></div>
                                         </th>
                                         <!-- Reveal columns -->
@@ -462,79 +496,76 @@
                                         <th class="resizable sortable" style="width: 60px; cursor: pointer;" onclick="sortResourceTable('imperium', 'reveal_swords')">
                                             Swords<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 50px;">
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('imperium', 'reveal_ability')">
                                             Ability<div class="resize-handle"></div>
                                         </th>
                                         <!-- Mechanics columns -->
-                                        <th class="resizable" style="width: 50px;">
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('imperium', 'tech')">
                                             Tech<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 50px;">
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('imperium', 'shipping')">
                                             Shipping<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 50px;">
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('imperium', 'unload')">
                                             Unload<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 60px;">
+                                        <th class="resizable sortable" style="width: 60px; cursor: pointer;" onclick="sortResourceTable('imperium', 'infiltration')">
                                             Infiltration<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 50px;">
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('imperium', 'research')">
                                             Research<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 50px;">
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('imperium', 'grafting')">
                                             Grafting<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 50px;">
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('imperium', 'spies')">
                                             Spies<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 60px;">
+                                        <th class="resizable sortable" style="width: 60px; cursor: pointer;" onclick="sortResourceTable('imperium', 'sandworms')">
                                             Sandworms<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 60px;">
+                                        <th class="resizable sortable" style="width: 60px; cursor: pointer;" onclick="sortResourceTable('imperium', 'contracts')">
                                             Contracts<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 50px;">
-                                            Battle Icons<div class="resize-handle"></div>
-                                        </th>
-                                        <th class="resizable" style="width: 60px;">
+                                        <th class="resizable sortable" style="width: 60px; cursor: pointer;" onclick="sortResourceTable('imperium', 'sardaukar')">
                                             Sardaukar<div class="resize-handle"></div>
                                         </th>
                                         <!-- Access columns -->
-                                        <th class="resizable" style="width: 50px;">
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('imperium', 'green_access')">
                                             Green<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 50px;">
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('imperium', 'purple_access')">
                                             Purple<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 50px;">
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('imperium', 'yellow_access')">
                                             Yellow<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 50px;">
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('imperium', 'emperor_access')">
                                             Emperor<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 50px;">
-                                            Guild<div class="resize-handle"></div>
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('imperium', 'spacing_guild_access')">
+                                            Spacing Guild<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 50px;">
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('imperium', 'bene_gesserit_access')">
                                             Bene Gesserit<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 50px;">
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('imperium', 'fremen_access')">
                                             Fremen<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 50px;">
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('imperium', 'spy_access')">
                                             Spy<div class="resize-handle"></div>
                                         </th>
                                         <!-- Affiliation columns -->
-                                        <th class="resizable" style="width: 55px;">
+                                        <th class="resizable sortable" style="width: 55px; cursor: pointer;" onclick="sortResourceTable('imperium', 'emperor_affiliation')">
                                             Emperor<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 55px;">
-                                            Guild<div class="resize-handle"></div>
+                                        <th class="resizable sortable" style="width: 55px; cursor: pointer;" onclick="sortResourceTable('imperium', 'spacing_guild_affiliation')">
+                                            Spacing Guild<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 55px;">
+                                        <th class="resizable sortable" style="width: 55px; cursor: pointer;" onclick="sortResourceTable('imperium', 'bene_gesserit_affiliation')">
                                             Bene Gesserit<div class="resize-handle"></div>
                                         </th>
-                                        <th class="resizable" style="width: 55px;">
+                                        <th class="resizable sortable" style="width: 55px; cursor: pointer;" onclick="sortResourceTable('imperium', 'fremen_affiliation')">
                                             Fremen<div class="resize-handle"></div>
                                         </th>
                                     </tr>
@@ -542,6 +573,7 @@
                                 <tbody id="imperium-tbody"></tbody>
                             </table>
                         </div>
+                        <div class="table-resize-handle" data-table="imperium-table-container"></div>
                         <small class="text-muted">Use +/- buttons to add/remove cards from blend.</small>
                     </div>
                 </div>
@@ -574,39 +606,38 @@
                                     <col style="width: 35px;"><!-- Spies -->
                                     <col style="width: 50px;"><!-- Sandworms -->
                                     <col style="width: 50px;"><!-- Contracts -->
-                                    <col style="width: 35px;"><!-- Battle -->
                                     <col style="width: 50px;"><!-- Sardaukar -->
                                     <col style="width: 70px;"><!-- Plot -->
                                     <col style="width: 70px;"><!-- Combat -->
                                     <col style="width: 70px;"><!-- Endgame -->
-                                    <col style="width: 40px;"><!-- Twisted -->
                                     <col style="width: 30px;"><!-- VPs -->
                                 </colgroup>
                                 <thead class="sticky-top bg-white">
                                     <tr>
-                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'selected')">Selected<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'selected')">Selected
+                                            <button class="btn btn-sm btn-outline-success" style="padding: 0px 3px; font-size: 0.7rem; margin-left: 2px;" onclick="event.stopPropagation(); selectAllResources('intrigue');" title="Select all to Count">+</button>
+                                            <button class="btn btn-sm btn-outline-danger" style="padding: 0px 3px; font-size: 0.7rem;" onclick="event.stopPropagation(); deselectAllResources('intrigue');" title="Deselect all">-</button>
+                                            <div class="resize-handle"></div></th>
                                         <th rowspan="2" class="resizable sortable" style="width: 150px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'name')">Name<div class="resize-handle"></div></th>
                                         <th rowspan="2" class="resizable sortable" style="width: 80px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'source')">Set<div class="resize-handle"></div></th>
                                         <th rowspan="2" class="resizable sortable" style="width: 70px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'count')">Count<div class="resize-handle"></div></th>
-                                        <th colspan="8" class="group-header">Mechanics</th>
+                                        <th colspan="7" class="group-header">Mechanics</th>
                                         <th colspan="3" class="group-header">Effects</th>
-                                        <th rowspan="2" class="resizable" style="width: 50px;">Twisted<div class="resize-handle"></div></th>
-                                        <th rowspan="2" class="resizable" style="width: 50px;">VPs<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'vps_available')">VPs<div class="resize-handle"></div></th>
                                     </tr>
                                     <tr>
                                         <!-- Mechanics -->
-                                        <th class="resizable" style="width: 45px;">Tech<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 50px;">Shipping<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 50px;">Research<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 45px;">Spies<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 60px;">Sandworms<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 60px;">Contracts<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 50px;">Battle<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 60px;">Sardaukar<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 45px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'tech')">Tech<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'shipping')">Shipping<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'research')">Research<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 45px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'spies')">Spies<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 60px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'sandworms')">Sandworms<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 60px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'contracts')">Contracts<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 60px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'sardaukar')">Sardaukar<div class="resize-handle"></div></th>
                                         <!-- Effects -->
-                                        <th class="resizable" style="width: 100px;">Plot<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 100px;">Combat<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 100px;">Endgame<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 100px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'plot_effect')">Plot<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 100px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'combat_effect')">Combat<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 100px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'endgame_effect')">Endgame<div class="resize-handle"></div></th>
                                     </tr>
                                 </thead>
                                 <tbody id="intrigue-tbody"></tbody>
@@ -640,69 +671,56 @@
                                     <col style="width: 45px;"><!-- Count -->
                                     <col style="width: 35px;"><!-- Cost -->
                                     <col style="width: 70px;"><!-- Agent -->
-                                    <col style="width: 70px;"><!-- Passive -->
                                     <col style="width: 45px;"><!-- Reveal Persuasion -->
                                     <col style="width: 45px;"><!-- Reveal Swords -->
                                     <col style="width: 70px;"><!-- Reveal Ability -->
-                                    <col style="width: 30px;"><!-- Tech -->
-                                    <col style="width: 40px;"><!-- Shipping -->
-                                    <col style="width: 40px;"><!-- Unload -->
                                     <col style="width: 50px;"><!-- Infiltration -->
                                     <col style="width: 45px;"><!-- Research -->
                                     <col style="width: 40px;"><!-- Grafting -->
-                                    <col style="width: 35px;"><!-- Spies -->
-                                    <col style="width: 50px;"><!-- Sandworms -->
-                                    <col style="width: 50px;"><!-- Contracts -->
                                     <col style="width: 35px;"><!-- Green Access -->
                                     <col style="width: 35px;"><!-- Purple Access -->
                                     <col style="width: 35px;"><!-- Yellow Access -->
                                     <col style="width: 45px;"><!-- Emperor Access -->
-                                    <col style="width: 35px;"><!-- Guild Access -->
+                                    <col style="width: 35px;"><!-- Spacing Guild Access -->
                                     <col style="width: 30px;"><!-- BG Access -->
                                     <col style="width: 40px;"><!-- Fremen Access -->
-                                    <col style="width: 30px;"><!-- Spy Access -->
                                     <col style="width: 30px;"><!-- VPs -->
                                 </colgroup>
                                 <thead class="sticky-top bg-white">
                                     <tr>
-                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('tleilax', 'selected')">Selected<div class="resize-handle"></div></th>
-                                        <th rowspan="2" class="resizable" style="width: 150px;">Name<div class="resize-handle"></div></th>
-                                        <th rowspan="2" class="resizable" style="width: 80px;">Set<div class="resize-handle"></div></th>
-                                        <th rowspan="2" class="resizable" style="width: 70px;">Count<div class="resize-handle"></div></th>
-                                        <th rowspan="2" class="resizable" style="width: 50px;">Cost<div class="resize-handle"></div></th>
-                                        <th colspan="2" class="group-header">Abilities</th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('tleilax', 'selected')">Selected
+                                            <button class="btn btn-sm btn-outline-success" style="padding: 0px 3px; font-size: 0.7rem; margin-left: 2px;" onclick="event.stopPropagation(); selectAllResources('tleilax');" title="Select all to Count">+</button>
+                                            <button class="btn btn-sm btn-outline-danger" style="padding: 0px 3px; font-size: 0.7rem;" onclick="event.stopPropagation(); deselectAllResources('tleilax');" title="Deselect all">-</button>
+                                            <div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 150px; cursor: pointer;" onclick="sortResourceTable('tleilax', 'name')">Name<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 80px; cursor: pointer;" onclick="sortResourceTable('tleilax', 'source')">Set<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 70px; cursor: pointer;" onclick="sortResourceTable('tleilax', 'count')">Count<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('tleilax', 'cost')">Cost<div class="resize-handle"></div></th>
+                                        <th colspan="1" class="group-header">Abilities</th>
                                         <th colspan="3" class="group-header">Reveal</th>
-                                        <th colspan="9" class="group-header">Mechanics</th>
-                                        <th colspan="8" class="group-header">Access</th>
-                                        <th rowspan="2" class="resizable" style="width: 50px;">VPs<div class="resize-handle"></div></th>
+                                        <th colspan="3" class="group-header">Mechanics</th>
+                                        <th colspan="7" class="group-header">Access</th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('tleilax', 'vps_available')">VPs<div class="resize-handle"></div></th>
                                     </tr>
                                     <tr>
                                         <!-- Abilities -->
-                                        <th class="resizable" style="width: 50px;">Agent<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 55px;">Passive<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('tleilax', 'agent')">Agent<div class="resize-handle"></div></th>
                                         <!-- Reveal -->
-                                        <th class="resizable" style="width: 60px;">Persuasion<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 60px;">Swords<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 50px;">Ability<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 60px; cursor: pointer;" onclick="sortResourceTable('tleilax', 'reveal_persuasion')">Persuasion<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 60px; cursor: pointer;" onclick="sortResourceTable('tleilax', 'reveal_swords')">Swords<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('tleilax', 'reveal_ability')">Ability<div class="resize-handle"></div></th>
                                         <!-- Mechanics -->
-                                        <th class="resizable" style="width: 45px;">Tech<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 50px;">Shipping<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 50px;">Unload<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 60px;">Infiltration<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 50px;">Research<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 50px;">Grafting<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 45px;">Spies<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 60px;">Sandworms<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 60px;">Contracts<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 60px; cursor: pointer;" onclick="sortResourceTable('tleilax', 'infiltration')">Infiltration<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('tleilax', 'research')">Research<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('tleilax', 'grafting')">Grafting<div class="resize-handle"></div></th>
                                         <!-- Access -->
-                                        <th class="resizable" style="width: 45px;">Green<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 45px;">Purple<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 45px;">Yellow<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 50px;">Emperor<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 45px;">Guild<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 40px;">BG<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 45px;">Fremen<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 40px;">Spy<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 45px; cursor: pointer;" onclick="sortResourceTable('tleilax', 'green_access')">Green<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 45px; cursor: pointer;" onclick="sortResourceTable('tleilax', 'purple_access')">Purple<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 45px; cursor: pointer;" onclick="sortResourceTable('tleilax', 'yellow_access')">Yellow<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('tleilax', 'emperor_access')">Emperor<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 45px; cursor: pointer;" onclick="sortResourceTable('tleilax', 'spacing_guild_access')">Spacing Guild<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 40px; cursor: pointer;" onclick="sortResourceTable('tleilax', 'bene_gesserit_access')">BG<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 45px; cursor: pointer;" onclick="sortResourceTable('tleilax', 'fremen_access')">Fremen<div class="resize-handle"></div></th>
                                     </tr>
                                 </thead>
                                 <tbody id="tleilax-tbody"></tbody>
@@ -744,39 +762,42 @@
                                     <col style="width: 35px;"><!-- Purple -->
                                     <col style="width: 35px;"><!-- Yellow -->
                                     <col style="width: 45px;"><!-- Emperor -->
-                                    <col style="width: 35px;"><!-- Guild -->
+                                    <col style="width: 35px;"><!-- Spacing Guild -->
                                     <col style="width: 30px;"><!-- BG -->
                                     <col style="width: 40px;"><!-- Fremen -->
                                     <col style="width: 30px;"><!-- Spy -->
                                 </colgroup>
                                 <thead class="sticky-top bg-white">
                                     <tr>
-                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('reserve', 'selected')">Selected<div class="resize-handle"></div></th>
-                                        <th rowspan="2" class="resizable" style="width: 150px;">Name<div class="resize-handle"></div></th>
-                                        <th rowspan="2" class="resizable" style="width: 80px;">Set<div class="resize-handle"></div></th>
-                                        <th rowspan="2" class="resizable" style="width: 70px;">Count<div class="resize-handle"></div></th>
-                                        <th rowspan="2" class="resizable" style="width: 50px;">Cost<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('reserve', 'selected')">Selected
+                                            <button class="btn btn-sm btn-outline-success" style="padding: 0px 3px; font-size: 0.7rem; margin-left: 2px;" onclick="event.stopPropagation(); selectAllResources('reserve');" title="Select all to Count">+</button>
+                                            <button class="btn btn-sm btn-outline-danger" style="padding: 0px 3px; font-size: 0.7rem;" onclick="event.stopPropagation(); deselectAllResources('reserve');" title="Deselect all">-</button>
+                                            <div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 150px; cursor: pointer;" onclick="sortResourceTable('reserve', 'name')">Name<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 80px; cursor: pointer;" onclick="sortResourceTable('reserve', 'source')">Set<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 70px; cursor: pointer;" onclick="sortResourceTable('reserve', 'count')">Count<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('reserve', 'cost')">Cost<div class="resize-handle"></div></th>
                                         <th colspan="2" class="group-header">Abilities</th>
                                         <th colspan="3" class="group-header">Reveal</th>
                                         <th colspan="8" class="group-header">Access</th>
                                     </tr>
                                     <tr>
                                         <!-- Abilities -->
-                                        <th class="resizable" style="width: 50px;">Agent<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 55px;">Passive<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('reserve', 'agent')">Agent<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 55px; cursor: pointer;" onclick="sortResourceTable('reserve', 'passive')">Passive<div class="resize-handle"></div></th>
                                         <!-- Reveal -->
-                                        <th class="resizable" style="width: 60px;">Persuasion<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 60px;">Swords<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 50px;">Ability<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 60px; cursor: pointer;" onclick="sortResourceTable('reserve', 'reveal_persuasion')">Persuasion<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 60px; cursor: pointer;" onclick="sortResourceTable('reserve', 'reveal_swords')">Swords<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('reserve', 'reveal_ability')">Ability<div class="resize-handle"></div></th>
                                         <!-- Access -->
-                                        <th class="resizable" style="width: 45px;">Green<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 45px;">Purple<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 45px;">Yellow<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 50px;">Emperor<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 45px;">Guild<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 40px;">BG<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 45px;">Fremen<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 40px;">Spy<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 45px; cursor: pointer;" onclick="sortResourceTable('reserve', 'green_access')">Green<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 45px; cursor: pointer;" onclick="sortResourceTable('reserve', 'purple_access')">Purple<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 45px; cursor: pointer;" onclick="sortResourceTable('reserve', 'yellow_access')">Yellow<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('reserve', 'emperor_access')">Emperor<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 45px; cursor: pointer;" onclick="sortResourceTable('reserve', 'spacing_guild_access')">Spacing Guild<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 40px; cursor: pointer;" onclick="sortResourceTable('reserve', 'bene_gesserit_access')">BG<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 45px; cursor: pointer;" onclick="sortResourceTable('reserve', 'fremen_access')">Fremen<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 40px; cursor: pointer;" onclick="sortResourceTable('reserve', 'spy_access')">Spy<div class="resize-handle"></div></th>
                                     </tr>
                                 </thead>
                                 <tbody id="reserve-tbody"></tbody>
@@ -813,29 +834,30 @@
                                     <col style="width: 35px;"><!-- Spies -->
                                     <col style="width: 50px;"><!-- Sandworms -->
                                     <col style="width: 50px;"><!-- Contracts -->
-                                    <col style="width: 35px;"><!-- Battle -->
                                     <col style="width: 50px;"><!-- Sardaukar -->
                                     <col style="width: 30px;"><!-- VPs -->
                                     <col style="width: 100px;"><!-- Effect -->
                                 </colgroup>
                                 <thead class="sticky-top bg-white">
                                     <tr>
-                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('tech', 'selected')">Selected<div class="resize-handle"></div></th>
-                                        <th rowspan="2" class="resizable" style="width: 150px;">Name<div class="resize-handle"></div></th>
-                                        <th rowspan="2" class="resizable" style="width: 80px;">Set<div class="resize-handle"></div></th>
-                                        <th rowspan="2" class="resizable" style="width: 80px;">Compat<div class="resize-handle"></div></th>
-                                        <th rowspan="2" class="resizable" style="width: 50px;">Cost<div class="resize-handle"></div></th>
-                                        <th colspan="6" class="group-header">Mechanics</th>
-                                        <th rowspan="2" class="resizable" style="width: 50px;">VPs<div class="resize-handle"></div></th>
-                                        <th rowspan="2" class="resizable" style="width: 100px;">Effect<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('tech', 'selected')">Selected
+                                            <button class="btn btn-sm btn-outline-success" style="padding: 0px 3px; font-size: 0.7rem; margin-left: 2px;" onclick="event.stopPropagation(); selectAllResources('tech');" title="Select all to Count">+</button>
+                                            <button class="btn btn-sm btn-outline-danger" style="padding: 0px 3px; font-size: 0.7rem;" onclick="event.stopPropagation(); deselectAllResources('tech');" title="Deselect all">-</button>
+                                            <div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 150px; cursor: pointer;" onclick="sortResourceTable('tech', 'name')">Name<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 80px; cursor: pointer;" onclick="sortResourceTable('tech', 'source')">Set<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 80px; cursor: pointer;" onclick="sortResourceTable('tech', 'compatibility')">Compat<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('tech', 'spice_cost')">Cost<div class="resize-handle"></div></th>
+                                        <th colspan="5" class="group-header">Mechanics</th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('tech', 'vps_available')">VPs<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 100px; cursor: pointer;" onclick="sortResourceTable('tech', 'effect')">Effect<div class="resize-handle"></div></th>
                                     </tr>
                                     <tr>
-                                        <th class="resizable" style="width: 50px;">Shipping<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 45px;">Spies<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 60px;">Sandworms<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 60px;">Contracts<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 50px;">Battle<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 60px;">Sardaukar<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('tech', 'shipping')">Shipping<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 45px; cursor: pointer;" onclick="sortResourceTable('tech', 'spies')">Spies<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 60px; cursor: pointer;" onclick="sortResourceTable('tech', 'sandworms')">Sandworms<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 60px; cursor: pointer;" onclick="sortResourceTable('tech', 'contracts')">Contracts<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 60px; cursor: pointer;" onclick="sortResourceTable('tech', 'sardaukar')">Sardaukar<div class="resize-handle"></div></th>
                                     </tr>
                                 </thead>
                                 <tbody id="tech-tbody"></tbody>
@@ -864,7 +886,7 @@
                             <table class="table table-sm table-hover table-bordered" style="table-layout: fixed;">
                                 <colgroup>
                                     <col style="width: 68px;"><!-- Selected -->
-                                    <col style="width: 200px;"><!-- Objective -->
+                                    <col style="width: 200px;"><!-- Name -->
                                     <col style="width: 80px;"><!-- Set -->
                                     <col style="width: 70px;"><!-- Count -->
                                     <col style="width: 150px;"><!-- Reward -->
@@ -872,12 +894,15 @@
                                 </colgroup>
                                 <thead class="sticky-top bg-white">
                                     <tr>
-                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('contracts', 'selected')">Selected<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 200px;">Objective<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 80px;">Set<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 70px;">Count<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 150px;">Reward<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 80px;">Ix Specific<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('contracts', 'selected')">Selected
+                                            <button class="btn btn-sm btn-outline-success" style="padding: 0px 3px; font-size: 0.7rem; margin-left: 2px;" onclick="event.stopPropagation(); selectAllResources('contracts');" title="Select all to Count">+</button>
+                                            <button class="btn btn-sm btn-outline-danger" style="padding: 0px 3px; font-size: 0.7rem;" onclick="event.stopPropagation(); deselectAllResources('contracts');" title="Deselect all">-</button>
+                                            <div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 200px; cursor: pointer;" onclick="sortResourceTable('contracts', 'name')">Name<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 80px; cursor: pointer;" onclick="sortResourceTable('contracts', 'source')">Set<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 70px; cursor: pointer;" onclick="sortResourceTable('contracts', 'count')">Count<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 150px; cursor: pointer;" onclick="sortResourceTable('contracts', 'reward')">Reward<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 80px; cursor: pointer;" onclick="sortResourceTable('contracts', 'rise_of_ix__specific')">Ix Specific<div class="resize-handle"></div></th>
                                     </tr>
                                 </thead>
                                 <tbody id="contracts-tbody"></tbody>
@@ -917,15 +942,18 @@
                                 </colgroup>
                                 <thead class="sticky-top bg-white">
                                     <tr>
-                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('leader', 'selected')">Selected<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 150px;">Name<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 80px;">Set<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 80px;">Compat<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 100px;">House<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 150px;">Starting Effect<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 150px;">Leader Ability<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 150px;">Signet Ring<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 80px;">Complexity<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('leader', 'selected')">Selected
+                                            <button class="btn btn-sm btn-outline-success" style="padding: 0px 3px; font-size: 0.7rem; margin-left: 2px;" onclick="event.stopPropagation(); selectAllResources('leader');" title="Select all to Count">+</button>
+                                            <button class="btn btn-sm btn-outline-danger" style="padding: 0px 3px; font-size: 0.7rem;" onclick="event.stopPropagation(); deselectAllResources('leader');" title="Deselect all">-</button>
+                                            <div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 150px; cursor: pointer;" onclick="sortResourceTable('leader', 'name')">Name<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 80px; cursor: pointer;" onclick="sortResourceTable('leader', 'source')">Set<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 80px; cursor: pointer;" onclick="sortResourceTable('leader', 'compatibility')">Compat<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 100px; cursor: pointer;" onclick="sortResourceTable('leader', 'house')">House<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 150px; cursor: pointer;" onclick="sortResourceTable('leader', 'starting_effect')">Starting Effect<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 150px; cursor: pointer;" onclick="sortResourceTable('leader', 'leader_ability')">Leader Ability<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 150px; cursor: pointer;" onclick="sortResourceTable('leader', 'signet_ring_ability')">Signet Ring<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 80px; cursor: pointer;" onclick="sortResourceTable('leader', 'listed_complexity_level')">Complexity<div class="resize-handle"></div></th>
                                     </tr>
                                 </thead>
                                 <tbody id="leader-tbody"></tbody>
@@ -955,17 +983,22 @@
                                 <colgroup>
                                     <col style="width: 68px;"><!-- Selected -->
                                     <col style="width: 150px;"><!-- Name -->
+                                    <col style="width: 80px;"><!-- Set -->
                                     <col style="width: 100px;"><!-- Compatibility -->
                                     <col style="width: 60px;"><!-- Count -->
                                     <col style="width: 250px;"><!-- Effect -->
                                 </colgroup>
                                 <thead class="sticky-top bg-white">
                                     <tr>
-                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('sardaukar', 'selected')">Selected<div class="resize-handle"></div></th>
-                                        <th style="width: 150px;">Name</th>
-                                        <th style="width: 100px;">Compatibility</th>
-                                        <th style="width: 60px;">Count</th>
-                                        <th style="width: 250px;">Effect</th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('sardaukar', 'selected')">Selected
+                                            <button class="btn btn-sm btn-outline-success" style="padding: 0px 3px; font-size: 0.7rem; margin-left: 2px;" onclick="event.stopPropagation(); selectAllResources('sardaukar');" title="Select all to Count">+</button>
+                                            <button class="btn btn-sm btn-outline-danger" style="padding: 0px 3px; font-size: 0.7rem;" onclick="event.stopPropagation(); deselectAllResources('sardaukar');" title="Deselect all">-</button>
+                                            <div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 150px; cursor: pointer;" onclick="sortResourceTable('sardaukar', 'name')">Name</th>
+                                        <th class="resizable sortable" style="width: 80px; cursor: pointer;" onclick="sortResourceTable('sardaukar', 'source')">Set</th>
+                                        <th class="resizable sortable" style="width: 100px; cursor: pointer;" onclick="sortResourceTable('sardaukar', 'compatibility')">Compatibility</th>
+                                        <th class="resizable sortable" style="width: 60px; cursor: pointer;" onclick="sortResourceTable('sardaukar', 'count')">Count</th>
+                                        <th class="resizable sortable" style="width: 250px; cursor: pointer;" onclick="sortResourceTable('sardaukar', 'effect')">Effect</th>
                                     </tr>
                                 </thead>
                                 <tbody id="sardaukar-tbody"></tbody>
@@ -1002,7 +1035,7 @@
                                     <col style="width: 35px;"><!-- Purple -->
                                     <col style="width: 35px;"><!-- Yellow -->
                                     <col style="width: 45px;"><!-- Emperor -->
-                                    <col style="width: 35px;"><!-- Guild -->
+                                    <col style="width: 35px;"><!-- Spacing Guild -->
                                     <col style="width: 30px;"><!-- BG -->
                                     <col style="width: 40px;"><!-- Fremen -->
                                     <col style="width: 45px;"><!-- Persuasion -->
@@ -1012,26 +1045,29 @@
                                 </colgroup>
                                 <thead class="sticky-top bg-white">
                                     <tr>
-                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('starter', 'selected')">Selected<div class="resize-handle"></div></th>
-                                        <th rowspan="2" class="resizable" style="width: 150px;">Name<div class="resize-handle"></div></th>
-                                        <th rowspan="2" class="resizable" style="width: 80px;">Set<div class="resize-handle"></div></th>
-                                        <th rowspan="2" class="resizable" style="width: 80px;">Compat<div class="resize-handle"></div></th>
-                                        <th rowspan="2" class="resizable" style="width: 70px;">Count/Player<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('starter', 'selected')">Selected
+                                            <button class="btn btn-sm btn-outline-success" style="padding: 0px 3px; font-size: 0.7rem; margin-left: 2px;" onclick="event.stopPropagation(); selectAllResources('starter');" title="Select all to Count">+</button>
+                                            <button class="btn btn-sm btn-outline-danger" style="padding: 0px 3px; font-size: 0.7rem;" onclick="event.stopPropagation(); deselectAllResources('starter');" title="Deselect all">-</button>
+                                            <div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 150px; cursor: pointer;" onclick="sortResourceTable('starter', 'name')">Name<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 80px; cursor: pointer;" onclick="sortResourceTable('starter', 'source')">Set<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 80px; cursor: pointer;" onclick="sortResourceTable('starter', 'compatibility')">Compat<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 70px; cursor: pointer;" onclick="sortResourceTable('starter', 'count_per_player')">Count/Player<div class="resize-handle"></div></th>
                                         <th colspan="7" class="group-header">Access</th>
                                         <th colspan="3" class="group-header">Reveal</th>
-                                        <th rowspan="2" class="resizable" style="width: 100px;">Agent<div class="resize-handle"></div></th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 100px; cursor: pointer;" onclick="sortResourceTable('starter', 'agent')">Agent<div class="resize-handle"></div></th>
                                     </tr>
                                     <tr>
-                                        <th class="resizable" style="width: 45px;">Green<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 45px;">Purple<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 45px;">Yellow<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 50px;">Emperor<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 45px;">Guild<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 40px;">BG<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 45px;">Fremen<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 50px;">Persuasion<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 50px;">Swords<div class="resize-handle"></div></th>
-                                        <th class="resizable" style="width: 70px;">Ability<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 45px; cursor: pointer;" onclick="sortResourceTable('starter', 'green_access')">Green<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 45px; cursor: pointer;" onclick="sortResourceTable('starter', 'purple_access')">Purple<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 45px; cursor: pointer;" onclick="sortResourceTable('starter', 'yellow_access')">Yellow<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('starter', 'emperor_access')">Emperor<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 45px; cursor: pointer;" onclick="sortResourceTable('starter', 'spacing_guild_access')">Spacing Guild<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 40px; cursor: pointer;" onclick="sortResourceTable('starter', 'bene_gesserit_access')">BG<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 45px; cursor: pointer;" onclick="sortResourceTable('starter', 'fremen_access')">Fremen<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('starter', 'reveal_persuasion')">Persuasion<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('starter', 'reveal_swords')">Swords<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 70px; cursor: pointer;" onclick="sortResourceTable('starter', 'reveal_ability')">Ability<div class="resize-handle"></div></th>
                                     </tr>
                                 </thead>
                                 <tbody id="starter-tbody"></tbody>
@@ -1066,16 +1102,23 @@
                                     <col style="width: 80px;"><!-- Conflict Level -->
                                     <col style="width: 80px;"><!-- VPs Available -->
                                     <col style="width: 200px;"><!-- First Place -->
+                                    <col style="width: 200px;"><!-- Second Place -->
+                                    <col style="width: 200px;"><!-- Third Place -->
                                 </colgroup>
                                 <thead class="sticky-top bg-white">
                                     <tr>
-                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('conflict', 'selected')">Selected<div class="resize-handle"></div></th>
-                                        <th style="width: 150px;">Name</th>
-                                        <th style="width: 80px;">Set</th>
-                                        <th style="width: 100px;">Compatibility</th>
-                                        <th style="width: 80px;">Conflict Level</th>
-                                        <th style="width: 80px;">VPs Available</th>
-                                        <th style="width: 200px;">First Place</th>
+                                        <th rowspan="2" class="resizable sortable" style="width: 68px; cursor: pointer;" onclick="sortResourceTable('conflict', 'selected')">Selected
+                                            <button class="btn btn-sm btn-outline-success" style="padding: 0px 3px; font-size: 0.7rem; margin-left: 2px;" onclick="event.stopPropagation(); selectAllResources('conflict');" title="Select all to Count">+</button>
+                                            <button class="btn btn-sm btn-outline-danger" style="padding: 0px 3px; font-size: 0.7rem;" onclick="event.stopPropagation(); deselectAllResources('conflict');" title="Deselect all">-</button>
+                                            <div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 150px; cursor: pointer;" onclick="sortResourceTable('conflict', 'name')">Name</th>
+                                        <th class="resizable sortable" style="width: 80px; cursor: pointer;" onclick="sortResourceTable('conflict', 'source')">Set</th>
+                                        <th class="resizable sortable" style="width: 100px; cursor: pointer;" onclick="sortResourceTable('conflict', 'compatibility')">Compatibility</th>
+                                        <th class="resizable sortable" style="width: 80px; cursor: pointer;" onclick="sortResourceTable('conflict', 'conflict_level')">Conflict Level</th>
+                                        <th class="resizable sortable" style="width: 80px; cursor: pointer;" onclick="sortResourceTable('conflict', 'vps_available')">VPs Available</th>
+                                        <th class="resizable sortable" style="width: 200px; cursor: pointer;" onclick="sortResourceTable('conflict', 'first_place')">First Place</th>
+                                        <th class="resizable sortable" style="width: 200px; cursor: pointer;" onclick="sortResourceTable('conflict', 'second_place')">Second Place</th>
+                                        <th class="resizable sortable" style="width: 200px; cursor: pointer;" onclick="sortResourceTable('conflict', 'third_place')">Third Place</th>
                                     </tr>
                                 </thead>
                                 <tbody id="conflict-tbody"></tbody>
@@ -1601,7 +1644,10 @@
 
                 if (!nameMatch || !sourceMatch) return false;
 
-                // If unique properties provided, match by those too (for synonyms)
+                // If resource_id is provided, use it for exact matching (most reliable)
+                if (uniqueProps.resource_id !== undefined && r.resource_id !== uniqueProps.resource_id) return false;
+
+                // Otherwise, fall back to other unique properties for synonyms
                 if (uniqueProps.reward !== undefined && r.reward !== uniqueProps.reward) return false;
                 if (uniqueProps.first_place !== undefined && r.first_place !== uniqueProps.first_place) return false;
 
@@ -1629,7 +1675,10 @@
 
                 if (!nameMatch || !sourceMatch) return false;
 
-                // If unique properties provided, match by those too (for synonyms)
+                // If resource_id is provided, use it for exact matching (most reliable)
+                if (uniqueProps.resource_id !== undefined && r.resource_id !== uniqueProps.resource_id) return false;
+
+                // Otherwise, fall back to other unique properties for synonyms
                 if (uniqueProps.reward !== undefined && r.reward !== uniqueProps.reward) return false;
                 if (uniqueProps.first_place !== undefined && r.first_place !== uniqueProps.first_place) return false;
 
@@ -1655,7 +1704,10 @@
 
                 if (!nameMatch || !sourceMatch) return false;
 
-                // If unique properties provided, match by those too (for synonyms)
+                // If resource_id is provided, use it for exact matching (most reliable)
+                if (uniqueProps.resource_id !== undefined && r.resource_id !== uniqueProps.resource_id) return false;
+
+                // Otherwise, fall back to other unique properties for synonyms
                 if (uniqueProps.reward !== undefined && r.reward !== uniqueProps.reward) return false;
                 if (uniqueProps.first_place !== undefined && r.first_place !== uniqueProps.first_place) return false;
 
@@ -1669,9 +1721,10 @@
             if (type === 'contracts' && resource.reward) {
                 const rewardHash = resource.reward.substring(0, 20).replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
                 idSuffix = `-${rewardHash}`;
-            } else if (type === 'conflict' && resource.first_place) {
-                const firstPlaceHash = resource.first_place.substring(0, 20).replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
-                idSuffix = `-${firstPlaceHash}`;
+            } else if (type === 'conflict') {
+                // Use resource_id for conflicts to ensure uniqueness
+                const resourceId = resource.resource_id !== undefined ? resource.resource_id : '';
+                idSuffix = `-${resourceId}`;
             }
 
             const id = `${type}-selected-${name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${source.replace(/\s+/g, '-')}${idSuffix}`;
@@ -1731,6 +1784,43 @@
                     }
                 }
             }
+        }
+
+        // Select all resources of a type to their Count value
+        function selectAllResources(type) {
+            if (!allResources[type]) return;
+
+            allResources[type].forEach(resource => {
+                // Set selected to the resource's count value (or 1 if no count or for unique items)
+                let maxCount = 1;
+                if (resource.count !== undefined && resource.count !== null && resource.count !== '') {
+                    maxCount = parseInt(resource.count) || 1;
+                }
+                // For unique resource types (tech, leader, conflict), always use 1
+                if (type === 'tech' || type === 'leader' || type === 'conflict') {
+                    maxCount = 1;
+                }
+                resource.selected = maxCount;
+            });
+
+            // Refresh the UI
+            initializeTab(type);
+            updateStatsForType(type);
+            updateBadge(type);
+        }
+
+        // Deselect all resources of a type (set to 0)
+        function deselectAllResources(type) {
+            if (!allResources[type]) return;
+
+            allResources[type].forEach(resource => {
+                resource.selected = 0;
+            });
+
+            // Refresh the UI
+            initializeTab(type);
+            updateStatsForType(type);
+            updateBadge(type);
         }
 
         function updateStatsForType(type) {
@@ -1812,7 +1902,6 @@
                     <td class="compact">${card.spies || ''}</td>
                     <td class="compact">${card.sandworms || ''}</td>
                     <td class="compact">${card.contracts || ''}</td>
-                    <td class="compact">${card.battle_icons || ''}</td>
                     <td class="compact">${card.sardaukar || ''}</td>
                     <td class="access-x access-green">${hasX(card.green_access) ? 'X' : ''}</td>
                     <td class="access-x access-purple">${hasX(card.purple_access) ? 'X' : ''}</td>
@@ -1827,7 +1916,7 @@
                     <td class="affiliation-x access-bg" style="width: 55px !important;">${hasX(card.bene_gesserit_affiliation) ? 'X' : ''}</td>
                     <td class="affiliation-x access-fremen" style="width: 55px !important;">${hasX(card.fremen_affiliation) ? 'X' : ''}</td>
                     <td class="compact">${card.compatibility || 'All'}</td>
-                    <td class="compact">${card.vps_available && card.vps_available !== '0' && card.vps_available !== '0.0' ? parseFloat(card.vps_available) : ''}</td>
+                    <td class="compact">${card.vps_available && parseFloat(card.vps_available) !== 0 && !isNaN(parseFloat(card.vps_available)) ? card.vps_available : ''}</td>
                 `;
 
                 tbody.appendChild(tr);
@@ -1890,13 +1979,11 @@
                     <td class="compact" style="max-width: 50px !important;">${card.spies || ''}</td>
                     <td class="compact" style="max-width: 50px !important;">${card.sandworms || ''}</td>
                     <td class="compact" style="max-width: 50px !important;">${card.contracts || ''}</td>
-                    <td class="compact" style="max-width: 50px !important;">${card.battle_icons || ''}</td>
                     <td class="compact" style="max-width: 50px !important;">${card.sardaukar || ''}</td>
                     <td title="${card.plot_effect || ''}">${truncate(card.plot_effect || '', 50)}</td>
                     <td title="${card.combat_effect || ''}">${truncate(card.combat_effect || '', 50)}</td>
                     <td title="${card.endgame_effect || ''}">${truncate(card.endgame_effect || '', 50)}</td>
-                    <td class="compact">${card.twisted || ''}</td>
-                    <td class="compact">${card.available_vps || ''}</td>
+                    <td class="compact">${card.vps_available && parseFloat(card.vps_available) !== 0 && !isNaN(parseFloat(card.vps_available)) ? card.vps_available : ''}</td>
                 `;
 
                 tbody.appendChild(tr);
@@ -1952,19 +2039,12 @@
                     <td class="compact">${card.count || '1'}</td>
                     <td class="compact">${parseFloat(card.specimen_cost || 0) || 0}</td>
                     <td title="${card.agent_ability || ''}">${truncate(card.agent_ability || '', 50)}</td>
-                    <td title="${card.passive_ability || ''}">${truncate(card.passive_ability || '', 50)}</td>
                     <td class="compact">${card.reveal_persuasion || ''}</td>
                     <td class="compact">${card.reveal_swords || ''}</td>
                     <td title="${card.reveal_ability || ''}">${truncate(card.reveal_ability || '', 50)}</td>
-                    <td class="compact">${card.tech || ''}</td>
-                    <td class="compact">${card.shipping || ''}</td>
-                    <td class="compact">${card.unload || ''}</td>
                     <td class="compact">${card.infiltration || ''}</td>
                     <td class="compact">${card.research || ''}</td>
                     <td class="compact">${card.grafting || ''}</td>
-                    <td class="compact">${card.spies || ''}</td>
-                    <td class="compact">${card.sandworms || ''}</td>
-                    <td class="compact">${card.contracts || ''}</td>
                     <td class="access-x access-green">${hasX(card.green_access) ? 'X' : ''}</td>
                     <td class="access-x access-purple">${hasX(card.purple_access) ? 'X' : ''}</td>
                     <td class="access-x access-yellow">${hasX(card.yellow_access) ? 'X' : ''}</td>
@@ -1972,8 +2052,7 @@
                     <td class="access-x access-guild">${hasX(card.spacing_guild_access) ? 'X' : ''}</td>
                     <td class="access-x access-bg">${hasX(card.bene_gesserit_access) ? 'X' : ''}</td>
                     <td class="access-x access-fremen">${hasX(card.fremen_access) ? 'X' : ''}</td>
-                    <td class="access-x access-spy">${hasX(card.spy_access) ? 'X' : ''}</td>
-                    <td class="compact">${card.available_vps || ''}</td>
+                    <td class="compact">${card.vps_available && parseFloat(card.vps_available) !== 0 && !isNaN(parseFloat(card.vps_available)) ? card.vps_available : ''}</td>
                 `;
 
                 tbody.appendChild(tr);
@@ -2097,9 +2176,8 @@
                     <td class="compact">${card.spies || ''}</td>
                     <td class="compact">${card.sandworms || ''}</td>
                     <td class="compact">${card.contracts || ''}</td>
-                    <td class="compact">${card.battle_icons || ''}</td>
                     <td class="compact">${card.sardaukar || ''}</td>
-                    <td class="compact">${card.available_vps || ''}</td>
+                    <td class="compact">${card.vps_available && parseFloat(card.vps_available) !== 0 && !isNaN(parseFloat(card.vps_available)) ? card.vps_available : ''}</td>
                     <td title="${card.effect || ''}">${truncate(card.effect || '', 80)}</td>
                 `;
 
@@ -2157,7 +2235,7 @@
                     <td class="expansion-${card.card_set}">${card.source || ''}</td>
                     <td class="compact">${card.count || '1'}</td>
                     <td title="${card.reward || ''}">${truncate(card.reward || '', 100)}</td>
-                    <td class="compact">${card['rise_of_ix_-specific?'] || ''}</td>
+                    <td class="compact">${card.rise_of_ix__specific || ''}</td>
                 `;
 
                 tbody.appendChild(tr);
@@ -2269,7 +2347,8 @@
                         <span id="${countId}" style="display: inline-block; min-width: 20px; text-align: center; font-weight: bold; font-size: 0.85rem;">${card.selected || 0}</span>
                         <button class="btn btn-sm btn-outline-success" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="increment" data-type="sardaukar" data-name="${cardNameSafe}" data-source="${sourceSafe}" data-max="${card.count || 999}">+</button>
                     </td>
-                    <td>${cardNameLink}</td>
+                    <td class="expansion-${card.card_set}">${cardNameLink}</td>
+                    <td class="expansion-${card.card_set}">${card.source || ''}</td>
                     <td class="compact">${card.compatibility || ''}</td>
                     <td class="compact">${card.count || '1'}</td>
                     <td title="${card.effect || ''}">${truncate(card.effect || '', 150)}</td>
@@ -2379,22 +2458,24 @@
                 const cardNameSafe = (card.name || '').replace(/'/g, "\\'");
                 const sourceSafe = (card.source || card.card_set || '').replace(/'/g, "\\'");
                 const firstPlaceSafe = (card.first_place || '').replace(/'/g, "\\'");
-                // Create unique ID by including first_place hash to differentiate synonyms
-                const firstPlaceHash = card.first_place ? card.first_place.substring(0, 20).replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '') : '';
-                const countId = `conflict-selected-${card.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${(card.source || card.card_set || '').replace(/\s+/g, '-')}-${firstPlaceHash}`;
+                // Use resource_id for unique ID to differentiate all conflicts, especially those with empty data
+                const resourceId = card.resource_id !== undefined ? card.resource_id : '';
+                const countId = `conflict-selected-${card.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${(card.source || card.card_set || '').replace(/\s+/g, '-')}-${resourceId}`;
 
                 tr.innerHTML = `
                     <td style="text-align: center; padding: 2px;">
-                        <button class="btn btn-sm btn-outline-danger" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="decrement" data-type="conflict" data-name="${cardNameSafe}" data-source="${sourceSafe}" data-first-place="${firstPlaceSafe}">-</button>
+                        <button class="btn btn-sm btn-outline-danger" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="decrement" data-type="conflict" data-name="${cardNameSafe}" data-source="${sourceSafe}" data-first-place="${firstPlaceSafe}" data-resource-id="${resourceId}">-</button>
                         <span id="${countId}" style="display: inline-block; min-width: 20px; text-align: center; font-weight: bold; font-size: 0.85rem;">${card.selected || 0}</span>
-                        <button class="btn btn-sm btn-outline-success" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="increment" data-type="conflict" data-name="${cardNameSafe}" data-source="${sourceSafe}" data-max="1" data-first-place="${firstPlaceSafe}">+</button>
+                        <button class="btn btn-sm btn-outline-success" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="increment" data-type="conflict" data-name="${cardNameSafe}" data-source="${sourceSafe}" data-max="1" data-first-place="${firstPlaceSafe}" data-resource-id="${resourceId}">+</button>
                     </td>
                     <td class="expansion-${card.card_set}">${cardNameLink}</td>
                     <td class="expansion-${card.card_set}">${card.source || ''}</td>
                     <td class="compact">${card.compatibility || ''}</td>
                     <td class="compact">${card.conflict_level || ''}</td>
-                    <td class="compact">${card.available_vps || ''}</td>
+                    <td class="compact">${card.vps_available && parseFloat(card.vps_available) !== 0 && !isNaN(parseFloat(card.vps_available)) ? card.vps_available : ''}</td>
                     <td title="${card.first_place || ''}">${card.first_place || ''}</td>
+                    <td title="${card.second_place || ''}">${card.second_place || ''}</td>
+                    <td title="${card.third_place || ''}">${card.third_place || ''}</td>
                 `;
 
                 tbody.appendChild(tr);
@@ -2408,11 +2489,13 @@
                     const name = btn.getAttribute('data-name');
                     const source = btn.getAttribute('data-source');
                     const maxCount = 1; // Conflict cards are unique
-                    const firstPlace = btn.getAttribute('data-first-place') || undefined;
+                    const resourceId = btn.getAttribute('data-resource-id');
 
                     // Build unique props object for synonym differentiation
                     const uniqueProps = {};
-                    if (firstPlace) uniqueProps.first_place = firstPlace;
+                    if (resourceId !== null && resourceId !== undefined && resourceId !== '') {
+                        uniqueProps.resource_id = parseInt(resourceId);
+                    }
 
                     if (action === 'increment') {
                         incrementSelected(type, name, source, maxCount, uniqueProps);
@@ -2553,9 +2636,13 @@
                 state.direction = 'asc';
             }
 
+            // Get sorted resources and save back to allResources to preserve order
+            const sortedResources = getSortedResources(type, column, state.direction);
+            allResources[type] = sortedResources;
+
             // Re-render the table with sorted data
             if (type === 'imperium') {
-                initializeImperiumDetailed(getSortedResources(type, column, state.direction));
+                initializeImperiumDetailed(sortedResources);
             } else {
                 initializeTab(type);
             }
@@ -2616,8 +2703,13 @@
         }
 
         function getSortedResources(type, column, direction) {
-            const resources = [...(allResources[type] || [])];
+            // Create a copy with original indices for stable sorting
+            const resources = (allResources[type] || []).map((resource, index) => ({
+                ...resource,
+                __originalIndex: index
+            }));
 
+            // Stable sort: preserves order of equal elements
             resources.sort((a, b) => {
                 let aVal = a[column];
                 let bVal = b[column];
@@ -2630,22 +2722,32 @@
                 const aNum = parseFloat(aVal);
                 const bNum = parseFloat(bVal);
 
+                let comparison = 0;
+
                 if (!isNaN(aNum) && !isNaN(bNum)) {
-                    return direction === 'asc' ? aNum - bNum : bNum - aNum;
-                }
-
-                // String comparison
-                const aStr = String(aVal).toLowerCase();
-                const bStr = String(bVal).toLowerCase();
-
-                if (direction === 'asc') {
-                    return aStr < bStr ? -1 : aStr > bStr ? 1 : 0;
+                    comparison = direction === 'asc' ? aNum - bNum : bNum - aNum;
                 } else {
-                    return aStr > bStr ? -1 : aStr < bStr ? 1 : 0;
+                    // String comparison
+                    const aStr = String(aVal).toLowerCase();
+                    const bStr = String(bVal).toLowerCase();
+
+                    if (direction === 'asc') {
+                        comparison = aStr < bStr ? -1 : aStr > bStr ? 1 : 0;
+                    } else {
+                        comparison = aStr > bStr ? -1 : aStr < bStr ? 1 : 0;
+                    }
                 }
+
+                // If values are equal, preserve original order (stable sort)
+                if (comparison === 0) {
+                    return a.__originalIndex - b.__originalIndex;
+                }
+
+                return comparison;
             });
 
-            return resources;
+            // Remove the temporary index property
+            return resources.map(({ __originalIndex, ...resource }) => resource);
         }
 
 
@@ -2683,7 +2785,7 @@
                 byCosts[costKey] = (byCosts[costKey] || 0) + count;
 
                 // Count mechanics
-                const mechanicFields = ['tech', 'shipping', 'unload', 'infiltration', 'research', 'grafting', 'spies', 'sandworms', 'contracts', 'battle_icons', 'sardaukar'];
+                const mechanicFields = ['tech', 'shipping', 'unload', 'infiltration', 'research', 'grafting', 'spies', 'sandworms', 'contracts', 'sardaukar'];
                 mechanicFields.forEach(field => {
                     if (c[field] && c[field] !== '0' && c[field] !== '0.0') {
                         mechanics[field] = (mechanics[field] || 0) + count;
@@ -2791,7 +2893,7 @@
                 bySets[set] = (bySets[set] || 0) + count;
 
                 // Count mechanics
-                const mechanicFields = ['tech', 'shipping', 'research', 'spies', 'sandworms', 'contracts', 'battle_icons', 'sardaukar'];
+                const mechanicFields = ['tech', 'shipping', 'research', 'spies', 'sandworms', 'contracts', 'sardaukar'];
                 mechanicFields.forEach(field => {
                     if (c[field] && c[field] !== '0' && c[field] !== '0.0') {
                         mechanics[field] = (mechanics[field] || 0) + count;
@@ -2853,7 +2955,7 @@
                 byCosts[costKey] = (byCosts[costKey] || 0) + count;
 
                 // Count mechanics
-                const mechanicFields = ['tech', 'contracts'];
+                const mechanicFields = ['infiltration', 'research', 'grafting'];
                 mechanicFields.forEach(field => {
                     if (c[field] && c[field] !== '0' && c[field] !== '0.0') {
                         mechanics[field] = (mechanics[field] || 0) + count;
@@ -2861,7 +2963,7 @@
                 });
 
                 // Count access
-                const accessFields = ['emperor_access', 'spacing_guild_access', 'bene_gesserit_access', 'fremen_access', 'spy_access'];
+                const accessFields = ['green_access', 'purple_access', 'yellow_access', 'emperor_access', 'spacing_guild_access', 'bene_gesserit_access', 'fremen_access'];
                 accessFields.forEach(field => {
                     if (hasX(c[field])) {
                         const displayName = field.replace('_access', '').replace('_', ' ');
@@ -3164,6 +3266,12 @@
         function clearBlend() {
             if (!confirm('Clear all selected resources?')) return;
 
+            // Clear Overview fields
+            const descField = document.getElementById('overview-description');
+            const rulesField = document.getElementById('overview-house-rules');
+            if (descField) descField.value = '';
+            if (rulesField) rulesField.value = '';
+
             // Reset all selected counts to 0
             for (let type in allResources) {
                 allResources[type].forEach(resource => {
@@ -3232,7 +3340,11 @@
                     selectedItems.forEach(resource => {
                         const name = resource.objective || resource.name;
                         const source = resource.source || resource.card_set || '';
-                        const key = `${name}|${source}`;
+
+                        // Always include resource_id in the key to ensure each resource is unique
+                        // This is critical for resources with minimal data (e.g., Uprising Skirmish)
+                        const resourceId = resource.resource_id !== undefined ? resource.resource_id : allResources[type].indexOf(resource);
+                        let key = `${name}|${source}|${resourceId}`;
 
                         if (!nameSourceGroups.has(key)) {
                             nameSourceGroups.set(key, []);
@@ -3240,20 +3352,41 @@
                         nameSourceGroups.get(key).push(resource);
                     });
 
-                    // Process each group and add synonym identifiers if needed
+                    // Now group by just name+source to assign synonym IDs
+                    // IMPORTANT: Use resource_id to ensure consistent synonym numbering
+                    const synonymGroups = new Map();
                     nameSourceGroups.forEach((resources, key) => {
-                        if (resources.length > 1) {
+                        const name = resources[0].objective || resources[0].name;
+                        const source = resources[0].source || resources[0].card_set || '';
+                        const synonymKey = `${name}|${source}`;
+
+                        if (!synonymGroups.has(synonymKey)) {
+                            synonymGroups.set(synonymKey, []);
+                        }
+                        // Add all resources from this specific variant with their stable resource_id
+                        resources.forEach(r => {
+                            const resourceId = r.resource_id !== undefined ? r.resource_id : allResources[type].indexOf(r);
+                            synonymGroups.get(synonymKey).push({resource: r, resourceId: resourceId});
+                        });
+                    });
+
+                    // Process each synonym group and add identifiers if needed
+                    synonymGroups.forEach((resourcesWithIds, synonymKey) => {
+                        // Sort by resource_id to maintain consistent order
+                        resourcesWithIds.sort((a, b) => a.resourceId - b.resourceId);
+
+                        if (resourcesWithIds.length > 1) {
                             // Multiple resources with same name/source - add identifiers
-                            resources.forEach((resource, index) => {
-                                const count = resource.selected || 1;
-                                const resourceWithId = {...resource, synonymId: index + 1};
+                            resourcesWithIds.forEach((item, index) => {
+                                const count = item.resource.selected || 1;
+                                const resourceWithId = {...item.resource, synonymId: index + 1};
                                 for (let i = 0; i < count; i++) {
                                     expandedResources.push(resourceWithId);
                                 }
                             });
                         } else {
                             // Single resource - no identifier needed
-                            const resource = resources[0];
+                            const resource = resourcesWithIds[0].resource;
                             const count = resource.selected || 1;
                             for (let i = 0; i < count; i++) {
                                 expandedResources.push(resource);
@@ -3330,8 +3463,14 @@
 
             // Show/hide server section based on server features
             const serverSection = document.getElementById('serverSaveSection');
+            const saveToServerBtn = serverSection.querySelector('button[onclick="saveToServer()"]');
+
             if (serverFeatures.canSaveToServer) {
                 serverSection.style.display = 'block';
+                saveToServerBtn.disabled = false;
+                saveToServerBtn.style.opacity = '1';
+                saveToServerBtn.style.cursor = 'pointer';
+                saveToServerBtn.title = '';
 
                 // Load and display existing files with clickable names
                 listBlends()
@@ -3378,7 +3517,15 @@
                         listDiv.innerHTML = '<p class="text-muted px-3 py-2 mb-0">Failed to load blend files</p>';
                     });
             } else {
-                serverSection.style.display = 'none';
+                serverSection.style.display = 'block';
+                saveToServerBtn.disabled = true;
+                saveToServerBtn.style.opacity = '0.5';
+                saveToServerBtn.style.cursor = 'not-allowed';
+                saveToServerBtn.title = 'Server saving unavailable (static hosting or HTTPS/CORS restriction)';
+
+                // Show message instead of file list
+                const listDiv = document.getElementById('saveAsFileList');
+                listDiv.innerHTML = '<p class="text-muted px-3 py-2 mb-0">Server saving not available</p>';
             }
 
             const modal = new bootstrap.Modal(document.getElementById('saveAsModal'));
@@ -3388,6 +3535,12 @@
 
         // Save to server (local development mode)
         async function saveToServer() {
+            // Check if server saving is available
+            if (!serverFeatures.canSaveToServer) {
+                alert('Server saving is not available. Please use the Download option instead.');
+                return;
+            }
+
             let blendName = document.getElementById('saveAsFilename').value.trim();
 
             if (!blendName) {
@@ -3407,7 +3560,15 @@
                 additionalBoards.push(cb.value);
             });
 
+            // Get overview data
+            const description = document.getElementById('overview-description')?.value.trim() || '';
+            const houseRules = document.getElementById('overview-house-rules')?.value.trim() || '';
+
             const resources_by_type = {
+                'Overview': {
+                    description: description,
+                    houseRules: houseRules
+                },
                 'Board': {
                     mainBoard: mainBoard,
                     additionalBoards: additionalBoards
@@ -3419,19 +3580,71 @@
                 const selectedItems = allResources[type].filter(r => r.selected > 0);
                 if (selectedItems.length > 0) {
                     const typeName = type.charAt(0).toUpperCase() + type.slice(1);
-                    // Expand resources based on selected count
                     const expandedResources = [];
+
+                    // Group resources by name and source to detect synonyms
+                    const nameSourceGroups = new Map();
                     selectedItems.forEach(resource => {
-                        const count = resource.selected || 1;
-                        for (let i = 0; i < count; i++) {
-                            expandedResources.push(resource);
+                        const name = resource.objective || resource.name;
+                        const source = resource.source || resource.card_set || '';
+
+                        // Always include resource_id in the key to ensure each resource is unique
+                        // This is critical for resources with minimal data (e.g., Uprising Skirmish)
+                        const resourceId = resource.resource_id !== undefined ? resource.resource_id : allResources[type].indexOf(resource);
+                        let key = `${name}|${source}|${resourceId}`;
+
+                        if (!nameSourceGroups.has(key)) {
+                            nameSourceGroups.set(key, []);
+                        }
+                        nameSourceGroups.get(key).push(resource);
+                    });
+
+                    // Now group by just name+source to assign synonym IDs
+                    const synonymGroups = new Map();
+                    nameSourceGroups.forEach((resources, key) => {
+                        const name = resources[0].objective || resources[0].name;
+                        const source = resources[0].source || resources[0].card_set || '';
+                        const synonymKey = `${name}|${source}`;
+
+                        if (!synonymGroups.has(synonymKey)) {
+                            synonymGroups.set(synonymKey, []);
+                        }
+                        // Add all resources from this specific variant with their stable resource_id
+                        resources.forEach(r => {
+                            const resourceId = r.resource_id !== undefined ? r.resource_id : allResources[type].indexOf(r);
+                            synonymGroups.get(synonymKey).push({resource: r, resourceId: resourceId});
+                        });
+                    });
+
+                    // Process each synonym group and add identifiers if needed
+                    synonymGroups.forEach((resourcesWithIds, synonymKey) => {
+                        // Sort by resource_id to maintain consistent order
+                        resourcesWithIds.sort((a, b) => a.resourceId - b.resourceId);
+
+                        if (resourcesWithIds.length > 1) {
+                            // Multiple resources with same name/source - add identifiers
+                            resourcesWithIds.forEach((item, index) => {
+                                const count = item.resource.selected || 1;
+                                const resourceWithId = {...item.resource, synonymId: index + 1};
+                                for (let i = 0; i < count; i++) {
+                                    expandedResources.push(resourceWithId);
+                                }
+                            });
+                        } else {
+                            // Single resource - no identifier needed
+                            const resource = resourcesWithIds[0].resource;
+                            const count = resource.selected || 1;
+                            for (let i = 0; i < count; i++) {
+                                expandedResources.push(resource);
+                            }
                         }
                     });
+
                     resources_by_type[typeName + ' Cards'] = expandedResources;
                 }
             }
 
-            if (Object.keys(resources_by_type).length <= 1) { // Only Board
+            if (Object.keys(resources_by_type).length <= 1) { // Only Board or Overview
                 alert('No resources selected to save!');
                 return;
             }
@@ -3474,7 +3687,15 @@
                 additionalBoards.push(cb.value);
             });
 
+            // Get overview data
+            const description = document.getElementById('overview-description')?.value.trim() || '';
+            const houseRules = document.getElementById('overview-house-rules')?.value.trim() || '';
+
             const resources_by_type = {
+                'Overview': {
+                    description: description,
+                    houseRules: houseRules
+                },
                 'Board': {
                     mainBoard: mainBoard,
                     additionalBoards: additionalBoards
@@ -3486,14 +3707,67 @@
                 const selectedItems = allResources[type].filter(r => r.selected > 0);
                 if (selectedItems.length > 0) {
                     const typeName = type.charAt(0).toUpperCase() + type.slice(1);
-                    // Expand resources based on selected count
                     const expandedResources = [];
+
+                    // Group resources by name and source to detect synonyms
+                    const nameSourceGroups = new Map();
                     selectedItems.forEach(resource => {
-                        const count = resource.selected || 1;
-                        for (let i = 0; i < count; i++) {
-                            expandedResources.push(resource);
+                        const name = resource.objective || resource.name;
+                        const source = resource.source || resource.card_set || '';
+
+                        // Always include resource_id in the key to ensure each resource is unique
+                        // This is critical for resources with minimal data (e.g., Uprising Skirmish)
+                        const resourceId = resource.resource_id !== undefined ? resource.resource_id : allResources[type].indexOf(resource);
+                        let key = `${name}|${source}|${resourceId}`;
+
+                        if (!nameSourceGroups.has(key)) {
+                            nameSourceGroups.set(key, []);
+                        }
+                        nameSourceGroups.get(key).push(resource);
+                    });
+
+                    // Now group by just name+source to assign synonym IDs
+                    const synonymGroups = new Map();
+                    nameSourceGroups.forEach((resources, key) => {
+                        const name = resources[0].objective || resources[0].name;
+                        const source = resources[0].source || resources[0].card_set || '';
+                        const synonymKey = `${name}|${source}`;
+
+                        if (!synonymGroups.has(synonymKey)) {
+                            synonymGroups.set(synonymKey, []);
+                        }
+                        // Add all resources from this specific variant with their original index
+                        resources.forEach(r => {
+                            // Find the original index in allResources[type] array
+                            const originalIndex = allResources[type].indexOf(r);
+                            synonymGroups.get(synonymKey).push({resource: r, originalIndex: originalIndex});
+                        });
+                    });
+
+                    // Process each synonym group and add identifiers if needed
+                    synonymGroups.forEach((resourcesWithIndices, synonymKey) => {
+                        // Sort by original index to maintain consistent order
+                        resourcesWithIndices.sort((a, b) => a.originalIndex - b.originalIndex);
+
+                        if (resourcesWithIndices.length > 1) {
+                            // Multiple resources with same name/source - add identifiers
+                            resourcesWithIds.forEach((item, index) => {
+                                const count = item.resource.selected || 1;
+                                const resourceWithId = {...item.resource, synonymId: index + 1};
+                                for (let i = 0; i < count; i++) {
+                                    expandedResources.push(resourceWithId);
+                                }
+                            });
+                        } else {
+                            // Single resource - no identifier needed
+                            const resource = resourcesWithIds[0].resource;
+                            const count = resource.selected || 1;
+                            for (let i = 0; i < count; i++) {
+                                expandedResources.push(resource);
+                            }
                         }
                     });
+
                     resources_by_type[typeName + ' Cards'] = expandedResources;
                 }
             }
@@ -3620,6 +3894,20 @@
             for (let sectionName in resources) {
                 const resourceNames = resources[sectionName];
 
+                // Handle Overview section specially
+                if (sectionName === 'Overview') {
+                    const overviewData = resourceNames;
+                    if (overviewData.description) {
+                        const descField = document.getElementById('overview-description');
+                        if (descField) descField.value = overviewData.description;
+                    }
+                    if (overviewData.houseRules) {
+                        const rulesField = document.getElementById('overview-house-rules');
+                        if (rulesField) rulesField.value = overviewData.houseRules;
+                    }
+                    continue;
+                }
+
                 // Handle Board section specially
                 if (sectionName === 'Board') {
                     const boardData = resourceNames;
@@ -3687,12 +3975,26 @@
                         });
 
                         if (matchingResources.length > 0) {
-                            // If synonym ID specified, find exact match
+                            // If synonym ID specified, find exact match using resource_id
                             let targetResource = null;
-                            if (synonymId !== null && matchingResources.length > synonymId - 1) {
+                            if (synonymId !== null && matchingResources.length >= synonymId) {
+                                // Sort matching resources by resource_id to get consistent ordering
+                                matchingResources.sort((a, b) => {
+                                    const idA = a.resource_id !== undefined ? a.resource_id : 0;
+                                    const idB = b.resource_id !== undefined ? b.resource_id : 0;
+                                    return idA - idB;
+                                });
+                                // Now get the resource at the synonym index
                                 targetResource = matchingResources[synonymId - 1];
                             } else {
-                                // Use first match or find by index
+                                // Use first match (also sorted by resource_id if available)
+                                if (matchingResources[0].resource_id !== undefined) {
+                                    matchingResources.sort((a, b) => {
+                                        const idA = a.resource_id !== undefined ? a.resource_id : 0;
+                                        const idB = b.resource_id !== undefined ? b.resource_id : 0;
+                                        return idA - idB;
+                                    });
+                                }
                                 targetResource = matchingResources[0];
                             }
 
@@ -4592,6 +4894,61 @@
             addSelectedDetectedResources();
         }
         window.applyDetectedCards = applyDetectedCards;
+
+        // Table resize functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            // Find all table-responsive divs and add resize handles
+            const tableContainers = document.querySelectorAll('.table-responsive');
+
+            tableContainers.forEach((container, index) => {
+                // Skip if already has resize handle
+                if (container.nextElementSibling && container.nextElementSibling.classList.contains('table-resize-handle')) {
+                    return;
+                }
+
+                // Create resize handle
+                const handle = document.createElement('div');
+                handle.className = 'table-resize-handle';
+                handle.setAttribute('data-table-index', index);
+
+                // Insert after the container
+                container.parentNode.insertBefore(handle, container.nextSibling);
+
+                // Add drag functionality
+                let isResizing = false;
+                let startY = 0;
+                let startHeight = 0;
+
+                handle.addEventListener('mousedown', (e) => {
+                    isResizing = true;
+                    startY = e.clientY;
+                    startHeight = container.offsetHeight;
+
+                    // Prevent text selection while dragging
+                    e.preventDefault();
+                    document.body.style.userSelect = 'none';
+                    document.body.style.cursor = 'ns-resize';
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isResizing) return;
+
+                    const deltaY = e.clientY - startY;
+                    const newHeight = Math.max(200, Math.min(1200, startHeight + deltaY));
+
+                    container.style.maxHeight = newHeight + 'px';
+                    container.style.height = newHeight + 'px';
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isResizing) {
+                        isResizing = false;
+                        document.body.style.userSelect = '';
+                        document.body.style.cursor = '';
+                    }
+                });
+            });
+        });
 
     </script>
 </body>

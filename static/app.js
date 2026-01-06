@@ -58,14 +58,29 @@ async function loadResources() {
 // List available blend files
 async function listBlends() {
     try {
+        // Add cache-busting timestamp
+        const cacheBuster = `?t=${Date.now()}`;
+
         // Try API endpoint first (for local server mode)
-        const response = await fetch('/api/blends');
+        const response = await fetch(`/api/blends${cacheBuster}`, {
+            cache: 'no-store',
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
+            }
+        });
         if (response.ok) {
             return await response.json();
         }
 
         // Fallback to index.json for static hosting
-        const indexResponse = await fetch('blends/index.json');
+        const indexResponse = await fetch(`blends/index.json${cacheBuster}`, {
+            cache: 'no-store',
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
+            }
+        });
         if (indexResponse.ok) {
             return await indexResponse.json();
         }
@@ -80,7 +95,15 @@ async function listBlends() {
 // Load a specific blend file
 async function loadBlend(filename) {
     try {
-        const response = await fetch(`blends/${filename}`);
+        // Add cache-busting timestamp to force fresh load
+        const cacheBuster = `?t=${Date.now()}`;
+        const response = await fetch(`blends/${filename}${cacheBuster}`, {
+            cache: 'no-store',
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
+            }
+        });
         if (!response.ok) {
             throw new Error(`Failed to load blend: ${filename}`);
         }
@@ -96,6 +119,7 @@ async function loadBlend(filename) {
 function parseBlendFile(content) {
     const resources_by_type = {};
     let current_section = null;
+    let current_subsection = null;
 
     const lines = content.split('\n');
     for (let line of lines) {
@@ -104,14 +128,40 @@ function parseBlendFile(content) {
         // Check for main sections (## Resource Type)
         if (line.startsWith('## ')) {
             current_section = line.substring(3).trim();
+            current_subsection = null;
             if (!(current_section in resources_by_type)) {
                 if (current_section === 'Board') {
                     resources_by_type[current_section] = {
                         mainBoard: 'imperium',
                         additionalBoards: []
                     };
+                } else if (current_section === 'Overview') {
+                    resources_by_type[current_section] = {
+                        description: '',
+                        houseRules: ''
+                    };
                 } else {
                     resources_by_type[current_section] = [];
+                }
+            }
+        }
+        // Check for subsections (### Subsection)
+        else if (line.startsWith('### ')) {
+            current_subsection = line.substring(4).trim();
+        }
+        // Parse Overview content
+        else if (current_section === 'Overview' && current_subsection && line) {
+            if (current_subsection === 'Description') {
+                if (resources_by_type['Overview'].description) {
+                    resources_by_type['Overview'].description += '\n' + line;
+                } else {
+                    resources_by_type['Overview'].description = line;
+                }
+            } else if (current_subsection === 'House Rules') {
+                if (resources_by_type['Overview'].houseRules) {
+                    resources_by_type['Overview'].houseRules += '\n' + line;
+                } else {
+                    resources_by_type['Overview'].houseRules = line;
                 }
             }
         }
@@ -128,7 +178,7 @@ function parseBlendFile(content) {
             }
         }
         // Check for resource lines
-        else if (current_section && current_section !== 'Board' && line &&
+        else if (current_section && current_section !== 'Board' && current_section !== 'Overview' && line &&
                  !line.startsWith('**') && !line.startsWith('*Generated')) {
             let clean_line = line;
             if (clean_line.startsWith('- ')) {
@@ -172,7 +222,23 @@ function saveBlend(blendName, resourcesByType) {
     // Build markdown
     let md = `# ${blendName}\n\n`;
 
-    // Handle Board section first if present
+    // Handle Overview section first if present
+    if ('Overview' in resourcesByType) {
+        const overview_data = resourcesByType['Overview'];
+        md += `## Overview\n\n`;
+
+        if (overview_data.description) {
+            md += `### Description\n\n`;
+            md += `${overview_data.description}\n\n`;
+        }
+
+        if (overview_data.houseRules) {
+            md += `### House Rules\n\n`;
+            md += `${overview_data.houseRules}\n\n`;
+        }
+    }
+
+    // Handle Board section if present
     if ('Board' in resourcesByType) {
         const board_data = resourcesByType['Board'];
         md += `## Board\n\n`;
@@ -187,7 +253,7 @@ function saveBlend(blendName, resourcesByType) {
     // Count total items
     let total_count = 0;
     for (const [key, items] of Object.entries(resourcesByType)) {
-        if (key !== 'Board' && Array.isArray(items)) {
+        if (key !== 'Board' && key !== 'Overview' && Array.isArray(items)) {
             total_count += items.length;
         }
     }
@@ -197,7 +263,7 @@ function saveBlend(blendName, resourcesByType) {
 
     // Add each resource type section
     for (const [resource_type, items] of Object.entries(resourcesByType)) {
-        if (resource_type === 'Board') continue;
+        if (resource_type === 'Board' || resource_type === 'Overview') continue;
         if (!items || items.length === 0) continue;
 
         md += `## ${resource_type}\n\n`;
@@ -258,7 +324,9 @@ async function saveBlendToServer(blendName, content) {
         const response = await fetch('/api/blend/upload', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache'
             },
             body: JSON.stringify({
                 filename: filename,

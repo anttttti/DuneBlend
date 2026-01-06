@@ -59,15 +59,34 @@ def generate_resources_json():
 
             # Add all columns as properties
             for key, value in row_dict.items():
-                if key and value is not None and key != name_col:
-                    col_key = key.lower().replace(' ', '_').replace('-', '_')
-                    resource[col_key] = str(value) if not isinstance(value, (int, float)) else value
+                if key and key != name_col:  # Include all columns except the name column
+                    col_key = key.lower().replace(' ', '_').replace('-', '_').replace('?', '')
+                    # Store value as-is, converting to string only if needed
+                    if value is None or value == '':
+                        resource[col_key] = ''
+                    elif isinstance(value, (int, float)):
+                        resource[col_key] = value
+                    else:
+                        resource[col_key] = str(value)
+
+            # Skip Intrigue cards with Twisted = X
+            if sheet_name.lower() == 'intrigue' and resource.get('twisted', '').strip().upper() == 'X':
+                continue
 
             # Add source/set mapping for color coding
-            source = resource.get('source', 'Imperium')
-            if source == 'Base':
-                source = 'Imperium'
-                resource['source'] = 'Imperium'
+            # Sardaukar are from Bloodlines expansion
+            if sheet_name.lower() == 'sardaukar':
+                source = 'Bloodlines'
+                resource['source'] = 'Bloodlines'
+            else:
+                # Other sheets without Source column default to Imperium
+                source = resource.get('source', '')
+                if not source:
+                    source = 'Imperium'
+                    resource['source'] = 'Imperium'
+                elif source == 'Base':
+                    source = 'Imperium'
+                    resource['source'] = 'Imperium'
 
             card_set_mapping = {
                 "Imperium": "base",
@@ -82,6 +101,11 @@ def generate_resources_json():
             resource['card_set'] = card_set_mapping.get(source, str(source).lower() if source else 'base')
 
             resources.append(resource)
+
+        # Assign stable IDs based on original Excel row order (not sorting)
+        # This ensures each row gets a unique ID regardless of content
+        for idx, resource in enumerate(resources):
+            resource['resource_id'] = idx
 
         all_resources[sheet_name.lower()] = resources
         print(f"Loaded {len(resources)} items from {sheet_name}")

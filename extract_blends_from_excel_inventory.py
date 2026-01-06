@@ -3,6 +3,7 @@
 Regenerate all blend files in the new simplified format
 Format: "- count× name" for all resource types
 """
+import json
 import openpyxl
 from pathlib import Path
 from collections import Counter
@@ -168,9 +169,19 @@ def regenerate_all_blends():
 
         for row in ws.iter_rows(min_row=2, values_only=True):
             row_dict = dict(zip(headers, row))
-            resource_name = str(row_dict.get(name_col, '')).strip()
-            if not resource_name:
+            # Properly handle None values - convert to empty string, not "None"
+            resource_name_raw = row_dict.get(name_col, '')
+            if resource_name_raw is None:
                 continue
+            resource_name = str(resource_name_raw).strip()
+            if not resource_name or resource_name.upper() == 'NONE':
+                continue
+
+            # Skip Intrigue cards with Twisted = X
+            if sheet_name == 'Intrigue':
+                twisted = row_dict.get('Twisted', '')
+                if twisted and str(twisted).strip().upper() == 'X':
+                    continue
 
             # Normalize card names: replace (Base) with (Imperium)
             resource_name = resource_name.replace('(Base)', '(Imperium)')
@@ -263,11 +274,22 @@ def regenerate_all_blends():
 
 def create_base_blends(wb, resource_sheets):
     """Create Base Imperium and Base Uprising blends."""
+    # Load resources.json to get resource IDs for synonym handling
+    resources_json_path = Path(__file__).parent / 'resources.json'
+    with open(resources_json_path, 'r', encoding='utf-8') as f:
+        all_resources = json.load(f)
+
     base_imperium_resources = {}
     base_uprising_resources = {}
 
     for sheet_name, display_name in resource_sheets.items():
         if sheet_name not in wb.sheetnames:
+            continue
+
+        # Skip Sardaukar - they are physical tokens that come with the game regardless
+        # Skip Tech - not part of base game card selections
+        # Skip Contracts - only in Imperium base game, not in base blends
+        if sheet_name in ['Sardaukar', 'Tech', 'Contracts']:
             continue
 
         ws = wb[sheet_name]
@@ -277,10 +299,30 @@ def create_base_blends(wb, resource_sheets):
         base_imperium_items = []
         base_uprising_items = []
 
+        # Track which synonyms we've already added (to avoid adding them multiple times)
+        added_synonyms = set()
+
+        # Build a lookup of resources by name and source from resources.json
+        resource_type_key = sheet_name.lower()
+        resource_lookup = {}
+        if resource_type_key in all_resources:
+            for resource in all_resources[resource_type_key]:
+                name = resource.get('name', '')
+                source = resource.get('source', 'Imperium')
+                resource_id = resource.get('resource_id', 0)
+                key = f"{name}|{source}"
+                if key not in resource_lookup:
+                    resource_lookup[key] = []
+                resource_lookup[key].append(resource_id)
+
         for row in ws.iter_rows(min_row=2, values_only=True):
             row_dict = dict(zip(headers, row))
-            resource_name = str(row_dict.get(name_col, '')).strip()
-            if not resource_name:
+            # Properly handle None values - convert to empty string, not "None"
+            resource_name_raw = row_dict.get(name_col, '')
+            if resource_name_raw is None:
+                continue
+            resource_name = str(resource_name_raw).strip()
+            if not resource_name or resource_name.upper() == 'NONE':
                 continue
 
             # Normalize card names: replace (Base) with (Imperium)
@@ -298,9 +340,6 @@ def create_base_blends(wb, resource_sheets):
                 # Remove the suffix from the name
                 resource_name = resource_name[:-len(source_suffix)].strip()
 
-            # Append source in parentheses
-            resource_name_with_source = f"{resource_name} ({source})"
-
             # Handle different count column names (Starter uses "Count per Player")
             count = row_dict.get("Count") or row_dict.get("Count per Player") or 1
 
@@ -309,12 +348,29 @@ def create_base_blends(wb, resource_sheets):
             except (ValueError, TypeError):
                 item_count = 1
 
-            if source == "Imperium":
-                for _ in range(item_count):
-                    base_imperium_items.append(resource_name_with_source)
-            elif source == "Uprising":
-                for _ in range(item_count):
-                    base_uprising_items.append(resource_name_with_source)
+            # Check if this is a synonym (multiple resources with same name+source)
+            lookup_key = f"{resource_name}|{source}"
+            resource_ids = resource_lookup.get(lookup_key, [])
+
+            if len(resource_ids) > 1:
+                # This is a synonym - add each variant once (only if not already added)
+                if lookup_key not in added_synonyms:
+                    added_synonyms.add(lookup_key)
+                    for idx in range(1, len(resource_ids) + 1):
+                        resource_with_id = f"{resource_name} #{idx} ({source})"
+                        if source == "Imperium":
+                            base_imperium_items.append(resource_with_id)
+                        elif source == "Uprising":
+                            base_uprising_items.append(resource_with_id)
+            else:
+                # Not a synonym - use regular name with source
+                resource_name_with_source = f"{resource_name} ({source})"
+                if source == "Imperium":
+                    for _ in range(item_count):
+                        base_imperium_items.append(resource_name_with_source)
+                elif source == "Uprising":
+                    for _ in range(item_count):
+                        base_uprising_items.append(resource_name_with_source)
 
         if base_imperium_items:
             base_imperium_resources[display_name] = base_imperium_items
@@ -368,17 +424,35 @@ def create_multi_resource_blend_file(filepath, blend_name, resources_by_type, de
 
         md += f"## {resource_type}\n\n"
 
-        # Count occurrences
-        item_counts = Counter(items)
+        # Separate synonym items (with #) from regular items
+        synonym_items = []
+        regular_items = []
+        for item in items:
+            if ' #' in item and item.count('(') > 0:
+                # This is a synonym item - keep it separate
+                synonym_items.append(item)
+            else:
+                regular_items.append(item)
 
-        # Sort by name and output
+        # Count occurrences for regular items only
+        item_counts = Counter(regular_items)
+
+        # Sort by name and output regular items
         for item_name in sorted(item_counts.keys()):
             count = item_counts[item_name]
             if count == 1:
                 md += f"- {item_name}\n"
             else:
                 # Multiple copies - use count× format
-                # The app will handle synonym detection at save time
+                md += f"- {count}× {item_name}\n"
+
+        # Output synonym items individually (no grouping)
+        for item_name in sorted(set(synonym_items)):
+            # Count how many of this specific synonym variant
+            count = synonym_items.count(item_name)
+            if count == 1:
+                md += f"- {item_name}\n"
+            else:
                 md += f"- {count}× {item_name}\n"
 
         md += "\n"

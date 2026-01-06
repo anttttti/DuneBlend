@@ -26,6 +26,16 @@ class ReuseAddrTCPServer(socketserver.TCPServer):
 class BlendServerHandler(http.server.SimpleHTTPRequestHandler):
     """HTTP handler with blend file upload/download support."""
 
+    def end_headers(self):
+        """Override to add cache control headers to all responses."""
+        # Add cache control headers for blend files and static content
+        parsed = urlparse(self.path)
+        if parsed.path.startswith('/blends/') or parsed.path.endswith('.md') or parsed.path.endswith('.json'):
+            self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            self.send_header('Pragma', 'no-cache')
+            self.send_header('Expires', '0')
+        super().end_headers()
+
     def do_GET(self):
         """Handle GET requests - serve files and list blends."""
         try:
@@ -115,6 +125,9 @@ class BlendServerHandler(http.server.SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-Type', 'text/markdown')
             self.send_header('Content-Disposition', f'attachment; filename="{filename}"')
+            self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            self.send_header('Pragma', 'no-cache')
+            self.send_header('Expires', '0')
             self.end_headers()
             self.wfile.write(content.encode('utf-8'))
         except Exception as e:
@@ -124,15 +137,21 @@ class BlendServerHandler(http.server.SimpleHTTPRequestHandler):
         """Upload a new blend file."""
         try:
             content_type = self.headers.get('Content-Type')
+            print(f"\n📤 Upload blend request received")
+            print(f"   Content-Type: {content_type}")
 
             if content_type and content_type.startswith('application/json'):
                 # JSON upload (markdown content in body)
                 content_length = int(self.headers.get('Content-Length', 0))
+                print(f"   Content-Length: {content_length} bytes")
+
                 body = self.rfile.read(content_length).decode('utf-8')
                 data = json.loads(body)
 
                 filename = data.get('filename', 'blend.md')
                 content = data.get('content', '')
+                print(f"   Filename: {filename}")
+                print(f"   Content preview: {content[:100]}...")
 
                 # Security: sanitize filename
                 filename = os.path.basename(filename)
@@ -146,8 +165,19 @@ class BlendServerHandler(http.server.SimpleHTTPRequestHandler):
 
                 # Save file
                 filepath = BLENDS_DIR / filename
+                print(f"📝 Saving blend to: {filepath}")
+                print(f"   Content length: {len(content)} bytes")
+
                 with open(filepath, 'w', encoding='utf-8') as f:
                     f.write(content)
+                    f.flush()  # Ensure data is written
+
+                # Verify file was written
+                if filepath.exists():
+                    actual_size = filepath.stat().st_size
+                    print(f"✅ File saved successfully: {filepath.name} ({actual_size} bytes)")
+                else:
+                    print(f"❌ File save failed: {filepath.name}")
 
                 # Update blends index
                 self.update_blends_index()
@@ -216,6 +246,9 @@ class BlendServerHandler(http.server.SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            self.send_header('Pragma', 'no-cache')
+            self.send_header('Expires', '0')
             self.end_headers()
             json_data = json.dumps(data)
             self.wfile.write(json_data.encode('utf-8'))

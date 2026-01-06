@@ -4,7 +4,7 @@
 
 - Main Board: uprising
 
-**Total Items:** 296
+**Total Items:** 284
 
 ## Imperium Cards
 
@@ -159,7 +159,6 @@
 - Adaptive Tactics (Bloodlines)
 - Advanced Weaponry (Rise of Ix)
 - Allied Armada (Imperium)
-- Ambitious (Bloodlines)
 - Backed by CHOAM (Uprising)
 - Battlefield Research (Bloodlines)
 - Bindu Suspension (Imperium)
@@ -167,13 +166,11 @@
 - Breakthrough (Immortality)
 - Buy Access (Uprising)
 - CHOAM Profits (Uprising)
-- Calculating (Bloodlines)
 - Call to Arms (Uprising)
 - Cannon Turrets (Rise of Ix)
 - Change Allegiences (Uprising)
 - Coercive Negotiation (Bloodlines)
 - Contingency Plan (Uprising)
-- Controlled (Bloodlines)
 - Corner The Market (Imperium)
 - Councilor's Ambition (Uprising)
 - Counterattack (Immortality)
@@ -184,9 +181,7 @@
 - Desert Mouse (Uprising)
 - Desert Support (Bloodlines)
 - 2× Detonation (Uprising)
-- Devious (Bloodlines)
 - Devour (Uprising)
-- Discerning (Bloodlines)
 - Disguised Bureaucrat (Immortality)
 - Dispatch an Envoy (Imperium)
 - 2× Distraction (Uprising)
@@ -206,7 +201,6 @@
 - Imperium Politics (Uprising)
 - Impress (Uprising)
 - Insider Information (Bloodlines)
-- Insidious (Bloodlines)
 - Inspire Awe (Uprising)
 - Intelligence Report (Uprising)
 - Ixian Probe (Rise of Ix)
@@ -227,19 +221,15 @@
 - Reach Agreement (Uprising)
 - Refocus (Imperium)
 - Reinforcements (Imperium)
-- Resourceful (Bloodlines)
 - Return the Favor (Bloodlines)
 - Ripples in the Sand (Bloodlines)
 - Sacred Pools (Bloodlines)
-- Sadistic (Bloodlines)
 - Secret Forces (Rise of Ix)
 - Seize Production (Bloodlines)
 - Shaddam's Favor (Uprising)
 - Shadow Alliance (Uprising)
 - Shadowy Bargain (Immortality)
-- Shrewd (Bloodlines)
 - Sietch Ritual (Uprising)
-- Sinister (Bloodlines)
 - Sleeper Unit (Bloodlines)
 - 2× Special Mission (Uprising)
 - Spice is Power (Uprising)
@@ -254,13 +244,11 @@
 - Tiebreaker (Imperium)
 - Tleilaxu Puppet (Immortality)
 - Unexpected Allies (Uprising)
-- Unnatural (Bloodlines)
 - 2× Viscious Talents (Immortality)
 - War Chest (Rise of Ix)
 - Water of Life (Imperium)
 - Weirding Combat (Uprising)
 - Withdrawal Agreement (Bloodlines)
-- Withdrawn (Bloodlines)
 
 ## Starter Cards
 
