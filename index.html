@@ -1872,8 +1872,8 @@
                 }
 
                 const cardNameLink = createCardNameLink(card.name || '', 'imperium', card.source || card.card_set || '');
-                const cardNameSafe = (card.name || '').replace(/'/g, "\\'");
-                const sourceSafe = (card.source || card.card_set || '').replace(/'/g, "\\'");
+                const cardNameSafe = (card.name || '').replace(/"/g, '&quot;');
+                const sourceSafe = (card.source || card.card_set || '').replace(/"/g, '&quot;');
                 const countId = `imperium-selected-${card.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${(card.source || card.card_set || '').replace(/\s+/g, '-')}`;
 
                 // Build entire row with innerHTML
@@ -1960,8 +1960,8 @@
                 }
 
                 const cardNameLink = createCardNameLink(card.name || '', 'intrigue', card.source || card.card_set || '');
-                const cardNameSafe = (card.name || '').replace(/'/g, "\\'");
-                const sourceSafe = (card.source || card.card_set || '').replace(/'/g, "\\'");
+                const cardNameSafe = (card.name || '').replace(/"/g, '&quot;');
+                const sourceSafe = (card.source || card.card_set || '').replace(/"/g, '&quot;');
                 const countId = `intrigue-selected-${card.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${(card.source || card.card_set || '').replace(/\s+/g, '-')}`;
 
                 tr.innerHTML = `
@@ -2024,8 +2024,8 @@
                 }
 
                 const cardNameLink = createCardNameLink(card.name || '', 'tleilax', card.source || card.card_set || '');
-                const cardNameSafe = (card.name || '').replace(/'/g, "\\'");
-                const sourceSafe = (card.source || card.card_set || '').replace(/'/g, "\\'");
+                const cardNameSafe = (card.name || '').replace(/"/g, '&quot;');
+                const sourceSafe = (card.source || card.card_set || '').replace(/"/g, '&quot;');
                 const countId = `tleilax-selected-${card.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${(card.source || card.card_set || '').replace(/\s+/g, '-')}`;
 
                 tr.innerHTML = `
@@ -2092,8 +2092,8 @@
                 }
 
                 const cardNameLink = createCardNameLink(card.name || '', 'reserve', card.source || card.card_set || '');
-                const cardNameSafe = (card.name || '').replace(/'/g, "\\'");
-                const sourceSafe = (card.source || card.card_set || '').replace(/'/g, "\\'");
+                const cardNameSafe = (card.name || '').replace(/"/g, '&quot;');
+                const sourceSafe = (card.source || card.card_set || '').replace(/"/g, '&quot;');
                 const countId = `reserve-selected-${card.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${(card.source || card.card_set || '').replace(/\s+/g, '-')}`;
 
                 tr.innerHTML = `
@@ -2158,8 +2158,8 @@
                 }
 
                 const cardNameLink = createCardNameLink(card.name || '', 'tech', card.source || card.card_set || '');
-                const cardNameSafe = (card.name || '').replace(/'/g, "\\'");
-                const sourceSafe = (card.source || card.card_set || '').replace(/'/g, "\\'");
+                const cardNameSafe = (card.name || '').replace(/"/g, '&quot;');
+                const sourceSafe = (card.source || card.card_set || '').replace(/"/g, '&quot;');
                 const countId = `tech-selected-${card.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${(card.source || card.card_set || '').replace(/\s+/g, '-')}`;
 
                 tr.innerHTML = `
@@ -2218,9 +2218,9 @@
                 }
 
                 const cardNameLink = createCardNameLink(card.objective || card.name || '', 'contracts', card.source || card.card_set || '');
-                const cardNameSafe = ((card.objective || card.name) || '').replace(/'/g, "\\'");
-                const sourceSafe = (card.source || card.card_set || '').replace(/'/g, "\\'");
-                const rewardSafe = (card.reward || '').replace(/'/g, "\\'");
+                const cardNameSafe = ((card.objective || card.name) || '').replace(/"/g, '&quot;');
+                const sourceSafe = (card.source || card.card_set || '').replace(/"/g, '&quot;');
+                const rewardSafe = (card.reward || '').replace(/"/g, '&quot;');
                 // Create unique ID by including reward hash to differentiate synonyms
                 const rewardHash = card.reward ? card.reward.substring(0, 20).replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '') : '';
                 const countId = `contracts-selected-${(card.objective || card.name || '').replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${(card.source || card.card_set || '').replace(/\s+/g, '-')}-${rewardHash}`;
@@ -2280,8 +2280,8 @@
                 }
 
                 const cardNameLink = createCardNameLink(card.name || '', 'leader', card.source || card.card_set || '');
-                const cardNameSafe = (card.name || '').replace(/'/g, "\\'");
-                const sourceSafe = (card.source || card.card_set || '').replace(/'/g, "\\'");
+                const cardNameSafe = (card.name || '').replace(/"/g, '&quot;');
+                const sourceSafe = (card.source || card.card_set || '').replace(/"/g, '&quot;');
                 const countId = `leader-selected-${card.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${(card.source || card.card_set || '').replace(/\s+/g, '-')}`;
 
                 tr.innerHTML = `
@@ -2337,8 +2337,8 @@
                 }
 
                 const cardNameLink = createCardNameLink(card.name || '', 'sardaukar', card.source || card.card_set || '');
-                const cardNameSafe = (card.name || '').replace(/'/g, "\\'");
-                const sourceSafe = (card.source || card.card_set || '').replace(/'/g, "\\'");
+                const cardNameSafe = (card.name || '').replace(/"/g, '&quot;');
+                const sourceSafe = (card.source || card.card_set || '').replace(/"/g, '&quot;');
                 const countId = `sardaukar-selected-${card.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${(card.source || card.card_set || '').replace(/\s+/g, '-')}`;
 
                 tr.innerHTML = `
@@ -2391,8 +2391,8 @@
                 }
 
                 const cardNameLink = createCardNameLink(card.name || '', 'starter', card.source || card.card_set || '');
-                const cardNameSafe = (card.name || '').replace(/'/g, "\\'");
-                const sourceSafe = (card.source || card.card_set || '').replace(/'/g, "\\'");
+                const cardNameSafe = (card.name || '').replace(/"/g, '&quot;');
+                const sourceSafe = (card.source || card.card_set || '').replace(/"/g, '&quot;');
                 const countId = `starter-selected-${card.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${(card.source || card.card_set || '').replace(/\s+/g, '-')}`;
 
                 tr.innerHTML = `
@@ -2455,9 +2455,9 @@
                 }
 
                 const cardNameLink = createCardNameLink(card.name || '', 'conflict', card.source || card.card_set || '');
-                const cardNameSafe = (card.name || '').replace(/'/g, "\\'");
-                const sourceSafe = (card.source || card.card_set || '').replace(/'/g, "\\'");
-                const firstPlaceSafe = (card.first_place || '').replace(/'/g, "\\'");
+                const cardNameSafe = (card.name || '').replace(/"/g, '&quot;');
+                const sourceSafe = (card.source || card.card_set || '').replace(/"/g, '&quot;');
+                const firstPlaceSafe = (card.first_place || '').replace(/"/g, '&quot;');
                 // Use resource_id for unique ID to differentiate all conflicts, especially those with empty data
                 const resourceId = card.resource_id !== undefined ? card.resource_id : '';
                 const countId = `conflict-selected-${card.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${(card.source || card.card_set || '').replace(/\s+/g, '-')}-${resourceId}`;
@@ -3880,12 +3880,20 @@
                 selectedResources[type] = [];
             }
 
-            // Reset all selected counts to 0 in allResources
+            // Reset all selected counts to 0 in allResources AND update UI
             for (let type in allResources) {
                 if (allResources[type] && Array.isArray(allResources[type])) {
                     allResources[type].forEach(resource => {
                         resource.selected = 0;
                     });
+                    // Update UI immediately after clearing to reflect the empty state
+                    try {
+                        initializeTab(type);
+                        updateBadge(type);
+                        updateStatsForType(type);
+                    } catch (error) {
+                        console.error(`Error clearing UI for ${type}:`, error);
+                    }
                 }
             }
 

@@ -7491,7 +7491,7 @@
       "count": 1,
       "persuasion_cost": 5,
       "acquisition_bonus": "+1 Spy",
-      "passive_ability": "",
+      "passive_ability": "Sieg",
       "green_access": "",
       "purple_access": "",
       "yellow_access": "",
@@ -13777,7 +13777,7 @@
     },
     {
       "resource_type": "conflict",
-      "name": "Sieg of Arrakeen",
+      "name": "Siege of Arrakeen",
       "selected": 0,
       "source": "Imperium",
       "compatibility": "Base",

@@ -130,7 +130,7 @@
 - Machinations (Imperium)
 - Raid Stockpiles (Imperium)
 - Secure Imperial Basin (Imperium)
-- Sieg of Arrakeen (Imperium)
+- Siege of Arrakeen (Imperium)
 - Siege of Carthag (Imperium)
 - Sort Through the Chaos (Imperium)
 - Terrible Purpose (Imperium)
