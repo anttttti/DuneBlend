@@ -237,7 +237,7 @@
         <!-- Resource Type Tabs -->
         <ul class="nav nav-tabs" id="resourceTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="board-tab" data-bs-toggle="tab" data-bs-target="#board-panel" type="button">
+                <button class="nav-link active" id="board-tab" data-bs-toggle="tab" data-bs-target="#board-panel" type="button" onclick="updateRequiredSets()">
                     Board
                 </button>
             </li>
@@ -312,14 +312,14 @@
                             </div>
                             <div class="card-body">
                                 <div class="form-check mb-3">
-                                    <input class="form-check-input" type="radio" name="mainBoard" id="board-imperium" value="imperium" checked>
+                                    <input class="form-check-input" type="radio" name="mainBoard" id="board-imperium" value="imperium" checked onchange="updateRequiredSets()">
                                     <label class="form-check-label" for="board-imperium">
                                         <strong>1. Dune: Imperium Board</strong>
                                         <p class="text-muted mb-0">Features the Mentat token mechanic and Foldspace cards</p>
                                     </label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="mainBoard" id="board-uprising" value="uprising">
+                                    <input class="form-check-input" type="radio" name="mainBoard" id="board-uprising" value="uprising" onchange="updateRequiredSets()">
                                     <label class="form-check-label" for="board-uprising">
                                         <strong>2. Dune: Imperium - Uprising Board</strong>
                                         <p class="text-muted mb-0">Features spies, sandworms, and observation posts</p>
@@ -335,13 +335,13 @@
                             <div class="card-body">
                                 <h6 class="mt-3"><strong>Rise of Ix:</strong></h6>
                                 <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" id="board-choam" value="choam">
+                                    <input class="form-check-input" type="checkbox" id="board-choam" value="choam" onchange="updateRequiredSets()">
                                     <label class="form-check-label" for="board-choam">
                                         <strong>CHOAM Board Overlay</strong> - sits on top of and expands the original game's CHOAM area, replacing the spice-to-Solari conversion with an Interstellar Shipping track
                                     </label>
                                 </div>
                                 <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="board-ix" value="ix">
+                                    <input class="form-check-input" type="checkbox" id="board-ix" value="ix" onchange="updateRequiredSets()">
                                     <label class="form-check-label" for="board-ix">
                                         <strong>Ix Board</strong> - sits alongside the upper right side of the main board, featuring spaces for 18 Tech tiles organized in three stacks
                                     </label>
@@ -349,13 +349,13 @@
 
                                 <h6 class="mt-3"><strong>Immortality:</strong></h6>
                                 <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" id="board-tleilax" value="tleilax">
+                                    <input class="form-check-input" type="checkbox" id="board-tleilax" value="tleilax" onchange="updateRequiredSets()">
                                     <label class="form-check-label" for="board-tleilax">
                                         <strong>Bene Tleilax Board</strong> - features two tracks: a research track (triggered by microscope icons) and a Tleilaxu track for genetic specimens
                                     </label>
                                 </div>
                                 <div class="form-check mb-3">
-                                    <input class="form-check-input" type="checkbox" id="board-research" value="research">
+                                    <input class="form-check-input" type="checkbox" id="board-research" value="research" onchange="updateRequiredSets()">
                                     <label class="form-check-label" for="board-research">
                                         <strong>Research Station Overlay</strong>
                                     </label>
@@ -363,10 +363,21 @@
 
                                 <h6 class="mt-3"><strong>Bloodlines:</strong></h6>
                                 <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox" id="board-embassy" value="embassy">
+                                    <input class="form-check-input" type="checkbox" id="board-embassy" value="embassy" onchange="updateRequiredSets()">
                                     <label class="form-check-label" for="board-embassy">
                                         <strong>Ixian Embassy Board</strong> - kept to the side of the main board, offering three stacks of Tech tiles available for purchase when sending agents to any Landsraad (green) space
                                     </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h5>📦 Required Sets <small class="text-muted ms-2">(auto-detected from selections)</small></h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="requiredSetsContainer">
+                                    <span class="text-muted">No sets selected yet</span>
                                 </div>
                             </div>
                         </div>
@@ -1561,6 +1572,9 @@
                     initializeTab(type);
                 }
             });
+
+            // Initial update of required sets (Board tab is active by default)
+            updateRequiredSets();
         }
 
         function initializeTab(type) {
@@ -1856,6 +1870,105 @@
                     updateConflictStats();
                     break;
             }
+        }
+
+        // Calculate and display required sets based on all selections
+        function updateRequiredSets() {
+            const requiredSets = new Set();
+
+            // Check main board selection
+            const mainBoard = document.querySelector('input[name="mainBoard"]:checked')?.value;
+            if (mainBoard) {
+                if (mainBoard === 'imperium') {
+                    requiredSets.add('Imperium');
+                } else if (mainBoard === 'uprising') {
+                    requiredSets.add('Uprising');
+                }
+            }
+
+            // Check additional boards
+            document.querySelectorAll('#board-panel input[type="checkbox"]:checked').forEach(cb => {
+                const value = cb.value;
+                if (value === 'choam' || value === 'ix') {
+                    requiredSets.add('Rise of Ix');
+                }
+                if (value === 'tleilax' || value === 'research') {
+                    requiredSets.add('Immortality');
+                }
+                if (value === 'embassy') {
+                    requiredSets.add('Bloodlines');
+                }
+            });
+
+            // Check all resource types for selected items
+            const resourceTypes = ['imperium', 'intrigue', 'tleilax', 'reserve', 'tech', 'contracts', 'leader', 'sardaukar', 'starter', 'conflict', 'rival', 'navigation'];
+
+            resourceTypes.forEach(type => {
+                if (!allResources[type]) return;
+
+                allResources[type].forEach(resource => {
+                    if (resource.selected && resource.selected > 0) {
+                        // Get source from various possible fields
+                        const source = resource.source || resource.card_set || resource.set || '';
+                        if (source) {
+                            const normalizedSource = normalizeSetName(source);
+                            if (normalizedSource) {
+                                requiredSets.add(normalizedSource);
+                            }
+                        }
+                    }
+                });
+            });
+
+            // Update the display
+            const container = document.getElementById('requiredSetsContainer');
+            if (container) {
+                if (requiredSets.size === 0) {
+                    container.innerHTML = '<span class="text-muted">No sets selected yet</span>';
+                } else {
+                    // Sort sets in a logical order
+                    const setOrder = ['Imperium', 'Uprising', 'Rise of Ix', 'Immortality', 'Bloodlines', 'Promo', 'Ecaz & Moritani'];
+                    const sortedSets = Array.from(requiredSets).sort((a, b) => {
+                        const indexA = setOrder.indexOf(a);
+                        const indexB = setOrder.indexOf(b);
+                        if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+                        if (indexA === -1) return 1;
+                        if (indexB === -1) return -1;
+                        return indexA - indexB;
+                    });
+
+                    container.innerHTML = sortedSets.map(set => {
+                        // Use expansion colors for badges
+                        let badgeClass = 'bg-primary';
+                        const lowerSet = set.toLowerCase();
+                        if (lowerSet.includes('imperium') || lowerSet === 'base') badgeClass = 'expansion-base';
+                        else if (lowerSet.includes('uprising')) badgeClass = 'expansion-uprising';
+                        else if (lowerSet.includes('ix')) badgeClass = 'expansion-ix';
+                        else if (lowerSet.includes('immortality')) badgeClass = 'expansion-immortality';
+                        else if (lowerSet.includes('bloodlines')) badgeClass = 'expansion-bloodlines';
+                        else if (lowerSet.includes('promo')) badgeClass = 'expansion-promo';
+
+                        return `<span class="badge ${badgeClass} me-2 mb-1" style="font-size: 0.95em; padding: 6px 12px;">${set}</span>`;
+                    }).join('');
+                }
+            }
+        }
+
+        // Normalize set names to consistent display names
+        function normalizeSetName(source) {
+            if (!source) return null;
+            const lower = source.toLowerCase().trim();
+
+            if (lower === 'base' || lower === 'imperium' || lower === 'dune: imperium') return 'Imperium';
+            if (lower === 'ix' || lower === 'rise of ix' || lower.includes('rise of ix')) return 'Rise of Ix';
+            if (lower === 'immortality' || lower.includes('immortality')) return 'Immortality';
+            if (lower === 'uprising' || lower.includes('uprising')) return 'Uprising';
+            if (lower === 'bloodlines' || lower.includes('bloodlines')) return 'Bloodlines';
+            if (lower === 'promo' || lower.includes('promo')) return 'Promo';
+            if (lower.includes('ecaz') || lower.includes('moritani')) return 'Ecaz & Moritani';
+
+            // Return capitalized original if no match
+            return source.charAt(0).toUpperCase() + source.slice(1);
         }
 
         function initializeImperiumDetailed(cards) {
@@ -4032,6 +4145,9 @@
 
             // Update the filename field with the loaded blend's filename
             document.getElementById('blendName').value = filename;
+
+            // Update required sets display (in case Board tab is currently open)
+            updateRequiredSets();
         }
 
         function loadBlendFromServer(filename) {
