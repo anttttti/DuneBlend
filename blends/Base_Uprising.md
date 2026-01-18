@@ -1,10 +1,14 @@
 # Base Uprising
 
+## Overview
+
+### Description
+
+Dune: Imperium - Uprising base game
+
 ## Board
 
 - Main Board: uprising
-
-*All cards from the Uprising expansion*
 
 **Total Items:** 166
 

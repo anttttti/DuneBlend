@@ -1,5 +1,15 @@
 # Merakon's House Blend
 
+## Overview
+
+### Description
+
+https://boardgamegeek.com/thread/3213458/merakons-house-blend
+
+### Leader Selection
+
+Deal four leaders to each player. Everyone picks a leader simultaneously.
+
 ## Board
 
 - Main Board: uprising

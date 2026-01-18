@@ -1,10 +1,14 @@
 # Base Imperium
 
+## Overview
+
+### Description
+
+Dune: Imperium base game
+
 ## Board
 
 - Main Board: imperium
-
-*All cards from the Base Game*
 
 **Total Items:** 167
 
