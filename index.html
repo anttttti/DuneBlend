@@ -10,6 +10,15 @@
     <style>
         body { padding: 20px; background-color: #f5f5f5; }
 
+        /* Overview textarea auto-resize */
+        #overview-description,
+        #overview-leader-selection,
+        #overview-house-rules {
+            overflow: hidden;
+            resize: vertical;
+            min-height: 72px;
+        }
+
         /* Tab styling */
         .nav-tabs { margin-bottom: 20px; border-bottom: 2px solid #ddd; flex-wrap: wrap; }
         .nav-tabs .nav-link { color: #666; border: none; padding: 8px 15px; font-size: 0.9em; }
@@ -397,6 +406,15 @@
                             </div>
                             <div class="card-body">
                                 <textarea class="form-control" id="overview-description" rows="6" placeholder="Describe your blend: what makes it unique, what gameplay style it emphasizes, recommended player count, etc."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h5>Leader Selection</h5>
+                            </div>
+                            <div class="card-body">
+                                <textarea class="form-control" id="overview-leader-selection" rows="4" placeholder="Describe how leaders are selected for this blend: draft order, random draw, player choice, specific leaders only, etc."></textarea>
                             </div>
                         </div>
 
@@ -1434,6 +1452,37 @@
             contracts: [], leader: [], sardaukar: [], starter: [], conflict: []
         };
 
+        // Auto-resize textarea to fit content
+        function autoResizeTextarea(textarea) {
+            if (!textarea) return;
+            // Reset height to auto to get the correct scrollHeight
+            textarea.style.height = 'auto';
+            // Set minimum height based on rows attribute
+            const rows = parseInt(textarea.getAttribute('rows')) || 3;
+            const lineHeight = 24; // Approximate line height in pixels
+            const minHeight = rows * lineHeight;
+            // Set height to scrollHeight or minimum, whichever is larger
+            textarea.style.height = Math.max(textarea.scrollHeight, minHeight) + 'px';
+        }
+
+        // Initialize auto-resize for Overview textareas
+        function initOverviewTextareas() {
+            const textareas = [
+                document.getElementById('overview-description'),
+                document.getElementById('overview-leader-selection'),
+                document.getElementById('overview-house-rules')
+            ];
+
+            textareas.forEach(textarea => {
+                if (textarea) {
+                    // Set initial height
+                    autoResizeTextarea(textarea);
+                    // Add input listener for dynamic resizing
+                    textarea.addEventListener('input', () => autoResizeTextarea(textarea));
+                }
+            });
+        }
+
         // Sorting state for each resource type
         let sortState = {};
         Object.keys(selectedResources).forEach(type => {
@@ -1572,6 +1621,9 @@
                     initializeTab(type);
                 }
             });
+
+            // Initialize Overview tab textareas with auto-resize
+            initOverviewTextareas();
 
             // Initial update of required sets (Board tab is active by default)
             updateRequiredSets();
@@ -3177,27 +3229,86 @@
             const uniqueCards = tiles.length;
             let totalCards = 0;
             const byCosts = {};
+            const bySets = {};
+            const mechanics = {};
+            const byVPs = {};
+
             tiles.forEach(t => {
                 const count = t.selected || 1;
                 totalCards += count;
+
+                // Cost
                 const cost = parseFloat(t.spice_cost || 0) || 0;
                 const costKey = cost.toString();
                 byCosts[costKey] = (byCosts[costKey] || 0) + count;
+
+                // Set
+                const set = t.source || t.card_set || 'Unknown';
+                bySets[set] = (bySets[set] || 0) + count;
+
+                // Mechanics
+                const mechanicFields = ['shipping', 'spies', 'sandworms', 'contracts', 'sardaukar'];
+                mechanicFields.forEach(field => {
+                    if (t[field] && t[field] !== '0' && t[field] !== '0.0' && t[field].toString().trim() !== '') {
+                        mechanics[field] = (mechanics[field] || 0) + count;
+                    }
+                });
+
+                // VPs
+                const vps = parseFloat(t.vps_available || 0);
+                if (!isNaN(vps) && vps > 0) {
+                    const vpsKey = vps.toString();
+                    byVPs[vpsKey] = (byVPs[vpsKey] || 0) + count;
+                }
             });
 
             let html = `
                 <p><strong>Total Tech:</strong> ${totalCards} &nbsp; <strong>Unique:</strong> ${uniqueCards}</p>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
-                    <div><p><strong>Cost:</strong></p>
             `;
 
-            // Sort costs numerically
+            // Cost column
+            html += '<div><p><strong>Cost:</strong></p>';
             const maxCostCount = Math.max(...Object.values(byCosts));
             for (const [cost, count] of Object.entries(byCosts).sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))) {
                 const percentage = ((count / totalCards) * 100).toFixed(1);
                 html += createStatBarChart(`Cost ${cost}`, count, percentage, maxCostCount, null);
             }
-            html += '</div></div>'; // Close div and grid
+            html += '</div>';
+
+            // Set column
+            html += '<div><p><strong>Set:</strong></p>';
+            const maxSetCount = Math.max(...Object.values(bySets));
+            for (const [set, count] of Object.entries(bySets).sort((a, b) => b[1] - a[1])) {
+                const percentage = ((count / totalCards) * 100).toFixed(1);
+                html += createStatBarChart(set, count, percentage, maxSetCount, 'set');
+            }
+            html += '</div>';
+
+            // Mechanics column
+            if (Object.keys(mechanics).length > 0) {
+                html += '<div><p><strong>Mechanics:</strong></p>';
+                const maxMechCount = Math.max(...Object.values(mechanics));
+                for (const [mech, count] of Object.entries(mechanics).sort((a, b) => b[1] - a[1])) {
+                    const displayName = mech.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    const percentage = ((count / totalCards) * 100).toFixed(1);
+                    html += createStatBarChart(displayName, count, percentage, maxMechCount, null);
+                }
+                html += '</div>';
+            }
+
+            // VPs column
+            if (Object.keys(byVPs).length > 0) {
+                html += '<div><p><strong>VPs:</strong></p>';
+                const maxVPCount = Math.max(...Object.values(byVPs));
+                for (const [vp, count] of Object.entries(byVPs).sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))) {
+                    const percentage = ((count / totalCards) * 100).toFixed(1);
+                    html += createStatBarChart(`${vp} VP`, count, percentage, maxVPCount, null);
+                }
+                html += '</div>';
+            }
+
+            html += '</div>'; // Close grid
 
             statsDiv.innerHTML = html;
         }
@@ -3248,23 +3359,67 @@
             const totalLeaders = leaders.length;
             const uniqueCards = leaders.length;
             const byHouse = {};
+            const bySets = {};
+            const byComplexity = {};
 
             leaders.forEach(l => {
+                // House
                 const house = l.house || 'Unknown';
                 byHouse[house] = (byHouse[house] || 0) + 1;
+
+                // Set
+                const set = l.source || l.card_set || 'Unknown';
+                bySets[set] = (bySets[set] || 0) + 1;
+
+                // Complexity
+                const complexity = l.listed_complexity_level || 'Unknown';
+                if (complexity && complexity.toString().trim() !== '') {
+                    byComplexity[complexity] = (byComplexity[complexity] || 0) + 1;
+                }
             });
 
             let html = `
                 <p><strong>Total Leaders:</strong> ${totalLeaders} &nbsp; <strong>Unique:</strong> ${uniqueCards}</p>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
-                    <div><p><strong>House:</strong></p>
             `;
+
+            // Set column
+            html += '<div><p><strong>Set:</strong></p>';
+            const maxSetCount = Math.max(...Object.values(bySets));
+            for (const [set, count] of Object.entries(bySets).sort((a, b) => b[1] - a[1])) {
+                const percentage = ((count / totalLeaders) * 100).toFixed(1);
+                html += createStatBarChart(set, count, percentage, maxSetCount, 'set');
+            }
+            html += '</div>';
+
+            // House column
+            html += '<div><p><strong>House:</strong></p>';
             const maxHouseCount = Math.max(...Object.values(byHouse));
             for (const [house, count] of Object.entries(byHouse).sort((a, b) => b[1] - a[1])) {
                 const percentage = ((count / totalLeaders) * 100).toFixed(1);
-                html += createStatBarChart(house, count, percentage, maxHouseCount, null); // House has no color theme
+                html += createStatBarChart(house, count, percentage, maxHouseCount, null);
             }
-            html += '</div></div>'; // Close div and grid
+            html += '</div>';
+
+            // Complexity column
+            if (Object.keys(byComplexity).length > 0) {
+                html += '<div><p><strong>Complexity:</strong></p>';
+                const maxComplexityCount = Math.max(...Object.values(byComplexity));
+                // Sort by complexity level (numerically if possible)
+                const sortedComplexity = Object.entries(byComplexity).sort((a, b) => {
+                    const numA = parseInt(a[0]);
+                    const numB = parseInt(b[0]);
+                    if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+                    return a[0].localeCompare(b[0]);
+                });
+                for (const [complexity, count] of sortedComplexity) {
+                    const percentage = ((count / totalLeaders) * 100).toFixed(1);
+                    html += createStatBarChart(`Level ${complexity}`, count, percentage, maxComplexityCount, null);
+                }
+                html += '</div>';
+            }
+
+            html += '</div>'; // Close grid
             statsDiv.innerHTML = html;
         }
 
@@ -3675,11 +3830,13 @@
 
             // Get overview data
             const description = document.getElementById('overview-description')?.value.trim() || '';
+            const leaderSelection = document.getElementById('overview-leader-selection')?.value.trim() || '';
             const houseRules = document.getElementById('overview-house-rules')?.value.trim() || '';
 
             const resources_by_type = {
                 'Overview': {
                     description: description,
+                    leaderSelection: leaderSelection,
                     houseRules: houseRules
                 },
                 'Board': {
@@ -3802,11 +3959,13 @@
 
             // Get overview data
             const description = document.getElementById('overview-description')?.value.trim() || '';
+            const leaderSelection = document.getElementById('overview-leader-selection')?.value.trim() || '';
             const houseRules = document.getElementById('overview-house-rules')?.value.trim() || '';
 
             const resources_by_type = {
                 'Overview': {
                     description: description,
+                    leaderSelection: leaderSelection,
                     houseRules: houseRules
                 },
                 'Board': {
@@ -3988,6 +4147,14 @@
                 throw new Error('Invalid blend data');
             }
 
+            // Clear Overview fields first (in case file has no Overview section)
+            const descField = document.getElementById('overview-description');
+            const leaderField = document.getElementById('overview-leader-selection');
+            const rulesField = document.getElementById('overview-house-rules');
+            if (descField) descField.value = '';
+            if (leaderField) leaderField.value = '';
+            if (rulesField) rulesField.value = '';
+
             // Clear current selection
             for (let type in selectedResources) {
                 selectedResources[type] = [];
@@ -4018,13 +4185,22 @@
                 // Handle Overview section specially
                 if (sectionName === 'Overview') {
                     const overviewData = resourceNames;
-                    if (overviewData.description) {
-                        const descField = document.getElementById('overview-description');
-                        if (descField) descField.value = overviewData.description;
+                    // Clear all overview fields first
+                    const descField = document.getElementById('overview-description');
+                    const leaderField = document.getElementById('overview-leader-selection');
+                    const rulesField = document.getElementById('overview-house-rules');
+
+                    if (descField) {
+                        descField.value = overviewData.description || '';
+                        autoResizeTextarea(descField);
                     }
-                    if (overviewData.houseRules) {
-                        const rulesField = document.getElementById('overview-house-rules');
-                        if (rulesField) rulesField.value = overviewData.houseRules;
+                    if (leaderField) {
+                        leaderField.value = overviewData.leaderSelection || '';
+                        autoResizeTextarea(leaderField);
+                    }
+                    if (rulesField) {
+                        rulesField.value = overviewData.houseRules || '';
+                        autoResizeTextarea(rulesField);
                     }
                     continue;
                 }

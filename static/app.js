@@ -138,6 +138,7 @@ function parseBlendFile(content) {
                 } else if (current_section === 'Overview') {
                     resources_by_type[current_section] = {
                         description: '',
+                        leaderSelection: '',
                         houseRules: ''
                     };
                 } else {
@@ -149,18 +150,24 @@ function parseBlendFile(content) {
         else if (line.startsWith('### ')) {
             current_subsection = line.substring(4).trim();
         }
-        // Parse Overview content
-        else if (current_section === 'Overview' && current_subsection && line) {
+        // Parse Overview content - include empty lines to preserve paragraph breaks
+        else if (current_section === 'Overview' && current_subsection) {
             if (current_subsection === 'Description') {
                 if (resources_by_type['Overview'].description) {
                     resources_by_type['Overview'].description += '\n' + line;
-                } else {
+                } else if (line) {
                     resources_by_type['Overview'].description = line;
+                }
+            } else if (current_subsection === 'Leader Selection') {
+                if (resources_by_type['Overview'].leaderSelection) {
+                    resources_by_type['Overview'].leaderSelection += '\n' + line;
+                } else if (line) {
+                    resources_by_type['Overview'].leaderSelection = line;
                 }
             } else if (current_subsection === 'House Rules') {
                 if (resources_by_type['Overview'].houseRules) {
                     resources_by_type['Overview'].houseRules += '\n' + line;
-                } else {
+                } else if (line) {
                     resources_by_type['Overview'].houseRules = line;
                 }
             }
@@ -214,6 +221,19 @@ function parseBlendFile(content) {
         }
     }
 
+    // Clean up trailing newlines from Overview fields
+    if (resources_by_type['Overview']) {
+        if (resources_by_type['Overview'].description) {
+            resources_by_type['Overview'].description = resources_by_type['Overview'].description.trim();
+        }
+        if (resources_by_type['Overview'].leaderSelection) {
+            resources_by_type['Overview'].leaderSelection = resources_by_type['Overview'].leaderSelection.trim();
+        }
+        if (resources_by_type['Overview'].houseRules) {
+            resources_by_type['Overview'].houseRules = resources_by_type['Overview'].houseRules.trim();
+        }
+    }
+
     return {success: true, resources: resources_by_type};
 }
 
@@ -230,6 +250,11 @@ function saveBlend(blendName, resourcesByType) {
         if (overview_data.description) {
             md += `### Description\n\n`;
             md += `${overview_data.description}\n\n`;
+        }
+
+        if (overview_data.leaderSelection) {
+            md += `### Leader Selection\n\n`;
+            md += `${overview_data.leaderSelection}\n\n`;
         }
 
         if (overview_data.houseRules) {
