@@ -4250,7 +4250,7 @@
 
                         if (resourcesWithIndices.length > 1) {
                             // Multiple resources with same name/source - add identifiers
-                            resourcesWithIds.forEach((item, index) => {
+                            resourcesWithIndices.forEach((item, index) => {
                                 const count = item.resource.selected || 1;
                                 const resourceWithId = {...item.resource, synonymId: index + 1};
                                 for (let i = 0; i < count; i++) {
@@ -4259,7 +4259,7 @@
                             });
                         } else {
                             // Single resource - no identifier needed
-                            const resource = resourcesWithIds[0].resource;
+                            const resource = resourcesWithIndices[0].resource;
                             const count = resource.selected || 1;
                             for (let i = 0; i < count; i++) {
                                 expandedResources.push(resource);

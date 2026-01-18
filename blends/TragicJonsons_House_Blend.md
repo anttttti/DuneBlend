@@ -107,7 +107,7 @@ https://observablehq.com/@mrcorvus/dune-imperium-deck-builder
 - Pointing the Way (Bloodlines)
 - Possible Futures (Bloodlines)
 - Power Play (Imperium)
-- Price is Not Object (Uprising)
+- Price is No Object (Uprising)
 - Priority Contracts (Uprising)
 - 2× Public Spectacle (Uprising)
 - 2× Quash Rebellion (Bloodlines)

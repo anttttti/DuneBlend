@@ -43,7 +43,7 @@ Dune: Imperium - Uprising base game
 - Northern Watermaster (Uprising)
 - Overthrow (Uprising)
 - Paracompass (Uprising)
-- Price is Not Object (Uprising)
+- Price is No Object (Uprising)
 - Priority Contracts (Uprising)
 - 2× Public Spectacle (Uprising)
 - 2× Rebel Supplier (Uprising)

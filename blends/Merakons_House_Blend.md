@@ -62,7 +62,7 @@ Deal four leaders to each player. Everyone picks a leader simultaneously.
 - Overthrow (Uprising)
 - Paracompass (Uprising)
 - Power Play (Imperium)
-- Price is Not Object (Uprising)
+- Price is No Object (Uprising)
 - Priority Contracts (Uprising)
 - 2× Public Spectacle (Uprising)
 - 2× Rebel Supplier (Uprising)
