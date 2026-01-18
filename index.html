@@ -1708,6 +1708,37 @@
                     toggleRowSelection(row, true); // Force add when dragging
                 }
             });
+
+            // Double-click to select all rows with matching column value
+            tbody.addEventListener('dblclick', (e) => {
+                const cell = e.target.closest('td');
+                const row = e.target.closest('tr.resource-row');
+                if (!cell || !row) return;
+
+                // Don't handle double-click on buttons
+                if (e.target.closest('button')) return;
+
+                // Get the column index of the clicked cell
+                const cellIndex = Array.from(row.cells).indexOf(cell);
+                if (cellIndex < 0) return;
+
+                // Get the value to match (use textContent, trimmed)
+                const matchValue = cell.textContent.trim();
+
+                // Clear previous selection
+                clearMultiSelection();
+
+                multiSelectState.currentType = resourceType;
+
+                // Find all rows with matching value in the same column
+                const allRows = tbody.querySelectorAll('tr.resource-row');
+                allRows.forEach(r => {
+                    const targetCell = r.cells[cellIndex];
+                    if (targetCell && targetCell.textContent.trim() === matchValue) {
+                        toggleRowSelection(r, true);
+                    }
+                });
+            });
         }
 
         // Toggle row selection
