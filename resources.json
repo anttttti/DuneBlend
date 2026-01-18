@@ -4302,6 +4302,92 @@
     },
     {
       "resource_type": "imperium",
+      "name": "Pivotal Gambit",
+      "selected": 0,
+      "source": "Promo",
+      "compatibility": "All",
+      "count": 1,
+      "persuasion_cost": 3,
+      "acquisition_bonus": "",
+      "passive_ability": "",
+      "green_access": "",
+      "purple_access": "",
+      "yellow_access": "",
+      "emperor_access": "",
+      "spacing_guild_access": "",
+      "bene_gesserit_access": "",
+      "fremen_access": "X",
+      "spy_access": "",
+      "tech": "",
+      "shipping": "",
+      "unload": "",
+      "infiltration": "",
+      "research": "",
+      "grafting": "",
+      "spies": "",
+      "sandworms": "",
+      "contracts": "",
+      "battle_icons": "",
+      "sardaukar": "",
+      "agent_ability": "You can send an Agent to Fremen or City spaces. Trash this card to recruit 1 troop and add \"Gain 1 Influence with any Faction\" to the first place reward for this conflict.",
+      "reveal_persuasion": 1,
+      "reveal_swords": 2,
+      "reveal_ability": "",
+      "emperor_affiliation": "",
+      "spacing_guild_affiliation": "",
+      "bene_gesserit_affiliation": "",
+      "fremen_affiliation": "X",
+      "vps_available": "",
+      "count_in_merakon's_house_blend": "",
+      "count_in_tragicjonson's_house_blend": "",
+      "card_set": "promo",
+      "resource_id": 100
+    },
+    {
+      "resource_type": "imperium",
+      "name": "The Beast's Spoils",
+      "selected": 0,
+      "source": "Promo",
+      "compatibility": "Uprising",
+      "count": 1,
+      "persuasion_cost": 3,
+      "acquisition_bonus": "",
+      "passive_ability": "",
+      "green_access": "",
+      "purple_access": "X",
+      "yellow_access": "",
+      "emperor_access": "",
+      "spacing_guild_access": "",
+      "bene_gesserit_access": "",
+      "fremen_access": "",
+      "spy_access": "",
+      "tech": "",
+      "shipping": "",
+      "unload": "",
+      "infiltration": "",
+      "research": "",
+      "grafting": "",
+      "spies": "",
+      "sandworms": "",
+      "contracts": "",
+      "battle_icons": "",
+      "sardaukar": "",
+      "agent_ability": "You can send an Agent to City spaces. Gain rewards for your face-up battle icons: Crysknife: trash one card from your hand, discard pile, or in play; Desert Mouse: gain 1 spice; Maker Hooks: recruit 1 troop.",
+      "reveal_persuasion": "",
+      "reveal_swords": 3,
+      "reveal_ability": "",
+      "emperor_affiliation": "X",
+      "spacing_guild_affiliation": "",
+      "bene_gesserit_affiliation": "",
+      "fremen_affiliation": "",
+      "vps_available": "",
+      "count_in_merakon's_house_blend": "",
+      "count_in_tragicjonson's_house_blend": "",
+      "card_set": "promo",
+      "resource_id": 101
+    },
+    {
+      "resource_type": "imperium",
       "name": "Appropriate",
       "selected": 0,
       "source": "Rise of Ix",
@@ -4341,7 +4427,7 @@
       "count_in_merakon's_house_blend": "",
       "count_in_tragicjonson's_house_blend": "",
       "card_set": "ix",
-      "resource_id": 100
+      "resource_id": 102
     },
     {
       "resource_type": "imperium",
@@ -4384,7 +4470,7 @@
       "count_in_merakon's_house_blend": "",
       "count_in_tragicjonson's_house_blend": "",
       "card_set": "ix",
-      "resource_id": 101
+      "resource_id": 103
     },
     {
       "resource_type": "imperium",
@@ -4427,7 +4513,7 @@
       "count_in_merakon's_house_blend": "",
       "count_in_tragicjonson's_house_blend": "",
       "card_set": "ix",
-      "resource_id": 102
+      "resource_id": 104
     },
     {
       "resource_type": "imperium",
@@ -4470,7 +4556,7 @@
       "count_in_merakon's_house_blend": "",
       "count_in_tragicjonson's_house_blend": "",
       "card_set": "ix",
-      "resource_id": 103
+      "resource_id": 105
     },
     {
       "resource_type": "imperium",
@@ -4513,7 +4599,7 @@
       "count_in_merakon's_house_blend": "",
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "ix",
-      "resource_id": 104
+      "resource_id": 106
     },
     {
       "resource_type": "imperium",
@@ -4556,7 +4642,7 @@
       "count_in_merakon's_house_blend": "",
       "count_in_tragicjonson's_house_blend": "",
       "card_set": "ix",
-      "resource_id": 105
+      "resource_id": 107
     },
     {
       "resource_type": "imperium",
@@ -4599,7 +4685,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "ix",
-      "resource_id": 106
+      "resource_id": 108
     },
     {
       "resource_type": "imperium",
@@ -4642,7 +4728,7 @@
       "count_in_merakon's_house_blend": "",
       "count_in_tragicjonson's_house_blend": "",
       "card_set": "ix",
-      "resource_id": 107
+      "resource_id": 109
     },
     {
       "resource_type": "imperium",
@@ -4685,7 +4771,7 @@
       "count_in_merakon's_house_blend": "",
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "ix",
-      "resource_id": 108
+      "resource_id": 110
     },
     {
       "resource_type": "imperium",
@@ -4728,7 +4814,7 @@
       "count_in_merakon's_house_blend": "",
       "count_in_tragicjonson's_house_blend": "",
       "card_set": "ix",
-      "resource_id": 109
+      "resource_id": 111
     },
     {
       "resource_type": "imperium",
@@ -4771,7 +4857,7 @@
       "count_in_merakon's_house_blend": "",
       "count_in_tragicjonson's_house_blend": "",
       "card_set": "ix",
-      "resource_id": 110
+      "resource_id": 112
     },
     {
       "resource_type": "imperium",
@@ -4814,7 +4900,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "ix",
-      "resource_id": 111
+      "resource_id": 113
     },
     {
       "resource_type": "imperium",
@@ -4857,7 +4943,7 @@
       "count_in_merakon's_house_blend": "",
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "ix",
-      "resource_id": 112
+      "resource_id": 114
     },
     {
       "resource_type": "imperium",
@@ -4900,7 +4986,7 @@
       "count_in_merakon's_house_blend": "",
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "ix",
-      "resource_id": 113
+      "resource_id": 115
     },
     {
       "resource_type": "imperium",
@@ -4943,7 +5029,7 @@
       "count_in_merakon's_house_blend": "",
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "ix",
-      "resource_id": 114
+      "resource_id": 116
     },
     {
       "resource_type": "imperium",
@@ -4986,7 +5072,7 @@
       "count_in_merakon's_house_blend": "",
       "count_in_tragicjonson's_house_blend": 2,
       "card_set": "ix",
-      "resource_id": 115
+      "resource_id": 117
     },
     {
       "resource_type": "imperium",
@@ -5029,7 +5115,7 @@
       "count_in_merakon's_house_blend": "",
       "count_in_tragicjonson's_house_blend": "",
       "card_set": "ix",
-      "resource_id": 116
+      "resource_id": 118
     },
     {
       "resource_type": "imperium",
@@ -5072,7 +5158,7 @@
       "count_in_merakon's_house_blend": "",
       "count_in_tragicjonson's_house_blend": "",
       "card_set": "ix",
-      "resource_id": 117
+      "resource_id": 119
     },
     {
       "resource_type": "imperium",
@@ -5115,7 +5201,7 @@
       "count_in_merakon's_house_blend": "",
       "count_in_tragicjonson's_house_blend": "",
       "card_set": "ix",
-      "resource_id": 118
+      "resource_id": 120
     },
     {
       "resource_type": "imperium",
@@ -5158,7 +5244,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "ix",
-      "resource_id": 119
+      "resource_id": 121
     },
     {
       "resource_type": "imperium",
@@ -5201,7 +5287,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": "",
       "card_set": "ix",
-      "resource_id": 120
+      "resource_id": 122
     },
     {
       "resource_type": "imperium",
@@ -5244,7 +5330,7 @@
       "count_in_merakon's_house_blend": "",
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "ix",
-      "resource_id": 121
+      "resource_id": 123
     },
     {
       "resource_type": "imperium",
@@ -5287,7 +5373,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": "",
       "card_set": "ix",
-      "resource_id": 122
+      "resource_id": 124
     },
     {
       "resource_type": "imperium",
@@ -5330,7 +5416,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "ix",
-      "resource_id": 123
+      "resource_id": 125
     },
     {
       "resource_type": "imperium",
@@ -5373,7 +5459,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "ix",
-      "resource_id": 124
+      "resource_id": 126
     },
     {
       "resource_type": "imperium",
@@ -5416,7 +5502,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": "",
       "card_set": "ix",
-      "resource_id": 125
+      "resource_id": 127
     },
     {
       "resource_type": "imperium",
@@ -5459,7 +5545,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": "",
       "card_set": "ix",
-      "resource_id": 126
+      "resource_id": 128
     },
     {
       "resource_type": "imperium",
@@ -5502,7 +5588,7 @@
       "count_in_merakon's_house_blend": "",
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "ix",
-      "resource_id": 127
+      "resource_id": 129
     },
     {
       "resource_type": "imperium",
@@ -5545,7 +5631,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "ix",
-      "resource_id": 128
+      "resource_id": 130
     },
     {
       "resource_type": "imperium",
@@ -5588,7 +5674,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 2,
       "card_set": "uprising",
-      "resource_id": 129
+      "resource_id": 131
     },
     {
       "resource_type": "imperium",
@@ -5631,7 +5717,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 130
+      "resource_id": 132
     },
     {
       "resource_type": "imperium",
@@ -5674,7 +5760,7 @@
       "count_in_merakon's_house_blend": 2,
       "count_in_tragicjonson's_house_blend": 2,
       "card_set": "uprising",
-      "resource_id": 131
+      "resource_id": 133
     },
     {
       "resource_type": "imperium",
@@ -5717,7 +5803,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 132
+      "resource_id": 134
     },
     {
       "resource_type": "imperium",
@@ -5760,7 +5846,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 133
+      "resource_id": 135
     },
     {
       "resource_type": "imperium",
@@ -5803,7 +5889,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 134
+      "resource_id": 136
     },
     {
       "resource_type": "imperium",
@@ -5846,7 +5932,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 135
+      "resource_id": 137
     },
     {
       "resource_type": "imperium",
@@ -5889,7 +5975,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 136
+      "resource_id": 138
     },
     {
       "resource_type": "imperium",
@@ -5932,7 +6018,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 137
+      "resource_id": 139
     },
     {
       "resource_type": "imperium",
@@ -5975,7 +6061,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 138
+      "resource_id": 140
     },
     {
       "resource_type": "imperium",
@@ -6018,7 +6104,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 139
+      "resource_id": 141
     },
     {
       "resource_type": "imperium",
@@ -6061,7 +6147,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": "",
       "card_set": "uprising",
-      "resource_id": 140
+      "resource_id": 142
     },
     {
       "resource_type": "imperium",
@@ -6104,7 +6190,7 @@
       "count_in_merakon's_house_blend": 2,
       "count_in_tragicjonson's_house_blend": 2,
       "card_set": "uprising",
-      "resource_id": 141
+      "resource_id": 143
     },
     {
       "resource_type": "imperium",
@@ -6147,7 +6233,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": "",
       "card_set": "uprising",
-      "resource_id": 142
+      "resource_id": 144
     },
     {
       "resource_type": "imperium",
@@ -6190,7 +6276,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": "",
       "card_set": "uprising",
-      "resource_id": 143
+      "resource_id": 145
     },
     {
       "resource_type": "imperium",
@@ -6233,7 +6319,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 144
+      "resource_id": 146
     },
     {
       "resource_type": "imperium",
@@ -6276,7 +6362,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 145
+      "resource_id": 147
     },
     {
       "resource_type": "imperium",
@@ -6319,7 +6405,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 146
+      "resource_id": 148
     },
     {
       "resource_type": "imperium",
@@ -6362,7 +6448,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 147
+      "resource_id": 149
     },
     {
       "resource_type": "imperium",
@@ -6405,7 +6491,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 148
+      "resource_id": 150
     },
     {
       "resource_type": "imperium",
@@ -6448,7 +6534,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 149
+      "resource_id": 151
     },
     {
       "resource_type": "imperium",
@@ -6491,7 +6577,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 150
+      "resource_id": 152
     },
     {
       "resource_type": "imperium",
@@ -6534,7 +6620,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 151
+      "resource_id": 153
     },
     {
       "resource_type": "imperium",
@@ -6577,7 +6663,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 152
+      "resource_id": 154
     },
     {
       "resource_type": "imperium",
@@ -6620,7 +6706,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 2,
       "card_set": "uprising",
-      "resource_id": 153
+      "resource_id": 155
     },
     {
       "resource_type": "imperium",
@@ -6663,7 +6749,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": "",
       "card_set": "uprising",
-      "resource_id": 154
+      "resource_id": 156
     },
     {
       "resource_type": "imperium",
@@ -6706,7 +6792,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 155
+      "resource_id": 157
     },
     {
       "resource_type": "imperium",
@@ -6749,7 +6835,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 156
+      "resource_id": 158
     },
     {
       "resource_type": "imperium",
@@ -6792,11 +6878,11 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 157
+      "resource_id": 159
     },
     {
       "resource_type": "imperium",
-      "name": "Price is Not Object",
+      "name": "Price is No Object",
       "selected": 0,
       "source": "Uprising",
       "compatibility": "All",
@@ -6835,7 +6921,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 158
+      "resource_id": 160
     },
     {
       "resource_type": "imperium",
@@ -6878,7 +6964,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 159
+      "resource_id": 161
     },
     {
       "resource_type": "imperium",
@@ -6921,7 +7007,7 @@
       "count_in_merakon's_house_blend": 2,
       "count_in_tragicjonson's_house_blend": 2,
       "card_set": "uprising",
-      "resource_id": 160
+      "resource_id": 162
     },
     {
       "resource_type": "imperium",
@@ -6964,7 +7050,7 @@
       "count_in_merakon's_house_blend": 2,
       "count_in_tragicjonson's_house_blend": 2,
       "card_set": "uprising",
-      "resource_id": 161
+      "resource_id": 163
     },
     {
       "resource_type": "imperium",
@@ -7007,7 +7093,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 162
+      "resource_id": 164
     },
     {
       "resource_type": "imperium",
@@ -7050,7 +7136,7 @@
       "count_in_merakon's_house_blend": 2,
       "count_in_tragicjonson's_house_blend": 2,
       "card_set": "uprising",
-      "resource_id": 163
+      "resource_id": 165
     },
     {
       "resource_type": "imperium",
@@ -7093,7 +7179,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 164
+      "resource_id": 166
     },
     {
       "resource_type": "imperium",
@@ -7136,7 +7222,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 165
+      "resource_id": 167
     },
     {
       "resource_type": "imperium",
@@ -7179,7 +7265,7 @@
       "count_in_merakon's_house_blend": 2,
       "count_in_tragicjonson's_house_blend": "",
       "card_set": "uprising",
-      "resource_id": 166
+      "resource_id": 168
     },
     {
       "resource_type": "imperium",
@@ -7222,7 +7308,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 167
+      "resource_id": 169
     },
     {
       "resource_type": "imperium",
@@ -7265,7 +7351,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 168
+      "resource_id": 170
     },
     {
       "resource_type": "imperium",
@@ -7308,7 +7394,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 169
+      "resource_id": 171
     },
     {
       "resource_type": "imperium",
@@ -7351,7 +7437,7 @@
       "count_in_merakon's_house_blend": 2,
       "count_in_tragicjonson's_house_blend": "",
       "card_set": "uprising",
-      "resource_id": 170
+      "resource_id": 172
     },
     {
       "resource_type": "imperium",
@@ -7394,7 +7480,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 171
+      "resource_id": 173
     },
     {
       "resource_type": "imperium",
@@ -7437,7 +7523,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 172
+      "resource_id": 174
     },
     {
       "resource_type": "imperium",
@@ -7480,7 +7566,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 173
+      "resource_id": 175
     },
     {
       "resource_type": "imperium",
@@ -7523,7 +7609,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 174
+      "resource_id": 176
     },
     {
       "resource_type": "imperium",
@@ -7566,7 +7652,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 175
+      "resource_id": 177
     },
     {
       "resource_type": "imperium",
@@ -7609,7 +7695,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 176
+      "resource_id": 178
     },
     {
       "resource_type": "imperium",
@@ -7652,7 +7738,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 2,
       "card_set": "uprising",
-      "resource_id": 177
+      "resource_id": 179
     },
     {
       "resource_type": "imperium",
@@ -7695,7 +7781,7 @@
       "count_in_merakon's_house_blend": 2,
       "count_in_tragicjonson's_house_blend": "",
       "card_set": "uprising",
-      "resource_id": 178
+      "resource_id": 180
     },
     {
       "resource_type": "imperium",
@@ -7738,7 +7824,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 179
+      "resource_id": 181
     },
     {
       "resource_type": "imperium",
@@ -7781,7 +7867,7 @@
       "count_in_merakon's_house_blend": 2,
       "count_in_tragicjonson's_house_blend": 2,
       "card_set": "uprising",
-      "resource_id": 180
+      "resource_id": 182
     },
     {
       "resource_type": "imperium",
@@ -7824,7 +7910,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 2,
       "card_set": "uprising",
-      "resource_id": 181
+      "resource_id": 183
     },
     {
       "resource_type": "imperium",
@@ -7867,7 +7953,7 @@
       "count_in_merakon's_house_blend": 1,
       "count_in_tragicjonson's_house_blend": 1,
       "card_set": "uprising",
-      "resource_id": 182
+      "resource_id": 184
     }
   ],
   "tleilax": [

@@ -71,7 +71,7 @@ The blend has both Arrakis Liaison (Imperium) and Prepare the Way (Uprising) as 
 - Maula Pistol (Uprising)
 - Mercantile Affairs (Bloodlines)
 - Possible Futures (Bloodlines)
-- Price is Not Object (Uprising)
+- Price is No Object (Uprising)
 - Priority Contracts (Uprising)
 - Public Spectacle (Uprising)
 - Rebel Supplier (Uprising)

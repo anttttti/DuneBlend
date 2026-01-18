@@ -158,8 +158,18 @@
             text-overflow: ellipsis;
         }
 
-        .resource-row { cursor: pointer; }
+        .resource-row { cursor: pointer; user-select: none; }
         .resource-row:hover { background-color: #f8f9fa !important; }
+
+        /* Multi-selection highlighting */
+        .resource-row.multi-selected {
+            outline: 2px solid var(--dune-spice) !important;
+            outline-offset: -2px;
+        }
+
+        .resource-row.multi-selected td {
+            filter: brightness(0.92);
+        }
 
         /* Highlight rows with selected items - no background color to preserve expansion colors */
         .resource-row.has-selection {
@@ -1660,6 +1670,175 @@
             contracts: [], leader: [], sardaukar: [], starter: [], conflict: []
         };
 
+        // Multi-row selection state
+        let multiSelectState = {
+            isSelecting: false,
+            selectedRows: new Set(),
+            currentType: null
+        };
+
+        // Initialize multi-selection event handlers for a table body
+        function initializeMultiSelect(tbody, resourceType) {
+            // Mouse down to start selection
+            tbody.addEventListener('mousedown', (e) => {
+                const row = e.target.closest('tr.resource-row');
+                if (!row) return;
+
+                // Don't start drag selection if clicking on a button
+                if (e.target.closest('button')) return;
+
+                // Clear previous selection if not holding Ctrl/Cmd
+                if (!e.ctrlKey && !e.metaKey) {
+                    clearMultiSelection();
+                }
+
+                multiSelectState.isSelecting = true;
+                multiSelectState.currentType = resourceType;
+
+                toggleRowSelection(row);
+            });
+
+            // Mouse move to extend selection while dragging
+            tbody.addEventListener('mouseover', (e) => {
+                if (!multiSelectState.isSelecting) return;
+                if (multiSelectState.currentType !== resourceType) return;
+
+                const row = e.target.closest('tr.resource-row');
+                if (row && !multiSelectState.selectedRows.has(row)) {
+                    toggleRowSelection(row, true); // Force add when dragging
+                }
+            });
+        }
+
+        // Toggle row selection
+        function toggleRowSelection(row, forceAdd = false) {
+            if (forceAdd || !multiSelectState.selectedRows.has(row)) {
+                multiSelectState.selectedRows.add(row);
+                row.classList.add('multi-selected');
+            } else {
+                multiSelectState.selectedRows.delete(row);
+                row.classList.remove('multi-selected');
+            }
+        }
+
+        // Clear all multi-selection
+        function clearMultiSelection() {
+            multiSelectState.selectedRows.forEach(row => {
+                row.classList.remove('multi-selected');
+            });
+            multiSelectState.selectedRows.clear();
+            multiSelectState.currentType = null;
+        }
+
+        // Global mouse up to end selection
+        document.addEventListener('mouseup', () => {
+            multiSelectState.isSelecting = false;
+        });
+
+        // Get selected row data for +/- operations
+        function getMultiSelectedRowsData() {
+            const rowsData = [];
+            multiSelectState.selectedRows.forEach(row => {
+                const incrementBtn = row.querySelector('button[data-action="increment"]');
+                if (incrementBtn) {
+                    const reward = incrementBtn.getAttribute('data-reward');
+                    const resourceId = incrementBtn.getAttribute('data-resource-id');
+
+                    // Build uniqueProps object if needed
+                    let uniqueProps = undefined;
+                    if (reward) {
+                        uniqueProps = uniqueProps || {};
+                        uniqueProps.reward = reward;
+                    }
+                    if (resourceId !== null && resourceId !== undefined && resourceId !== '') {
+                        uniqueProps = uniqueProps || {};
+                        uniqueProps.resource_id = parseInt(resourceId);
+                    }
+
+                    rowsData.push({
+                        row: row,
+                        type: incrementBtn.getAttribute('data-type'),
+                        name: (incrementBtn.getAttribute('data-name') || '').replace(/\\'/g, "'"),
+                        source: (incrementBtn.getAttribute('data-source') || '').replace(/\\'/g, "'"),
+                        maxCount: parseInt(incrementBtn.getAttribute('data-max')) || 999,
+                        uniqueProps: uniqueProps
+                    });
+                }
+            });
+            return rowsData;
+        }
+
+        // Increment/decrement for all multi-selected rows
+        function incrementMultiSelected() {
+            const rowsData = getMultiSelectedRowsData();
+            if (rowsData.length === 0) return false;
+
+            rowsData.forEach(data => {
+                incrementSelected(data.type, data.name, data.source, data.maxCount, data.uniqueProps);
+            });
+            return true;
+        }
+
+        function decrementMultiSelected() {
+            const rowsData = getMultiSelectedRowsData();
+            if (rowsData.length === 0) return false;
+
+            rowsData.forEach(data => {
+                decrementSelected(data.type, data.name, data.source, data.uniqueProps);
+            });
+            return true;
+        }
+
+        // Setup button handlers and multi-select for a resource table
+        function setupResourceTableHandlers(tbody, resourceType) {
+            // Add click event listeners for +/- buttons
+            tbody.querySelectorAll('button[data-action]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const action = btn.getAttribute('data-action');
+                    const type = btn.getAttribute('data-type');
+                    const name = (btn.getAttribute('data-name') || '').replace(/\\'/g, "'");
+                    const source = (btn.getAttribute('data-source') || '').replace(/\\'/g, "'");
+                    const maxCount = parseInt(btn.getAttribute('data-max')) || 999;
+
+                    // Handle uniqueProps for contracts (data-reward) and conflicts (data-resource-id)
+                    const reward = btn.getAttribute('data-reward');
+                    const resourceId = btn.getAttribute('data-resource-id');
+
+                    let uniqueProps = undefined;
+                    if (reward) {
+                        uniqueProps = uniqueProps || {};
+                        uniqueProps.reward = reward;
+                    }
+                    if (resourceId !== null && resourceId !== undefined && resourceId !== '') {
+                        uniqueProps = uniqueProps || {};
+                        uniqueProps.resource_id = parseInt(resourceId);
+                    }
+
+                    // Check if this row is part of a multi-selection
+                    const row = btn.closest('tr.resource-row');
+                    const isMultiSelected = row && multiSelectState.selectedRows.has(row) && multiSelectState.selectedRows.size > 1;
+
+                    if (action === 'increment') {
+                        if (isMultiSelected) {
+                            incrementMultiSelected();
+                        } else {
+                            incrementSelected(type, name, source, maxCount, uniqueProps);
+                        }
+                    } else if (action === 'decrement') {
+                        if (isMultiSelected) {
+                            decrementMultiSelected();
+                        } else {
+                            decrementSelected(type, name, source, uniqueProps);
+                        }
+                    }
+                });
+            });
+
+            // Initialize multi-selection for this table
+            initializeMultiSelect(tbody, resourceType);
+        }
+
         // Auto-resize textarea to fit content
         function autoResizeTextarea(textarea) {
             if (!textarea) return;
@@ -1955,9 +2134,8 @@
                 updateSelectedCountDisplay(type, name, source, uniqueProps);
                 updateStatsForType(type);
                 updateBadge(type);
-            } else {
-                alert(`Maximum ${maxCount} of "${name}" available.`);
             }
+            // Silently ignore if maximum count reached
         }
 
         function decrementSelected(type, name, source, uniqueProps = {}) {
@@ -2314,23 +2492,8 @@
                 tbody.appendChild(tr);
             });
 
-            // Add click event listeners for +/- buttons
-            tbody.querySelectorAll('button[data-action]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const action = btn.getAttribute('data-action');
-                    const type = btn.getAttribute('data-type');
-                    const name = btn.getAttribute('data-name').replace(/\\'/g, "'");
-                    const source = btn.getAttribute('data-source').replace(/\\'/g, "'");
-                    const maxCount = parseInt(btn.getAttribute('data-max')) || 999;
-
-                    if (action === 'increment') {
-                        incrementSelected(type, name, source, maxCount);
-                    } else if (action === 'decrement') {
-                        decrementSelected(type, name, source);
-                    }
-                });
-            });
+            // Setup button handlers and multi-selection
+            setupResourceTableHandlers(tbody, 'imperium');
 
             document.getElementById('imperium-available-count').textContent = cards.length;
             initializeResizing();
@@ -2381,23 +2544,8 @@
                 tbody.appendChild(tr);
             });
 
-            // Add click event listeners for +/- buttons
-            tbody.querySelectorAll('button[data-action]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const action = btn.getAttribute('data-action');
-                    const type = btn.getAttribute('data-type');
-                    const name = btn.getAttribute('data-name');
-                    const source = btn.getAttribute('data-source');
-                    const maxCount = parseInt(btn.getAttribute('data-max')) || 999;
-
-                    if (action === 'increment') {
-                        incrementSelected(type, name, source, maxCount);
-                    } else if (action === 'decrement') {
-                        decrementSelected(type, name, source);
-                    }
-                });
-            });
+            // Setup button handlers and multi-selection
+            setupResourceTableHandlers(tbody, 'intrigue');
 
             document.getElementById('intrigue-available-count').textContent = cards.length;
             initializeResizing();
@@ -2450,22 +2598,8 @@
                 tbody.appendChild(tr);
             });
 
-            tbody.querySelectorAll('button[data-action]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const action = btn.getAttribute('data-action');
-                    const type = btn.getAttribute('data-type');
-                    const name = btn.getAttribute('data-name');
-                    const source = btn.getAttribute('data-source');
-                    const maxCount = parseInt(btn.getAttribute('data-max')) || 1;
-
-                    if (action === 'increment') {
-                        incrementSelected(type, name, source, maxCount);
-                    } else if (action === 'decrement') {
-                        decrementSelected(type, name, source);
-                    }
-                });
-            });
+            // Setup button handlers and multi-selection
+            setupResourceTableHandlers(tbody, 'tleilax');
 
             document.getElementById('tleilax-available-count').textContent = cards.length;
             initializeResizing();
@@ -2516,22 +2650,8 @@
                 tbody.appendChild(tr);
             });
 
-            tbody.querySelectorAll('button[data-action]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const action = btn.getAttribute('data-action');
-                    const type = btn.getAttribute('data-type');
-                    const name = btn.getAttribute('data-name');
-                    const source = btn.getAttribute('data-source');
-                    const maxCount = parseInt(btn.getAttribute('data-max')) || 999;
-
-                    if (action === 'increment') {
-                        incrementSelected(type, name, source, maxCount);
-                    } else if (action === 'decrement') {
-                        decrementSelected(type, name, source);
-                    }
-                });
-            });
+            // Setup button handlers and multi-selection
+            setupResourceTableHandlers(tbody, 'reserve');
 
             document.getElementById('reserve-available-count').textContent = cards.length;
             initializeResizing();
@@ -2576,22 +2696,8 @@
                 tbody.appendChild(tr);
             });
 
-            tbody.querySelectorAll('button[data-action]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const action = btn.getAttribute('data-action');
-                    const type = btn.getAttribute('data-type');
-                    const name = btn.getAttribute('data-name');
-                    const source = btn.getAttribute('data-source');
-                    const maxCount = 1; // Tech tiles are unique
-
-                    if (action === 'increment') {
-                        incrementSelected(type, name, source, maxCount);
-                    } else if (action === 'decrement') {
-                        decrementSelected(type, name, source);
-                    }
-                });
-            });
+            // Setup button handlers and multi-selection
+            setupResourceTableHandlers(tbody, 'tech');
 
             document.getElementById('tech-available-count').textContent = cards.length;
             initializeResizing();
@@ -2633,27 +2739,8 @@
                 tbody.appendChild(tr);
             });
 
-            tbody.querySelectorAll('button[data-action]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const action = btn.getAttribute('data-action');
-                    const type = btn.getAttribute('data-type');
-                    const name = btn.getAttribute('data-name');
-                    const source = btn.getAttribute('data-source');
-                    const maxCount = parseInt(btn.getAttribute('data-max')) || 999;
-                    const reward = btn.getAttribute('data-reward') || undefined;
-
-                    // Build unique props object for synonym differentiation
-                    const uniqueProps = {};
-                    if (reward) uniqueProps.reward = reward;
-
-                    if (action === 'increment') {
-                        incrementSelected(type, name, source, maxCount, uniqueProps);
-                    } else if (action === 'decrement') {
-                        decrementSelected(type, name, source, uniqueProps);
-                    }
-                });
-            });
+            // Setup button handlers and multi-selection
+            setupResourceTableHandlers(tbody, 'contracts');
 
             document.getElementById('contracts-available-count').textContent = cards.length;
             initializeResizing();
@@ -2695,22 +2782,8 @@
                 tbody.appendChild(tr);
             });
 
-            tbody.querySelectorAll('button[data-action]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const action = btn.getAttribute('data-action');
-                    const type = btn.getAttribute('data-type');
-                    const name = btn.getAttribute('data-name');
-                    const source = btn.getAttribute('data-source');
-                    const maxCount = 1; // Leaders are unique
-
-                    if (action === 'increment') {
-                        incrementSelected(type, name, source, maxCount);
-                    } else if (action === 'decrement') {
-                        decrementSelected(type, name, source);
-                    }
-                });
-            });
+            // Setup button handlers and multi-selection
+            setupResourceTableHandlers(tbody, 'leader');
 
             document.getElementById('leader-available-count').textContent = cards.length;
             initializeResizing();
@@ -2749,22 +2822,8 @@
                 tbody.appendChild(tr);
             });
 
-            tbody.querySelectorAll('button[data-action]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const action = btn.getAttribute('data-action');
-                    const type = btn.getAttribute('data-type');
-                    const name = btn.getAttribute('data-name');
-                    const source = btn.getAttribute('data-source');
-                    const maxCount = parseInt(btn.getAttribute('data-max')) || 999;
-
-                    if (action === 'increment') {
-                        incrementSelected(type, name, source, maxCount);
-                    } else if (action === 'decrement') {
-                        decrementSelected(type, name, source);
-                    }
-                });
-            });
+            // Setup button handlers and multi-selection
+            setupResourceTableHandlers(tbody, 'sardaukar');
 
             document.getElementById('sardaukar-available-count').textContent = cards.length;
             initializeResizing();
@@ -2813,22 +2872,8 @@
                 tbody.appendChild(tr);
             });
 
-            tbody.querySelectorAll('button[data-action]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const action = btn.getAttribute('data-action');
-                    const type = btn.getAttribute('data-type');
-                    const name = btn.getAttribute('data-name');
-                    const source = btn.getAttribute('data-source');
-                    const maxCount = parseInt(btn.getAttribute('data-max')) || 999;
-
-                    if (action === 'increment') {
-                        incrementSelected(type, name, source, maxCount);
-                    } else if (action === 'decrement') {
-                        decrementSelected(type, name, source);
-                    }
-                });
-            });
+            // Setup button handlers and multi-selection
+            setupResourceTableHandlers(tbody, 'starter');
 
             document.getElementById('starter-available-count').textContent = cards.length;
             initializeResizing();
@@ -2873,29 +2918,8 @@
                 tbody.appendChild(tr);
             });
 
-            tbody.querySelectorAll('button[data-action]').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const action = btn.getAttribute('data-action');
-                    const type = btn.getAttribute('data-type');
-                    const name = btn.getAttribute('data-name');
-                    const source = btn.getAttribute('data-source');
-                    const maxCount = 1; // Conflict cards are unique
-                    const resourceId = btn.getAttribute('data-resource-id');
-
-                    // Build unique props object for synonym differentiation
-                    const uniqueProps = {};
-                    if (resourceId !== null && resourceId !== undefined && resourceId !== '') {
-                        uniqueProps.resource_id = parseInt(resourceId);
-                    }
-
-                    if (action === 'increment') {
-                        incrementSelected(type, name, source, maxCount, uniqueProps);
-                    } else if (action === 'decrement') {
-                        decrementSelected(type, name, source, uniqueProps);
-                    }
-                });
-            });
+            // Setup button handlers and multi-selection
+            setupResourceTableHandlers(tbody, 'conflict');
 
             document.getElementById('conflict-available-count').textContent = cards.length;
             initializeResizing();

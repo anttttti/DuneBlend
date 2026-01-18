@@ -94,7 +94,7 @@ Sand worm nerf: combat bonuses with sandworms are not doubled. Instead:
 - Mercantile Affairs (Bloodlines)
 - Pointing the Way (Bloodlines)
 - Possible Futures (Bloodlines)
-- Price is Not Object (Uprising)
+- Price is No Object (Uprising)
 - Priority Contracts (Uprising)
 - Public Spectacle (Uprising)
 - Quash Rebellion (Bloodlines)
