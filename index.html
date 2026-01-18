@@ -8,27 +8,131 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="static/app.js?v=2"></script>
     <style>
-        body { padding: 20px; background-color: #f5f5f5; }
+        :root {
+            --dune-sand: #E8D5B7;
+            --dune-sand-dark: #C9A86C;
+            --dune-brown: #8B6914;
+            --dune-spice: #D2691E;
+            --dune-dark: #2C1810;
+        }
+
+        body {
+            padding: 0;
+            background: linear-gradient(135deg, #f5f0e6 0%, #e8dcc8 50%, #d9c9a8 100%);
+            min-height: 100vh;
+        }
+
+        /* Header styling */
+        .app-header {
+            background: linear-gradient(135deg, var(--dune-dark) 0%, #4a3520 100%);
+            padding: 1rem 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            border-bottom: 3px solid var(--dune-spice);
+        }
+
+        .app-header h1 {
+            color: var(--dune-sand);
+            font-weight: 300;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* Main container */
+        .main-container {
+            padding: 0 20px 20px 20px;
+        }
+
+        /* Controls bar */
+        .controls-bar {
+            background: rgba(255,255,255,0.85);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid rgba(139,105,20,0.2);
+        }
+
+        .controls-bar .form-label {
+            font-weight: 500;
+            color: var(--dune-dark);
+        }
+
+        .controls-bar .btn-primary {
+            background: linear-gradient(135deg, var(--dune-brown) 0%, #6b5210 100%);
+            border: none;
+        }
+        .controls-bar .btn-primary:hover {
+            background: linear-gradient(135deg, #a67c1a 0%, var(--dune-brown) 100%);
+        }
+
+        .controls-bar .btn-success {
+            background: linear-gradient(135deg, #4a7c3f 0%, #366b2c 100%);
+            border: none;
+        }
+
+        .controls-bar .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+            border: none;
+        }
 
         /* Overview textarea auto-resize */
         #overview-description,
         #overview-leader-selection,
         #overview-house-rules {
-            overflow: hidden;
+            overflow-y: hidden;
             resize: vertical;
-            min-height: 72px;
+            line-height: 1.5;
         }
 
         /* Tab styling */
-        .nav-tabs { margin-bottom: 20px; border-bottom: 2px solid #ddd; flex-wrap: wrap; }
-        .nav-tabs .nav-link { color: #666; border: none; padding: 8px 15px; font-size: 0.9em; }
+        .nav-tabs {
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--dune-sand-dark);
+            flex-wrap: wrap;
+            background: rgba(255,255,255,0.6);
+            padding: 0.5rem 0.5rem 0;
+            border-radius: 8px 8px 0 0;
+        }
+        .nav-tabs .nav-link {
+            color: var(--dune-dark);
+            border: none;
+            padding: 8px 15px;
+            font-size: 0.9em;
+            border-radius: 4px 4px 0 0;
+            transition: all 0.2s ease;
+        }
         .nav-tabs .nav-link.active {
-            color: #000;
-            background-color: #fff;
-            border-bottom: 3px solid #0066cc;
+            color: #fff;
+            background: linear-gradient(135deg, var(--dune-brown) 0%, #6b5210 100%);
+            border-bottom: 3px solid var(--dune-spice);
             font-weight: bold;
         }
-        .nav-tabs .nav-link:hover { background-color: #f0f0f0; }
+        .nav-tabs .nav-link:hover:not(.active) {
+            background-color: rgba(139,105,20,0.15);
+        }
+        .nav-tabs .nav-link .badge {
+            font-size: 0.75em;
+        }
+        .nav-tabs .nav-link.active .badge {
+            background-color: var(--dune-spice) !important;
+        }
+
+        /* Tab content panels */
+        .tab-content {
+            background: rgba(255,255,255,0.9);
+            border-radius: 0 0 8px 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 1px solid rgba(139,105,20,0.15);
+            border-top: none;
+        }
+
+        .tab-pane h4, .tab-pane h5 {
+            color: var(--dune-dark);
+        }
 
         /* Expansion colors - light backgrounds with dark text */
         .expansion-base { background-color: #F5DEB3 !important; color: #000 !important; }
@@ -224,22 +328,126 @@
         .sortable:hover {
             background-color: #e9ecef !important;
         }
+
+        /* Modal dialog theming */
+        .modal-content {
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--dune-dark) 0%, #4a3520 100%);
+            color: var(--dune-sand);
+            border-bottom: 3px solid var(--dune-spice);
+            border-radius: 8px 8px 0 0;
+        }
+
+        .modal-header .modal-title {
+            color: var(--dune-sand);
+            font-weight: 400;
+            letter-spacing: 1px;
+        }
+
+        .modal-header .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+
+        .modal-footer {
+            background-color: #f8f5f0;
+            border-top: 1px solid var(--dune-sand-dark);
+        }
+
+        .modal-body {
+            background-color: #fdfcfa;
+        }
+
+        /* Blend sections in load dialog */
+        .blend-section {
+            border-left-color: var(--dune-brown) !important;
+        }
+
+        .blend-section h6 {
+            color: var(--dune-dark);
+        }
+
+        /* Remote blends section */
+        #loadBlendModal .blend-section:first-of-type {
+            background: linear-gradient(135deg, #f5ebe0 0%, #ede4d8 100%) !important;
+            border-left-color: var(--dune-brown) !important;
+        }
+
+        /* Local file section */
+        #loadBlendModal .blend-section:last-of-type {
+            background: linear-gradient(135deg, #e8dcc8 0%, #ddd0bc 100%) !important;
+            border-left-color: var(--dune-spice) !important;
+        }
+
+        #dropZone {
+            background-color: #fdfcfa !important;
+            border-color: var(--dune-sand-dark) !important;
+            transition: all 0.2s ease;
+        }
+
+        #dropZone:hover {
+            background-color: #f5ebe0 !important;
+            border-color: var(--dune-brown) !important;
+        }
+
+        /* Modal buttons */
+        .modal-body .btn-primary {
+            background: linear-gradient(135deg, var(--dune-brown) 0%, #6b5210 100%);
+            border: none;
+        }
+
+        .modal-body .btn-primary:hover {
+            background: linear-gradient(135deg, #a67c1a 0%, var(--dune-brown) 100%);
+        }
+
+        .modal-body .btn-success {
+            background: linear-gradient(135deg, #4a7c3f 0%, #366b2c 100%);
+            border: none;
+        }
+
+        .modal-footer .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
+            border: none;
+        }
+
+        /* List group items in modals */
+        .modal .list-group-item {
+            border-color: rgba(139,105,20,0.2);
+        }
+
+        .modal .list-group-item:hover {
+            background-color: #f5ebe0;
+        }
+
+        .modal .list-group-item.active {
+            background: linear-gradient(135deg, var(--dune-brown) 0%, #6b5210 100%);
+            border-color: var(--dune-brown);
+        }
     </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <h1>Dune Imperium Blend Builder</h1>
-            </div>
-            <div class="col-md-6">
-                <div class="mb-2">
+    <!-- App Header -->
+    <header class="app-header">
+        <h1>Dune Imperium Blend Builder</h1>
+    </header>
+
+    <div class="container-fluid main-container">
+        <!-- Controls Bar -->
+        <div class="controls-bar">
+            <div class="row align-items-end">
+                <div class="col-md-6">
                     <label for="blendName" class="form-label">Filename:</label>
                     <input type="text" class="form-control" id="blendName" value="My_Custom_Blend.md">
                 </div>
-                <button class="btn btn-primary btn-sm me-2" onclick="showSaveAsDialog()">Save</button>
-                <button class="btn btn-success btn-sm me-2" onclick="showLoadDialog()">Load</button>
-                <button class="btn btn-secondary btn-sm" onclick="clearBlend()">Clear All</button>
+                <div class="col-md-6 text-end mt-2 mt-md-0">
+                    <button class="btn btn-primary btn-sm me-2" onclick="showSaveAsDialog()">Save</button>
+                    <button class="btn btn-success btn-sm me-2" onclick="showLoadDialog()">Load</button>
+                    <button class="btn btn-secondary btn-sm" onclick="clearBlend()">Clear All</button>
+                </div>
             </div>
         </div>
 
@@ -251,7 +459,7 @@
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview-panel" type="button">
+                <button class="nav-link" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview-panel" type="button" onclick="setTimeout(initOverviewTextareas, 50)">
                     Overview
                 </button>
             </li>
@@ -1455,14 +1663,33 @@
         // Auto-resize textarea to fit content
         function autoResizeTextarea(textarea) {
             if (!textarea) return;
-            // Reset height to auto to get the correct scrollHeight
-            textarea.style.height = 'auto';
-            // Set minimum height based on rows attribute
-            const rows = parseInt(textarea.getAttribute('rows')) || 3;
-            const lineHeight = 24; // Approximate line height in pixels
-            const minHeight = rows * lineHeight;
-            // Set height to scrollHeight or minimum, whichever is larger
-            textarea.style.height = Math.max(textarea.scrollHeight, minHeight) + 'px';
+
+            // Create a hidden clone to measure the content height accurately
+            const clone = textarea.cloneNode(false);
+            clone.style.cssText = `
+                position: absolute;
+                visibility: hidden;
+                height: auto;
+                min-height: 0;
+                max-height: none;
+                width: ${textarea.offsetWidth || 400}px;
+                padding: ${getComputedStyle(textarea).padding};
+                border: ${getComputedStyle(textarea).border};
+                font: ${getComputedStyle(textarea).font};
+                line-height: ${getComputedStyle(textarea).lineHeight};
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                overflow: hidden;
+            `;
+            clone.value = textarea.value;
+
+            document.body.appendChild(clone);
+            const contentHeight = clone.scrollHeight;
+            document.body.removeChild(clone);
+
+            // Set height with minimum
+            const minHeight = 60;
+            textarea.style.height = Math.max(contentHeight, minHeight) + 'px';
         }
 
         // Initialize auto-resize for Overview textareas
@@ -4324,6 +4551,16 @@
 
             // Update required sets display (in case Board tab is currently open)
             updateRequiredSets();
+
+            // Deferred resize of Overview textareas (in case tab was hidden during load)
+            setTimeout(() => {
+                const descField = document.getElementById('overview-description');
+                const leaderField = document.getElementById('overview-leader-selection');
+                const rulesField = document.getElementById('overview-house-rules');
+                if (descField) autoResizeTextarea(descField);
+                if (leaderField) autoResizeTextarea(leaderField);
+                if (rulesField) autoResizeTextarea(rulesField);
+            }, 100);
         }
 
         function loadBlendFromServer(filename) {
