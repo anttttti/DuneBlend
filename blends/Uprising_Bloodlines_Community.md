@@ -41,8 +41,9 @@ Jamis: No infiltrate ability
 ## Board
 
 - Main Board: uprising
+- Additional Boards: embassy
 
-**Total Items:** 271
+**Total Items:** 301
 
 ## Imperium Cards
 
@@ -223,13 +224,41 @@ Jamis: No infiltrate ability
 
 ## Contracts Cards
 
+- Acquire The Spice Must Flow (Uprising)
+- Arrakeen #1 (Uprising)
+- Arrakeen #2 (Uprising)
 - Deliver Supplies (Bloodlines)
+- Deliver Supplies (Uprising)
+- Dreadnought (Uprising)
 - Earn Any Alliance (Bloodlines)
+- Espionage #1 (Uprising)
+- 2× Espionage #2 (Uprising)
 - Harvest (Bloodlines)
+- Harvest 3+ Spice #1 (Uprising)
+- 2× Harvest 3+ Spice #2 (Uprising)
+- Harvest 4+ Spice #1 (Uprising)
+- Harvest 4+ Spice #2 (Uprising)
+- Heighliner #1 (Uprising)
+- Heighliner #2 (Uprising)
+- Heighliner #3 (Uprising)
+- High Council #1 (Uprising)
+- High Council #2 (Uprising)
+- High Council #3 (Uprising)
 - High Council (Bloodlines)
 - Immediate (Bloodlines)
+- Immediate (Uprising)
+- Interstellar Shipping (Uprising)
+- Research Station #1 (Uprising)
+- Research Station #2 (Uprising)
+- Sardaukar #1 (Uprising)
+- Sardaukar #2 (Uprising)
 - Secrets (Bloodlines)
+- Secrets (Uprising)
+- Smuggling (Uprising)
+- Spice Refinery #1 (Uprising)
+- Spice Refinery #2 (Uprising)
 - Spice Refinery (Bloodlines)
+- Tech Negotiation (Uprising)
 
 ## Sardaukar Cards
 
