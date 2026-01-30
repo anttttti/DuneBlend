@@ -6182,8 +6182,8 @@
       "reveal_persuasion": 1,
       "reveal_swords": 1,
       "reveal_ability": "",
-      "emperor_affiliation": "",
-      "spacing_guild_affiliation": "",
+      "emperor_affiliation": "X",
+      "spacing_guild_affiliation": "X",
       "bene_gesserit_affiliation": "",
       "fremen_affiliation": "",
       "vps_available": "",
@@ -6355,7 +6355,7 @@
       "reveal_swords": "",
       "reveal_ability": "If you acquire The Spice Must Flow this turn, gain one influence with each Faction you are spying on.",
       "emperor_affiliation": "",
-      "spacing_guild_affiliation": "",
+      "spacing_guild_affiliation": "X",
       "bene_gesserit_affiliation": "",
       "fremen_affiliation": "",
       "vps_available": "",
@@ -12762,7 +12762,7 @@
     },
     {
       "resource_type": "contracts",
-      "name": "Harvest",
+      "name": "Harvest 3+ Spice",
       "selected": 0,
       "source": "Bloodlines",
       "rise_of_ix__specific": "",
@@ -12770,6 +12770,17 @@
       "reward": "+2 Solari and +1 Spy",
       "card_set": "bloodlines",
       "resource_id": 34
+    },
+    {
+      "resource_type": "contracts",
+      "name": "Harvest 4+ Spice",
+      "selected": 0,
+      "source": "Bloodlines",
+      "rise_of_ix__specific": "",
+      "count": 1,
+      "reward": "+3 Solari and +1 Spy",
+      "card_set": "bloodlines",
+      "resource_id": 35
     }
   ],
   "sardaukar": [
