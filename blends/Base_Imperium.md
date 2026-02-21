@@ -89,7 +89,7 @@ Dune: Imperium base game
 - Staged Incident (Imperium)
 - The Sleeper Must Awaken (Imperium)
 - Tiebreaker (Imperium)
-- To the Victor … (Imperium)
+- To the Victor… (Imperium)
 - Urgent Mission (Imperium)
 - Water Peddlers Union (Imperium)
 - Water of Life (Imperium)

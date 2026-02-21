@@ -340,6 +340,18 @@
             text-align: right;
         }
 
+        /* Baseline marker for stat bars (shows base blend default value) */
+        .stat-baseline-marker {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: transparent;
+            border-left: 2px dashed #888;
+            z-index: 5;
+            pointer-events: none;
+        }
+
         /* Sortable columns */
         .sortable {
             cursor: pointer !important;
@@ -549,14 +561,14 @@
                             </div>
                             <div class="card-body">
                                 <div class="form-check mb-3">
-                                    <input class="form-check-input" type="radio" name="mainBoard" id="board-imperium" value="imperium" checked onchange="updateRequiredSets()">
+                                    <input class="form-check-input" type="radio" name="mainBoard" id="board-imperium" value="imperium" checked onchange="updateRequiredSets(); refreshAllStats();">
                                     <label class="form-check-label" for="board-imperium">
                                         <strong>1. Dune: Imperium Board</strong>
                                         <p class="text-muted mb-0">Features the Mentat token mechanic and Foldspace cards</p>
                                     </label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="mainBoard" id="board-uprising" value="uprising" onchange="updateRequiredSets()">
+                                    <input class="form-check-input" type="radio" name="mainBoard" id="board-uprising" value="uprising" onchange="updateRequiredSets(); refreshAllStats();">
                                     <label class="form-check-label" for="board-uprising">
                                         <strong>2. Dune: Imperium - Uprising Board</strong>
                                         <p class="text-muted mb-0">Features spies, sandworms, and observation posts</p>
@@ -1678,6 +1690,12 @@
             contracts: [], leader: [], sardaukar: [], starter: [], conflict: []
         };
 
+        // Base blend stats for baseline comparison
+        let baseBlendStats = {
+            imperium: null,  // Stats for Base_Imperium.md
+            uprising: null   // Stats for Base_Uprising.md
+        };
+
         // Multi-row selection state
         let multiSelectState = {
             isSelecting: false,
@@ -2028,13 +2046,159 @@
             return null;
         }
 
+        // Calculate stats from a blend's resources (matching the format used by stat functions)
+        function calculateBlendStats(blendResources, allResourcesData) {
+            const stats = {
+                imperium: { byCosts: {}, bySets: {}, mechanics: {}, access: {}, affiliation: {}, total: 0 },
+                intrigue: { bySets: {}, mechanics: {}, total: 0 },
+                reserve: { byCosts: {}, total: 0 },
+                leader: { bySets: {}, byHouse: {}, byComplexity: {}, total: 0 },
+                conflict: { bySets: {}, total: 0 },
+                starter: { bySets: {}, total: 0 }
+            };
+
+            // Map blend resource types to internal types
+            const typeMap = {
+                'Imperium Cards': 'imperium',
+                'Intrigue Cards': 'intrigue',
+                'Reserve Cards': 'reserve',
+                'Leaders': 'leader',
+                'Conflict Cards': 'conflict',
+                'Starter Cards': 'starter'
+            };
+
+            for (const [blendType, resources] of Object.entries(blendResources)) {
+                const internalType = typeMap[blendType];
+                if (!internalType || !stats[internalType] || !Array.isArray(resources)) continue;
+
+                resources.forEach(blendItem => {
+                    const count = blendItem.count || 1;
+                    const itemName = blendItem.name;
+
+                    // Find the full resource data from allResources
+                    const fullResource = (allResourcesData[internalType] || []).find(r => {
+                        const resourceName = r.displayName || r.name || '';
+                        const resourceSource = r.source || '';
+                        // Match "Name (Source)" format
+                        const fullName = `${resourceName} (${resourceSource})`;
+                        return fullName === itemName || resourceName === itemName;
+                    });
+
+                    if (!fullResource) return;
+
+                    stats[internalType].total += count;
+
+                    // Calculate stats based on resource type
+                    if (internalType === 'imperium') {
+                        const cost = parseFloat(fullResource.cost || fullResource.persuasion_cost || 0) || 0;
+                        const costKey = cost.toString();
+                        stats.imperium.byCosts[costKey] = (stats.imperium.byCosts[costKey] || 0) + count;
+
+                        const set = fullResource.source || 'Unknown';
+                        stats.imperium.bySets[set] = (stats.imperium.bySets[set] || 0) + count;
+
+                        // Mechanics
+                        const mechanicFields = ['tech', 'shipping', 'unload', 'infiltration', 'research', 'grafting', 'spies', 'sandworms', 'contracts', 'sardaukar'];
+                        mechanicFields.forEach(field => {
+                            if (fullResource[field] && fullResource[field] !== '0' && fullResource[field] !== '0.0') {
+                                stats.imperium.mechanics[field] = (stats.imperium.mechanics[field] || 0) + count;
+                            }
+                        });
+
+                        // Access
+                        const accessFields = ['green_access', 'purple_access', 'yellow_access', 'emperor_access', 'spacing_guild_access', 'bene_gesserit_access', 'fremen_access', 'spy_access'];
+                        accessFields.forEach(field => {
+                            if (hasX(fullResource[field])) {
+                                const displayName = field.replace('_access', '').replace('_', ' ');
+                                stats.imperium.access[displayName] = (stats.imperium.access[displayName] || 0) + count;
+                            }
+                        });
+
+                        // Affiliation
+                        const affiliationFields = ['emperor_affiliation', 'spacing_guild_affiliation', 'bene_gesserit_affiliation', 'fremen_affiliation'];
+                        affiliationFields.forEach(field => {
+                            if (hasX(fullResource[field])) {
+                                const displayName = field.replace('_affiliation', '').replace('_', ' ');
+                                stats.imperium.affiliation[displayName] = (stats.imperium.affiliation[displayName] || 0) + count;
+                            }
+                        });
+                    } else if (internalType === 'intrigue') {
+                        const set = fullResource.source || 'Unknown';
+                        stats.intrigue.bySets[set] = (stats.intrigue.bySets[set] || 0) + count;
+
+                        const mechanicFields = ['tech', 'shipping', 'research', 'spies', 'sandworms', 'contracts', 'sardaukar'];
+                        mechanicFields.forEach(field => {
+                            if (fullResource[field] && fullResource[field] !== '0' && fullResource[field] !== '0.0') {
+                                stats.intrigue.mechanics[field] = (stats.intrigue.mechanics[field] || 0) + count;
+                            }
+                        });
+                    } else if (internalType === 'reserve') {
+                        const cost = parseFloat(fullResource.persuasion_cost || 0) || 0;
+                        const costKey = cost.toString();
+                        stats.reserve.byCosts[costKey] = (stats.reserve.byCosts[costKey] || 0) + count;
+                    } else if (internalType === 'leader') {
+                        const set = fullResource.source || 'Unknown';
+                        stats.leader.bySets[set] = (stats.leader.bySets[set] || 0) + count;
+
+                        const house = fullResource.house || 'Unknown';
+                        stats.leader.byHouse[house] = (stats.leader.byHouse[house] || 0) + count;
+
+                        const complexity = fullResource.complexity || 'Unknown';
+                        stats.leader.byComplexity[complexity] = (stats.leader.byComplexity[complexity] || 0) + count;
+                    } else if (internalType === 'conflict') {
+                        const set = fullResource.source || 'Unknown';
+                        stats.conflict.bySets[set] = (stats.conflict.bySets[set] || 0) + count;
+                    } else if (internalType === 'starter') {
+                        const set = fullResource.source || 'Unknown';
+                        stats.starter.bySets[set] = (stats.starter.bySets[set] || 0) + count;
+                    }
+                });
+            }
+
+            return stats;
+        }
+
+        // Load base blend stats for both main boards
+        async function loadBaseBlendStats() {
+            try {
+                // Load Base_Imperium.md
+                const imperiumBlend = await loadBlend('Base_Imperium.md');
+                if (imperiumBlend.success) {
+                    baseBlendStats.imperium = calculateBlendStats(imperiumBlend.resources, allResources);
+                    console.log('✅ Loaded Base_Imperium stats:', baseBlendStats.imperium);
+                }
+            } catch (e) {
+                console.warn('Could not load Base_Imperium.md:', e);
+            }
+
+            try {
+                // Load Base_Uprising.md
+                const uprisingBlend = await loadBlend('Base_Uprising.md');
+                if (uprisingBlend.success) {
+                    baseBlendStats.uprising = calculateBlendStats(uprisingBlend.resources, allResources);
+                    console.log('✅ Loaded Base_Uprising stats:', baseBlendStats.uprising);
+                }
+            } catch (e) {
+                console.warn('Could not load Base_Uprising.md:', e);
+            }
+        }
+
+        // Get the current base stats based on selected main board
+        function getCurrentBaseStats() {
+            const mainBoard = document.querySelector('input[name="mainBoard"]:checked')?.value || 'imperium';
+            return baseBlendStats[mainBoard] || null;
+        }
+
         // Load all resources on page load
         Promise.all([
             detectServerFeatures(),
             loadResources()
-        ]).then(([features, resources]) => {
+        ]).then(async ([features, resources]) => {
             allResources = resources;
             console.log('Loaded resources:', Object.keys(resources).map(k => `${k}: ${resources[k].length}`));
+
+            // Load base blend stats for baseline comparison
+            await loadBaseBlendStats();
 
             // Show/hide server features in UI
             if (features.canSaveToServer) {
@@ -3126,8 +3290,11 @@
         }
 
         // Helper function to create bar chart HTML for statistics
-        function createStatBarChart(label, count, percentage, maxCount, category = null) {
-            const barWidth = maxCount > 0 ? (count / maxCount * 100) : 0;
+        // baselinePercentage: optional percentage (0-100) showing the base blend percentage (shown as dashed grey line)
+        function createStatBarChart(label, count, percentage, maxCount, category = null, baselinePercentage = null) {
+            // Bar width is based on the percentage value (0-100 scale)
+            // This makes the bar and baseline marker directly comparable
+            const barWidth = parseFloat(percentage) || 0;
 
             // Get color based on category and label
             let barColor = null;
@@ -3144,10 +3311,20 @@
                 barStyle = `background: linear-gradient(90deg, rgba(77, 148, 255, 1), rgba(128, 179, 255, 0.6)) !important;`;
             }
 
+            // Calculate baseline position (dashed grey line) based on percentage
+            // baselinePercentage is 0-100 representing the percentage in the base blend
+            let baselineHtml = '';
+            if (baselinePercentage !== null) {
+                // Position is relative to the bar width (which shows 100% as full width)
+                // So we just use the percentage directly
+                baselineHtml = `<div class="stat-baseline-marker" style="left: ${baselinePercentage}%;" title="Base: ${baselinePercentage.toFixed(1)}%"></div>`;
+            }
+
             return `
                 <div class="stat-bar-container">
                     <div class="stat-bar-label">${label}</div>
                     <div class="stat-bar-wrapper">
+                        ${baselineHtml}
                         <div class="stat-bar" style="width: ${barWidth}%; ${barStyle}">
                             <span class="stat-bar-value" style="color: black;">${count}</span>
                         </div>
@@ -3216,6 +3393,10 @@
                 return;
             }
 
+            // Get base blend stats for current board
+            const baseStats = getCurrentBaseStats();
+            const baseImperium = baseStats?.imperium || {};
+
             // Calculate totals considering selected count
             let totalCards = 0;
             const uniqueCards = cards.length; // Number of unique cards
@@ -3271,56 +3452,87 @@
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
             `;
 
+            // Calculate base total for percentage calculation
+            const baseTotal = baseImperium.total || 0;
+
+            // Combine current costs with base costs for maxCount calculation
+            const allCostKeys = new Set([...Object.keys(byCosts), ...Object.keys(baseImperium.byCosts || {})]);
+            const allCostValues = [...Object.values(byCosts), ...Object.values(baseImperium.byCosts || {})];
+            const maxCostCount = allCostValues.length > 0 ? Math.max(...allCostValues) : 0;
+
             // By Cost column
             html += '<div><p><strong>Cost:</strong></p>';
-            const maxCostCount = Math.max(...Object.values(byCosts));
-            for (const [cost, count] of Object.entries(byCosts).sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))) {
-                const percentage = ((count / totalCards) * 100).toFixed(1);
-                html += createStatBarChart(`Cost ${cost}`, count, percentage, maxCostCount, null); // Cost has no color theme
+            for (const cost of [...allCostKeys].sort((a, b) => parseFloat(a) - parseFloat(b))) {
+                const count = byCosts[cost] || 0;
+                const baseCount = baseImperium.byCosts?.[cost] || 0;
+                const baselinePercentage = baseTotal > 0 ? (baseCount / baseTotal * 100) : 0;
+                const percentage = totalCards > 0 ? ((count / totalCards) * 100).toFixed(1) : '0.0';
+                html += createStatBarChart(`Cost ${cost}`, count, percentage, maxCostCount, null, baselinePercentage);
             }
             html += '</div>';
 
+            // Combine current sets with base sets for maxCount calculation
+            const allSetKeys = new Set([...Object.keys(bySets), ...Object.keys(baseImperium.bySets || {})]);
+            const allSetValues = [...Object.values(bySets), ...Object.values(baseImperium.bySets || {})];
+            const maxSetCount = allSetValues.length > 0 ? Math.max(...allSetValues) : 0;
+
             // By Set column
             html += '<div><p><strong>Set:</strong></p>';
-            const maxSetCount = Math.max(...Object.values(bySets));
             for (const [set, count] of Object.entries(bySets).sort((a, b) => b[1] - a[1])) {
+                const baseCount = baseImperium.bySets?.[set] || 0;
+                const baselinePercentage = baseTotal > 0 ? (baseCount / baseTotal * 100) : 0;
                 const percentage = ((count / totalCards) * 100).toFixed(1);
-                html += createStatBarChart(set, count, percentage, maxSetCount, 'set');
+                html += createStatBarChart(set, count, percentage, maxSetCount, 'set', baselinePercentage);
             }
             html += '</div>';
 
             // Mechanics column
             if (Object.keys(mechanics).length > 0) {
+                // Combine with base mechanics for maxCount
+                const allMechValues = [...Object.values(mechanics), ...Object.values(baseImperium.mechanics || {})];
+                const maxMechCount = allMechValues.length > 0 ? Math.max(...allMechValues) : 0;
+
                 html += '<div><p><strong>Mechanics:</strong></p>';
-                const maxMechCount = Math.max(...Object.values(mechanics));
                 for (const [mech, count] of Object.entries(mechanics).sort((a, b) => b[1] - a[1])) {
                     const displayName = mech.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    const baseCount = baseImperium.mechanics?.[mech] || 0;
+                    const baselinePercentage = baseTotal > 0 ? (baseCount / baseTotal * 100) : 0;
                     const percentage = ((count / totalCards) * 100).toFixed(1);
-                    html += createStatBarChart(displayName, count, percentage, maxMechCount, null); // Mechanics have no color theme
+                    html += createStatBarChart(displayName, count, percentage, maxMechCount, null, baselinePercentage);
                 }
                 html += '</div>';
             }
 
             // Access column
             if (Object.keys(access).length > 0) {
+                // Combine with base access for maxCount
+                const allAccessValues = [...Object.values(access), ...Object.values(baseImperium.access || {})];
+                const maxAccessCount = allAccessValues.length > 0 ? Math.max(...allAccessValues) : 0;
+
                 html += '<div><p><strong>Access:</strong></p>';
-                const maxAccessCount = Math.max(...Object.values(access));
                 for (const [acc, count] of Object.entries(access).sort((a, b) => b[1] - a[1])) {
                     const displayName = acc.replace(/\b\w/g, l => l.toUpperCase());
+                    const baseCount = baseImperium.access?.[acc] || 0;
+                    const baselinePercentage = baseTotal > 0 ? (baseCount / baseTotal * 100) : 0;
                     const percentage = ((count / totalCards) * 100).toFixed(1);
-                    html += createStatBarChart(displayName, count, percentage, maxAccessCount, 'access');
+                    html += createStatBarChart(displayName, count, percentage, maxAccessCount, 'access', baselinePercentage);
                 }
                 html += '</div>';
             }
 
             // Affiliation column
             if (Object.keys(affiliation).length > 0) {
+                // Combine with base affiliation for maxCount
+                const allAffValues = [...Object.values(affiliation), ...Object.values(baseImperium.affiliation || {})];
+                const maxAffCount = allAffValues.length > 0 ? Math.max(...allAffValues) : 0;
+
                 html += '<div><p><strong>Affiliation:</strong></p>';
-                const maxAffCount = Math.max(...Object.values(affiliation));
                 for (const [aff, count] of Object.entries(affiliation).sort((a, b) => b[1] - a[1])) {
                     const displayName = aff.replace(/\b\w/g, l => l.toUpperCase());
+                    const baseCount = baseImperium.affiliation?.[aff] || 0;
+                    const baselinePercentage = baseTotal > 0 ? (baseCount / baseTotal * 100) : 0;
                     const percentage = ((count / totalCards) * 100).toFixed(1);
-                    html += createStatBarChart(displayName, count, percentage, maxAffCount, 'affiliation');
+                    html += createStatBarChart(displayName, count, percentage, maxAffCount, 'affiliation', baselinePercentage);
                 }
                 html += '</div>';
             }
@@ -3337,6 +3549,11 @@
                 statsDiv.innerHTML = '<p class="text-muted">No cards selected</p>';
                 return;
             }
+
+            // Get base blend stats for current board
+            const baseStats = getCurrentBaseStats();
+            const baseIntrigue = baseStats?.intrigue || {};
+
             const totalCards = cards.reduce((sum, c) => sum + (c.selected || 0), 0);
             const uniqueCards = cards.length;
             const bySets = {};
@@ -3361,23 +3578,35 @@
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
             `;
 
+            // Calculate base total for percentage calculation
+            const baseTotal = baseIntrigue.total || 0;
+
+            // Combine current sets with base sets for maxCount calculation
+            const allSetValues = [...Object.values(bySets), ...Object.values(baseIntrigue.bySets || {})];
+            const maxSetCount = allSetValues.length > 0 ? Math.max(...allSetValues) : 0;
+
             // By Set column
             html += '<div><p><strong>Set:</strong></p>';
-            const maxSetCount = Math.max(...Object.values(bySets));
             for (const [set, count] of Object.entries(bySets).sort((a, b) => b[1] - a[1])) {
+                const baseCount = baseIntrigue.bySets?.[set] || 0;
+                const baselinePercentage = baseTotal > 0 ? (baseCount / baseTotal * 100) : 0;
                 const percentage = ((count / totalCards) * 100).toFixed(1);
-                html += createStatBarChart(set, count, percentage, maxSetCount, 'set');
+                html += createStatBarChart(set, count, percentage, maxSetCount, 'set', baselinePercentage);
             }
             html += '</div>';
 
             // Mechanics column
             if (Object.keys(mechanics).length > 0) {
+                const allMechValues = [...Object.values(mechanics), ...Object.values(baseIntrigue.mechanics || {})];
+                const maxMechCount = allMechValues.length > 0 ? Math.max(...allMechValues) : 0;
+
                 html += '<div><p><strong>Mechanics:</strong></p>';
-                const maxMechCount = Math.max(...Object.values(mechanics));
                 for (const [mech, count] of Object.entries(mechanics).sort((a, b) => b[1] - a[1])) {
                     const displayName = mech.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+                    const baseCount = baseIntrigue.mechanics?.[mech] || 0;
+                    const baselinePercentage = baseTotal > 0 ? (baseCount / baseTotal * 100) : 0;
                     const percentage = ((count / totalCards) * 100).toFixed(1);
-                    html += createStatBarChart(displayName, count, percentage, maxMechCount, null);
+                    html += createStatBarChart(displayName, count, percentage, maxMechCount, null, baselinePercentage);
                 }
                 html += '</div>';
             }
@@ -3477,6 +3706,11 @@
                 statsDiv.innerHTML = '<p class="text-muted">No cards selected</p>';
                 return;
             }
+
+            // Get base blend stats for current board
+            const baseStats = getCurrentBaseStats();
+            const baseReserve = baseStats?.reserve || {};
+
             let totalCards = 0;
             const uniqueCards = cards.length;
             const byCosts = {};
@@ -3496,11 +3730,21 @@
                     <div><p><strong>Cost:</strong></p>
             `;
 
+            // Calculate base total for percentage calculation
+            const baseTotal = baseReserve.total || 0;
+
+            // Combine with base costs for maxCount
+            const allCostKeys = new Set([...Object.keys(byCosts), ...Object.keys(baseReserve.byCosts || {})]);
+            const allCostValues = [...Object.values(byCosts), ...Object.values(baseReserve.byCosts || {})];
+            const maxCostCount = allCostValues.length > 0 ? Math.max(...allCostValues) : 0;
+
             // Sort costs numerically
-            const maxCostCount = Math.max(...Object.values(byCosts));
-            for (const [cost, count] of Object.entries(byCosts).sort((a, b) => parseFloat(a[0]) - parseFloat(b[0]))) {
-                const percentage = ((count / totalCards) * 100).toFixed(1);
-                html += createStatBarChart(`Cost ${cost}`, count, percentage, maxCostCount, null);
+            for (const cost of [...allCostKeys].sort((a, b) => parseFloat(a) - parseFloat(b))) {
+                const count = byCosts[cost] || 0;
+                const baseCount = baseReserve.byCosts?.[cost] || 0;
+                const baselinePercentage = baseTotal > 0 ? (baseCount / baseTotal * 100) : 0;
+                const percentage = totalCards > 0 ? ((count / totalCards) * 100).toFixed(1) : '0.0';
+                html += createStatBarChart(`Cost ${cost}`, count, percentage, maxCostCount, null, baselinePercentage);
             }
             html += '</div></div>'; // Close div and grid
 
@@ -3646,6 +3890,10 @@
                 return;
             }
 
+            // Get base blend stats for current board
+            const baseStats = getCurrentBaseStats();
+            const baseLeader = baseStats?.leader || {};
+
             const totalLeaders = leaders.length;
             const uniqueCards = leaders.length;
             const byHouse = {};
@@ -3673,28 +3921,41 @@
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
             `;
 
-            // Set column
+            // Calculate base total for percentage calculation
+            const baseTotal = baseLeader.total || 0;
+
+            // Set column - combine with base sets for maxCount
+            const allSetValues = [...Object.values(bySets), ...Object.values(baseLeader.bySets || {})];
+            const maxSetCount = allSetValues.length > 0 ? Math.max(...allSetValues) : 0;
+
             html += '<div><p><strong>Set:</strong></p>';
-            const maxSetCount = Math.max(...Object.values(bySets));
             for (const [set, count] of Object.entries(bySets).sort((a, b) => b[1] - a[1])) {
+                const baseCount = baseLeader.bySets?.[set] || 0;
+                const baselinePercentage = baseTotal > 0 ? (baseCount / baseTotal * 100) : 0;
                 const percentage = ((count / totalLeaders) * 100).toFixed(1);
-                html += createStatBarChart(set, count, percentage, maxSetCount, 'set');
+                html += createStatBarChart(set, count, percentage, maxSetCount, 'set', baselinePercentage);
             }
             html += '</div>';
 
-            // House column
+            // House column - combine with base house for maxCount
+            const allHouseValues = [...Object.values(byHouse), ...Object.values(baseLeader.byHouse || {})];
+            const maxHouseCount = allHouseValues.length > 0 ? Math.max(...allHouseValues) : 0;
+
             html += '<div><p><strong>House:</strong></p>';
-            const maxHouseCount = Math.max(...Object.values(byHouse));
             for (const [house, count] of Object.entries(byHouse).sort((a, b) => b[1] - a[1])) {
+                const baseCount = baseLeader.byHouse?.[house] || 0;
+                const baselinePercentage = baseTotal > 0 ? (baseCount / baseTotal * 100) : 0;
                 const percentage = ((count / totalLeaders) * 100).toFixed(1);
-                html += createStatBarChart(house, count, percentage, maxHouseCount, null);
+                html += createStatBarChart(house, count, percentage, maxHouseCount, null, baselinePercentage);
             }
             html += '</div>';
 
-            // Complexity column
+            // Complexity column - combine with base complexity for maxCount
             if (Object.keys(byComplexity).length > 0) {
+                const allComplexityValues = [...Object.values(byComplexity), ...Object.values(baseLeader.byComplexity || {})];
+                const maxComplexityCount = allComplexityValues.length > 0 ? Math.max(...allComplexityValues) : 0;
+
                 html += '<div><p><strong>Complexity:</strong></p>';
-                const maxComplexityCount = Math.max(...Object.values(byComplexity));
                 // Sort by complexity level (numerically if possible)
                 const sortedComplexity = Object.entries(byComplexity).sort((a, b) => {
                     const numA = parseInt(a[0]);
@@ -3703,8 +3964,10 @@
                     return a[0].localeCompare(b[0]);
                 });
                 for (const [complexity, count] of sortedComplexity) {
+                    const baseCount = baseLeader.byComplexity?.[complexity] || 0;
+                    const baselinePercentage = baseTotal > 0 ? (baseCount / baseTotal * 100) : 0;
                     const percentage = ((count / totalLeaders) * 100).toFixed(1);
-                    html += createStatBarChart(`Level ${complexity}`, count, percentage, maxComplexityCount, null);
+                    html += createStatBarChart(`Level ${complexity}`, count, percentage, maxComplexityCount, null, baselinePercentage);
                 }
                 html += '</div>';
             }
@@ -3722,22 +3985,48 @@
                 return;
             }
 
+            // Get base blend stats for current board
+            const baseStats = getCurrentBaseStats();
+            const baseConflict = baseStats?.conflict || {};
+
             let totalCards = 0;
             const uniqueCards = conflicts.length;
             const byLevel = {};
+            const bySets = {};
 
             conflicts.forEach(c => {
                 const count = c.selected || 1;
                 totalCards += count;
                 const level = c.conflict_level || 'Unknown';
                 byLevel[level] = (byLevel[level] || 0) + count;
+
+                const set = c.source || c.card_set || 'Unknown';
+                bySets[set] = (bySets[set] || 0) + count;
             });
 
             let html = `
                 <p><strong>Total Conflicts:</strong> ${totalCards} &nbsp; <strong>Unique:</strong> ${uniqueCards}</p>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
-                    <div><p><strong>Level:</strong></p>
             `;
+
+            // Calculate base total for percentage calculation
+            const baseTotal = baseConflict.total || 0;
+
+            // Set column - combine with base sets for maxCount
+            const allSetValues = [...Object.values(bySets), ...Object.values(baseConflict.bySets || {})];
+            const maxSetCount = allSetValues.length > 0 ? Math.max(...allSetValues) : 0;
+
+            html += '<div><p><strong>Set:</strong></p>';
+            for (const [set, count] of Object.entries(bySets).sort((a, b) => b[1] - a[1])) {
+                const baseCount = baseConflict.bySets?.[set] || 0;
+                const baselinePercentage = baseTotal > 0 ? (baseCount / baseTotal * 100) : 0;
+                const percentage = ((count / totalCards) * 100).toFixed(1);
+                html += createStatBarChart(set, count, percentage, maxSetCount, 'set', baselinePercentage);
+            }
+            html += '</div>';
+
+            // Level column
+            html += '<div><p><strong>Level:</strong></p>';
             // Sort by level (numerically if possible)
             const sortedLevels = Object.keys(byLevel).sort((a, b) => {
                 const numA = parseInt(a);
@@ -3783,6 +4072,10 @@
                 return;
             }
 
+            // Get base blend stats for current board
+            const baseStats = getCurrentBaseStats();
+            const baseStarter = baseStats?.starter || {};
+
             let totalCards = 0;
             const uniqueCards = cards.length;
             const bySets = {};
@@ -3799,10 +4092,19 @@
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 8px;">
                     <div><p><strong>Set:</strong></p>
             `;
-            const maxSetCount = Math.max(...Object.values(bySets));
+
+            // Calculate base total for percentage calculation
+            const baseTotal = baseStarter.total || 0;
+
+            // Combine with base sets for maxCount
+            const allSetValues = [...Object.values(bySets), ...Object.values(baseStarter.bySets || {})];
+            const maxSetCount = allSetValues.length > 0 ? Math.max(...allSetValues) : 0;
+
             for (const [set, count] of Object.entries(bySets).sort((a, b) => b[1] - a[1])) {
+                const baseCount = baseStarter.bySets?.[set] || 0;
+                const baselinePercentage = baseTotal > 0 ? (baseCount / baseTotal * 100) : 0;
                 const percentage = ((count / totalCards) * 100).toFixed(1);
-                html += createStatBarChart(set, count, percentage, maxSetCount, 'set');
+                html += createStatBarChart(set, count, percentage, maxSetCount, 'set', baselinePercentage);
             }
             html += '</div></div>'; // Close div and grid
             statsDiv.innerHTML = html;
@@ -3819,6 +4121,20 @@
                 badge.textContent = count;
                 badge.className = count > 0 ? 'badge bg-primary' : 'badge bg-secondary';
             }
+        }
+
+        // Refresh all stats (used when base board changes to update baseline markers)
+        function refreshAllStats() {
+            updateImperiumStats();
+            updateIntrigueStats();
+            updateTleilaxStats();
+            updateReserveStats();
+            updateTechStats();
+            updateContractsStats();
+            updateLeaderStats();
+            updateSardaukarStats();
+            updateStarterStats();
+            updateConflictStats();
         }
 
         function clearBlend() {
