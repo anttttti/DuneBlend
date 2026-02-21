@@ -1597,7 +1597,7 @@
                     <!-- Camera Input -->
                     <div class="mb-3" id="cameraInputContainer" style="display: none;">
                         <label class="form-label">Take photo:</label>
-                        <video id="cameraPreview" autoplay playsinline style="width: 100%; max-height: 300px; border: 1px solid #ddd; border-radius: 4px; display: none;"></video>
+                        <video id="cameraPreview" autoplay playsinline style="width: 100%; max-height: 300px; border: 1px solid #ddd; border-radius: 4px; display: none; cursor: pointer;" onclick="capturePhotoFromVideo()"></video>
                         <canvas id="cameraCanvas" style="display: none;"></canvas>
                         <div class="d-grid gap-2">
                             <button type="button" class="btn btn-primary" id="startCameraBtn" onclick="startCamera()">
@@ -1606,11 +1606,8 @@
                             <button type="button" class="btn btn-success" id="capturePhotoBtn" onclick="capturePhoto()" style="display: none;">
                                 📸 Capture Photo
                             </button>
-                            <button type="button" class="btn btn-secondary" id="retakePhotoBtn" onclick="retakePhoto()" style="display: none;">
-                                🔄 Retake
-                            </button>
                         </div>
-                        <small class="text-muted d-block mt-2">Click "Start Camera" to use your device camera.</small>
+                        <small class="text-muted d-block mt-2">Click "Start Camera" to use your device camera. Click on the video to capture.</small>
                     </div>
 
                     <!-- Clipboard Input -->
@@ -1665,6 +1662,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
+                    <span id="scanFeedbackMessage" class="text-success me-auto" style="display: none;"></span>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -4762,6 +4760,13 @@
 
             // Clear detected cards
             detectedCardsGlobal = [];
+
+            // Clear feedback message
+            const feedbackEl = document.getElementById('scanFeedbackMessage');
+            if (feedbackEl) {
+                feedbackEl.textContent = '';
+                feedbackEl.style.display = 'none';
+            }
         }
 
         function resetPhotoScanDialog() {
@@ -4889,7 +4894,7 @@
             const video = document.getElementById('cameraPreview');
             const canvas = document.getElementById('cameraCanvas');
             const captureBtn = document.getElementById('capturePhotoBtn');
-            const retakeBtn = document.getElementById('retakePhotoBtn');
+            const startBtn = document.getElementById('startCameraBtn');
 
             // Set canvas size to match video
             canvas.width = video.videoWidth;
@@ -4909,7 +4914,7 @@
                     stopCamera();
                     video.style.display = 'none';
                     captureBtn.style.display = 'none';
-                    retakeBtn.style.display = 'block';
+                    startBtn.style.display = 'block';
 
                     // Reset previous scan results when new photo is captured
                     resetScanResults();
@@ -4921,11 +4926,19 @@
         }
         window.capturePhoto = capturePhoto;
 
+        // Allow clicking on video to capture photo
+        function capturePhotoFromVideo() {
+            const video = document.getElementById('cameraPreview');
+            // Only capture if video is playing (camera is active)
+            if (video && video.srcObject && video.style.display !== 'none') {
+                capturePhoto();
+            }
+        }
+        window.capturePhotoFromVideo = capturePhotoFromVideo;
+
         function retakePhoto() {
             const startBtn = document.getElementById('startCameraBtn');
-            const retakeBtn = document.getElementById('retakePhotoBtn');
 
-            retakeBtn.style.display = 'none';
             startBtn.style.display = 'block';
 
             // Reset preview and results
@@ -4949,11 +4962,9 @@
 
             const startBtn = document.getElementById('startCameraBtn');
             const captureBtn = document.getElementById('capturePhotoBtn');
-            const retakeBtn = document.getElementById('retakePhotoBtn');
 
             if (startBtn) startBtn.style.display = 'block';
             if (captureBtn) captureBtn.style.display = 'none';
-            if (retakeBtn) retakeBtn.style.display = 'none';
         }
 
         // ========================================
@@ -5194,10 +5205,10 @@
 
                 if (detectedNames && detectedNames.length > 0) {
                     // Match detected names to resources with fuzzy matching
+                    // Allow multiple copies of the same resource (don't use usedResources set)
                     const matchedCards = [];
-                    const usedResources = new Set();
 
-                    detectedNames.forEach(detectedName => {
+                    detectedNames.forEach((detectedName, detectionIndex) => {
                         // Find best match in resources
                         let bestMatch = null;
                         let bestScore = 0;
@@ -5213,17 +5224,16 @@
 
                             if (!resourceName) return;
 
-                            const key = `${currentResourceType}:${resourceName}`;
-                            if (usedResources.has(key)) return;
-
                             // Calculate match score
                             const nameLower = resourceName.toLowerCase();
                             const detectedLower = detectedName.toLowerCase();
 
                             // Exact match
                             if (nameLower === detectedLower) {
-                                bestMatch = resource;
-                                bestScore = 100;
+                                if (100 > bestScore) {
+                                    bestMatch = resource;
+                                    bestScore = 100;
+                                }
                                 return;
                             }
 
@@ -5248,11 +5258,6 @@
                         });
 
                         if (bestMatch && bestScore > 60) {
-                            // Get resource name for the key
-                            const resourceName = currentResourceType === 'contracts' ? bestMatch.objective : bestMatch.name;
-                            const key = `${currentResourceType}:${resourceName}`;
-                            usedResources.add(key);
-
                             // Calculate confidence based on score
                             const confidence = bestScore >= 90 ? 'high' : bestScore >= 75 ? 'medium' : 'low';
 
@@ -5261,7 +5266,8 @@
                                 resource: bestMatch,
                                 detectedAs: detectedName,
                                 confidence: confidence,
-                                checked: true  // Default to checked
+                                checked: true,  // Default to checked
+                                detectionId: detectionIndex  // Unique ID for each detection
                             });
                         }
                     });
@@ -5354,6 +5360,20 @@
         window.updateResourceTypeFilter = updateResourceTypeFilter;
 
         function renderDetectedCardsList() {
+            // Count occurrences of each resource to show copy numbers
+            const resourceCounts = {};
+            const resourceCopyIndices = {};
+
+            detectedCardsGlobal.forEach((card, index) => {
+                const name = card.type === 'contracts' ? card.resource.objective : card.resource.name;
+                const key = `${card.type}:${name}`;
+                if (!resourceCounts[key]) {
+                    resourceCounts[key] = 0;
+                    resourceCopyIndices[key] = 0;
+                }
+                resourceCounts[key]++;
+            });
+
             // Display all detected cards (no filtering needed since resource type is already known)
             const listHtml = detectedCardsGlobal.map((card, index) => {
                 // Get name based on resource type
@@ -5365,13 +5385,20 @@
                 // Check if this card is already selected in the checkbox state (default to true)
                 const isChecked = card.checked !== false; // Default to checked unless explicitly set to false
 
+                // Show copy number if there are duplicates
+                const key = `${card.type}:${name}`;
+                resourceCopyIndices[key] = (resourceCopyIndices[key] || 0) + 1;
+                const copyNumber = resourceCopyIndices[key];
+                const totalCopies = resourceCounts[key];
+                const copyLabel = totalCopies > 1 ? ` (copy ${copyNumber}/${totalCopies})` : '';
+
                 return `
                     <div class="list-group-item d-flex align-items-center">
                         <input type="checkbox" class="form-check-input me-3" id="detectedCard_${index}"
                                ${isChecked ? 'checked' : ''}
                                onchange="toggleDetectedCard(${index})">
                         <label class="flex-grow-1" for="detectedCard_${index}" style="cursor: pointer;">
-                            <strong>${name}</strong>
+                            <strong>${name}</strong>${copyLabel}
                             ${source ? `<span class="badge bg-secondary ms-2">${source}</span>` : ''}
                             <span class="badge bg-${confidenceBadge} ms-2">${card.confidence}</span>
                             <br>
@@ -5442,6 +5469,19 @@
             const totalAdded = Object.values(addedByType).reduce((sum, count) => sum + count, 0);
             console.log(`✅ Added ${totalAdded} resource(s) to blend`);
 
+            // Show feedback message in the modal footer
+            const feedbackEl = document.getElementById('scanFeedbackMessage');
+            if (feedbackEl) {
+                if (totalAdded > 0) {
+                    feedbackEl.textContent = `Added ${totalAdded}`;
+                    feedbackEl.className = 'text-success me-auto fw-bold';
+                } else {
+                    feedbackEl.textContent = 'Nothing to add';
+                    feedbackEl.className = 'text-muted me-auto';
+                }
+                feedbackEl.style.display = 'inline';
+            }
+
             // Log skipped resources to console (no popup)
             if (skippedResources.length > 0) {
                 console.log(`⚠️ Skipped ${skippedResources.length} resource(s) already at max count:`, skippedResources);
@@ -5485,7 +5525,21 @@
             // DON'T close modal or clear results - user may want to add/remove more
             // Modal stays open with same scan results for further operations
 
-            console.log(`✅ Removed ${selectedCards.length} resource(s) from blend`);
+            const totalRemoved = Object.values(removedByType).reduce((sum, count) => sum + count, 0);
+            console.log(`✅ Removed ${totalRemoved} resource(s) from blend`);
+
+            // Show feedback message in the modal footer
+            const feedbackEl = document.getElementById('scanFeedbackMessage');
+            if (feedbackEl) {
+                if (totalRemoved > 0) {
+                    feedbackEl.textContent = `Removed ${totalRemoved}`;
+                    feedbackEl.className = 'text-danger me-auto fw-bold';
+                } else {
+                    feedbackEl.textContent = 'Nothing to remove';
+                    feedbackEl.className = 'text-muted me-auto';
+                }
+                feedbackEl.style.display = 'inline';
+            }
         }
         window.removeSelectedDetectedResources = removeSelectedDetectedResources;
 
