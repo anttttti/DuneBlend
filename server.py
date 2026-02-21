@@ -179,8 +179,6 @@ class BlendServerHandler(http.server.SimpleHTTPRequestHandler):
                 else:
                     print(f"❌ File save failed: {filepath.name}")
 
-                # Update blends index
-                self.update_blends_index()
 
                 self.send_json_response({
                     'success': True,
@@ -223,8 +221,6 @@ class BlendServerHandler(http.server.SimpleHTTPRequestHandler):
 
             filepath.unlink()
 
-            # Update blends index
-            self.update_blends_index()
 
             self.send_json_response({
                 'success': True,
@@ -234,11 +230,6 @@ class BlendServerHandler(http.server.SimpleHTTPRequestHandler):
         except Exception as e:
             self.send_json_response({'success': False, 'error': str(e)})
 
-    def update_blends_index(self):
-        """Update blends/index.json."""
-        blend_files = [{'filename': f.name} for f in sorted(BLENDS_DIR.glob('*.md'))]
-        with open(BLENDS_DIR / 'index.json', 'w') as f:
-            json.dump(blend_files, f, indent=2)
 
     def send_json_response(self, data):
         """Send JSON response."""

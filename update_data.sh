@@ -22,19 +22,35 @@ echo "📝 Regenerating blend files..."
 python3 extract_blends_from_excel_inventory.py
 echo ""
 
-# 3. Update blends index
+# 3. Update blends index (only include official blends for GitHub Pages)
 echo "📋 Updating blends/index.json..."
 python3 << 'EOF'
 import json
 from pathlib import Path
 
 blends_dir = Path('blends')
-blend_files = [{'filename': f.name} for f in sorted(blends_dir.glob('*.md'))]
+
+# Only include official/public blends for GitHub Pages
+# Personal blends (like house blends) should not be in this list
+# They will still be available locally via the /api/blends endpoint
+official_blends = [
+    'Anttis_Basic_House_Blend.md',
+    'Anttis_House_Blend.md',
+    'Base_Imperium.md',
+    'Base_Uprising.md',
+    'Merakons_House_Blend.md',
+    'TragicJonsons_House_Blend.md',
+    'Uprising_Bloodlines_Community.md',
+]
+
+# Filter to only existing files
+blend_files = [{'filename': f} for f in official_blends if (blends_dir / f).exists()]
 
 with open(blends_dir / 'index.json', 'w') as f:
     json.dump(blend_files, f, indent=2)
 
-print(f"✅ Updated index with {len(blend_files)} blends")
+print(f"✅ Updated index with {len(blend_files)} official blends")
+print(f"   (Personal blends are only available via local server)")
 EOF
 echo ""
 
