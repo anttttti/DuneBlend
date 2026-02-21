@@ -62,9 +62,15 @@ class BlendServerHandler(http.server.SimpleHTTPRequestHandler):
             # Default: serve static files
             return super().do_GET()
 
+        except (ConnectionResetError, BrokenPipeError, ssl.SSLError) as e:
+            # Client disconnected - ignore these errors
+            pass
         except Exception as e:
             print(f"Error in GET: {e}")
-            self.send_error(500, f"Internal server error: {str(e)}")
+            try:
+                self.send_error(500, f"Internal server error: {str(e)}")
+            except:
+                pass  # Client disconnected
 
     def do_POST(self):
         """Handle POST requests - upload/save blends."""
@@ -85,9 +91,15 @@ class BlendServerHandler(http.server.SimpleHTTPRequestHandler):
 
             self.send_error(404, "Not Found")
 
+        except (ConnectionResetError, BrokenPipeError, ssl.SSLError) as e:
+            # Client disconnected - ignore these errors
+            pass
         except Exception as e:
             print(f"Error in POST: {e}")
-            self.send_error(500, f"Internal server error: {str(e)}")
+            try:
+                self.send_error(500, f"Internal server error: {str(e)}")
+            except:
+                pass  # Client disconnected
 
     def send_json_response(self, data, status=200):
         """Send JSON response."""
@@ -210,8 +222,15 @@ def run_server():
     with ReuseAddrTCPServer(("", PORT), BlendServerHandler) as httpd:
         # Wrap with SSL
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.minimum_version = ssl.TLSVersion.TLSv1_2
         context.load_cert_chain(CERT_FILE, KEY_FILE)
-        httpd.socket = context.wrap_socket(httpd.socket, server_side=True)
+
+        # Wrap the socket with SSL
+        httpd.socket = context.wrap_socket(
+            httpd.socket,
+            server_side=True,
+            do_handshake_on_connect=True
+        )
 
         local_ip = get_local_ip()
 
