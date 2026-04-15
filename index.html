@@ -2116,12 +2116,17 @@
 
                         // Affiliation
                         const affiliationFields = ['emperor_affiliation', 'spacing_guild_affiliation', 'bene_gesserit_affiliation', 'fremen_affiliation'];
+                        let hasAnyAffiliation = false;
                         affiliationFields.forEach(field => {
                             if (hasX(fullResource[field])) {
+                                hasAnyAffiliation = true;
                                 const displayName = field.replace('_affiliation', '').replace('_', ' ');
                                 stats.imperium.affiliation[displayName] = (stats.imperium.affiliation[displayName] || 0) + count;
                             }
                         });
+                        if (!hasAnyAffiliation) {
+                            stats.imperium.affiliation['unaffiliated'] = (stats.imperium.affiliation['unaffiliated'] || 0) + count;
+                        }
                     } else if (internalType === 'intrigue') {
                         const set = fullResource.source || 'Unknown';
                         stats.intrigue.bySets[set] = (stats.intrigue.bySets[set] || 0) + count;
@@ -3439,12 +3444,17 @@
 
                 // Count affiliation
                 const affiliationFields = ['emperor_affiliation', 'spacing_guild_affiliation', 'bene_gesserit_affiliation', 'fremen_affiliation'];
+                let hasAnyAffiliation = false;
                 affiliationFields.forEach(field => {
                     if (hasX(c[field])) {
+                        hasAnyAffiliation = true;
                         const displayName = field.replace('_affiliation', '').replace('_', ' ');
                         affiliation[displayName] = (affiliation[displayName] || 0) + count;
                     }
                 });
+                if (!hasAnyAffiliation) {
+                    affiliation['unaffiliated'] = (affiliation['unaffiliated'] || 0) + count;
+                }
             });
 
             let html = `
