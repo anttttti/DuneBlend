@@ -133,7 +133,8 @@ function parseBlendFile(content) {
                 if (current_section === 'Board') {
                     resources_by_type[current_section] = {
                         mainBoard: 'imperium',
-                        additionalBoards: []
+                        additionalBoards: [],
+                        familyAtomics: false
                     };
                 } else if (current_section === 'Overview') {
                     resources_by_type[current_section] = {
@@ -182,6 +183,9 @@ function parseBlendFile(content) {
                 const boards_str = clean_line.split(':', 2)[1].trim();
                 const additional = boards_str.split(',').map(b => b.trim());
                 resources_by_type['Board'].additionalBoards = additional;
+            } else if (clean_line.startsWith('Family Atomics:')) {
+                const val = clean_line.split(':', 2)[1].trim().toLowerCase();
+                resources_by_type['Board'].familyAtomics = (val === 'true');
             }
         }
         // Check for resource lines
@@ -271,6 +275,9 @@ function saveBlend(blendName, resourcesByType) {
         const additional = board_data.additionalBoards || [];
         if (additional.length > 0) {
             md += `- Additional Boards: ${additional.join(', ')}\n`;
+        }
+        if (board_data.familyAtomics) {
+            md += `- Family Atomics: true\n`;
         }
         md += '\n';
     }

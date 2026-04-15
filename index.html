@@ -622,6 +622,20 @@
 
                         <div class="card mt-3">
                             <div class="card-header">
+                                <h5>Optional Rules</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="board-family-atomics" onchange="updateRequiredSets()">
+                                    <label class="form-check-label" for="board-family-atomics">
+                                        <strong>Family Atomics</strong> - use Family Atomics token from Immortality to refresh the Imperium Row
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card mt-3">
+                            <div class="card-header">
                                 <h5>📦 Required Sets <small class="text-muted ms-2">(auto-detected from selections)</small></h5>
                             </div>
                             <div class="card-body">
@@ -2563,6 +2577,9 @@
                 if (value === 'embassy') {
                     requiredSets.add('Bloodlines');
                 }
+                if (cb.id === 'board-family-atomics') {
+                    requiredSets.add('Immortality');
+                }
             });
 
             // Check all resource types for selected items
@@ -4202,14 +4219,16 @@
             // Get board selections first
             const mainBoard = document.querySelector('input[name="mainBoard"]:checked')?.value || 'imperium';
             const additionalBoards = [];
-            document.querySelectorAll('#board-panel input[type="checkbox"]:checked').forEach(cb => {
+            document.querySelectorAll('#board-panel input[type="checkbox"]:not(#board-family-atomics):checked').forEach(cb => {
                 additionalBoards.push(cb.value);
             });
+            const familyAtomics = document.getElementById('board-family-atomics')?.checked || false;
 
             // Add board info to resources (will be placed at top of file)
             resources_by_type['Board'] = {
                 mainBoard: mainBoard,
-                additionalBoards: additionalBoards
+                additionalBoards: additionalBoards,
+                familyAtomics: familyAtomics
             };
 
             for (let type in allResources) {
@@ -4440,9 +4459,10 @@
             // Get board selections first
             const mainBoard = document.querySelector('input[name="mainBoard"]:checked')?.value || 'imperium';
             const additionalBoards = [];
-            document.querySelectorAll('#board-panel input[type="checkbox"]:checked').forEach(cb => {
+            document.querySelectorAll('#board-panel input[type="checkbox"]:not(#board-family-atomics):checked').forEach(cb => {
                 additionalBoards.push(cb.value);
             });
+            const familyAtomics = document.getElementById('board-family-atomics')?.checked || false;
 
             // Get overview data
             const description = document.getElementById('overview-description')?.value.trim() || '';
@@ -4457,7 +4477,8 @@
                 },
                 'Board': {
                     mainBoard: mainBoard,
-                    additionalBoards: additionalBoards
+                    additionalBoards: additionalBoards,
+                    familyAtomics: familyAtomics
                 }
             };
 
@@ -4569,9 +4590,10 @@
             // Get board selections first
             const mainBoard = document.querySelector('input[name="mainBoard"]:checked')?.value || 'imperium';
             const additionalBoards = [];
-            document.querySelectorAll('#board-panel input[type="checkbox"]:checked').forEach(cb => {
+            document.querySelectorAll('#board-panel input[type="checkbox"]:not(#board-family-atomics):checked').forEach(cb => {
                 additionalBoards.push(cb.value);
             });
+            const familyAtomics = document.getElementById('board-family-atomics')?.checked || false;
 
             // Get overview data
             const description = document.getElementById('overview-description')?.value.trim() || '';
@@ -4586,7 +4608,8 @@
                 },
                 'Board': {
                     mainBoard: mainBoard,
-                    additionalBoards: additionalBoards
+                    additionalBoards: additionalBoards,
+                    familyAtomics: familyAtomics
                 }
             };
 
@@ -4828,14 +4851,23 @@
                         const mainRadio = document.querySelector(`input[name="mainBoard"][value="${boardData.mainBoard}"]`);
                         if (mainRadio) mainRadio.checked = true;
                     }
+                    // Clear all expansion board checkboxes first (keep optional rules separate)
+                    document.querySelectorAll('#board-panel input[type="checkbox"]:not(#board-family-atomics)').forEach(cb => cb.checked = false);
                     if (boardData.additionalBoards && Array.isArray(boardData.additionalBoards)) {
-                        // Clear all checkboxes first
-                        document.querySelectorAll('#board-panel input[type="checkbox"]').forEach(cb => cb.checked = false);
                         // Check the saved ones
                         boardData.additionalBoards.forEach(boardValue => {
                             const checkbox = document.querySelector(`#board-panel input[type="checkbox"][value="${boardValue}"]`);
                             if (checkbox) checkbox.checked = true;
                         });
+                    }
+                    const familyAtomicsCheckbox = document.getElementById('board-family-atomics');
+                    if (familyAtomicsCheckbox) {
+                        if (typeof boardData.familyAtomics === 'boolean') {
+                            familyAtomicsCheckbox.checked = boardData.familyAtomics;
+                        } else {
+                            const normalizedFilename = (filename || '').toLowerCase();
+                            familyAtomicsCheckbox.checked = (normalizedFilename === 'tragicjonsons_house_blend.md');
+                        }
                     }
                     continue;
                 }

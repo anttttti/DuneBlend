@@ -9,6 +9,7 @@ https://observablehq.com/@mrcorvus/dune-imperium-deck-builder
 ## Board
 
 - Main Board: uprising
+- Family Atomics: true
 
 **Total Items:** 284
 
