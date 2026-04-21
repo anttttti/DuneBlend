@@ -598,6 +598,108 @@
             50%       { opacity: 0; }
         }
 
+        /* Sequence graph */
+        .seq-graph {
+            display: flex;
+            align-items: flex-start;
+            gap: 3px;
+            padding: 4px 0;
+            overflow-x: auto;
+            flex-wrap: wrap;
+            margin-bottom: 4px;
+        }
+        .seq-step {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .seq-arrow {
+            align-self: center;
+            color: #aaa;
+            padding: 0 1px;
+            font-size: 0.9em;
+            user-select: none;
+        }
+        .seq-task {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.72em;
+            border: 1px solid #dee2e6;
+            background: #fff;
+            white-space: nowrap;
+            line-height: 1.5;
+        }
+        .seq-task-tokens {
+            font-variant-numeric: tabular-nums;
+            opacity: 0.6;
+            font-size: 0.82em;
+        }
+        .seq-task-timer {
+            font-variant-numeric: tabular-nums;
+            opacity: 0.65;
+            font-size: 0.88em;
+        }
+        .seq-task.seq-running {
+            border-color: #0d6efd;
+            background: #e8f0fe;
+            color: #0d6efd;
+        }
+        .seq-task.seq-done {
+            border-color: #198754;
+            background: #d1e7dd;
+            color: #0a3622;
+            cursor: pointer;
+        }
+        .seq-task.seq-done:hover { background: #badbcc; }
+        .seq-task.seq-done.seq-selected {
+            border-color: #ffc107;
+            background: #fff3cd;
+            color: #664d03;
+        }
+        .seq-task.seq-stopped {
+            border-color: #6c757d;
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+        .seq-task.seq-compact.seq-running {
+            border-color: #e67e00;
+            background: #fff3e0;
+            color: #b45300;
+        }
+        .seq-task.seq-compact.seq-done {
+            border-color: #e67e00;
+            background: #ffe8c2;
+            color: #7a3900;
+        }
+        .seq-task.seq-compact.seq-done:hover { background: #ffd999; }
+        .seq-live-detail {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+        .seq-detail-col {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .seq-selected-detail {
+            margin-top: 2px;
+        }
+        .seq-col-header {
+            font-size: 0.72em;
+            font-weight: 600;
+            color: #555;
+            padding: 1px 2px 3px;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+            margin-bottom: 2px;
+            user-select: none;
+        }
+
         .agent-input-row {
             display: flex;
             gap: 0.5rem;
@@ -1599,7 +1701,10 @@
                 <div id="agent-messages"></div>
                 <div class="agent-input-row">
                     <textarea id="agent-input" rows="2" placeholder="Ask about Dune: Imperium rules, cards, or say "build me a blend with Uprising"… (Enter to send, Shift+Enter for newline)"></textarea>
-                    <button id="agent-action-btn" class="btn btn-success" onclick="agentAction()" title="Send">&#9654;&#65038;</button>
+                    <div class="d-flex flex-column align-items-center">
+                        <button id="agent-action-btn" class="btn btn-success" onclick="agentAction()" title="Send">&#9654;&#65038;</button>
+                        <span id="agent-token-label" class="text-muted" style="font-size:0.6rem;line-height:1.2;margin-top:2px;white-space:nowrap"></span>
+                    </div>
                 </div>
                 <small class="text-muted mt-1 d-block">The agent knows your current blend and can modify it. Requires an API key from the model provider.</small>
             </div>
@@ -6283,7 +6388,7 @@
         };
 
     </script>
-    <script src="static/agent.js?v=43"></script>
+    <script src="static/agent.js?v=59"></script>
 </body>
 </html>
 

@@ -1,22 +1,26 @@
 // ========================================
 // AI Agent Tab — DuneBlend
-// Supports Google Gemini, Mistral AI, and OpenAI
-// API keys stored in localStorage: 'geminiApiKey', 'mistralApiKey', 'openaiApiKey'
+// Supports Google Gemini and Mistral AI
+// API keys stored in localStorage: 'geminiApiKey', 'mistralApiKey'
 // ========================================
 
 const AGENT_MODEL_DEFAULT = 'gemini-3-flash-preview';
 const MAX_TOOL_ROUNDS     = 1000;
+
+// Set this to your deployed Cloudflare Worker URL, e.g.:
+// 'https://duneblend-search.YOUR-SUBDOMAIN.workers.dev'
+const SEARCH_WORKER_URL = '';
 
 // ----------------------------------------
 // Session state  (reset on agentClear)
 // ----------------------------------------
 let geminiHistory    = []; // [{role:'user'|'model', parts:[...]}]
 let mistralHistory   = []; // [{role:'user'|'assistant'|'tool', content, tool_calls?}]
-let openaiHistory    = []; // [{role:'user'|'assistant'|'tool', content, tool_calls?}]
 let agentStreaming        = false;
 let fetchedResourceTypes  = new Set();
 let activePlaceholder     = null;
 let activeAbortController = null;
+let lastProvider          = null; // tracks previous provider to detect switches
 
 // ----------------------------------------
 // Provider / model helpers
@@ -25,19 +29,31 @@ function getAgentModel() {
     return localStorage.getItem('agentModel') || AGENT_MODEL_DEFAULT;
 }
 
+function getModelMaxTokens() {
+    const m = getAgentModel();
+    if (m.startsWith('gemini') || m.startsWith('gemma')) return 1000000;
+    return 128000; // mistral
+}
+
+function updateTokenLabel() {
+    const el = document.getElementById('agent-token-label');
+    if (!el) return;
+    const history = getProvider() === 'mistral' ? mistralHistory : geminiHistory;
+    const tokens  = estimateTokens(history);
+    const max     = getModelMaxTokens();
+    el.textContent = tokens > 0 ? `${tokens.toLocaleString()}/${(max/1000).toFixed(0)}k` : '';
+}
+
 function getProvider() {
     const m = getAgentModel();
     if (m.startsWith('mistral') || m.startsWith('open-mistral') || m.startsWith('codestral'))
         return 'mistral';
-    if (m.startsWith('gpt-') || m.startsWith('o1') || m.startsWith('o3') || m.startsWith('o4'))
-        return 'openai';
     return 'google';
 }
 
 function getActiveApiKey() {
     const p = getProvider();
     if (p === 'mistral') return localStorage.getItem('mistralApiKey') || '';
-    if (p === 'openai')  return localStorage.getItem('openaiApiKey')  || '';
     return localStorage.getItem('geminiApiKey') || '';
 }
 
@@ -130,32 +146,91 @@ const BLEND_TOOL_PARAMETERS = {
 const STATS_TOOL_PARAMETERS = { type: 'object', properties: {}, required: [] };
 const EMPTY_PARAMETERS       = { type: 'object', properties: {}, required: [] };
 
+const WEB_SEARCH_DESCRIPTION = 'Search the web for current information. Returns titles, URLs, and snippets from top results.';
+const WEB_SEARCH_PARAMETERS  = {
+    type: 'object',
+    properties: {
+        query: { type: 'string', description: 'The search query.' }
+    },
+    required: ['query']
+};
+
+const FETCH_URL_DESCRIPTION = 'Fetch and read the content of a web page as plain text.';
+const FETCH_URL_PARAMETERS  = {
+    type: 'object',
+    properties: {
+        url: { type: 'string', description: 'The full URL to fetch.' }
+    },
+    required: ['url']
+};
+
+const WIKIPEDIA_DESCRIPTION =
+    'Search Wikipedia and return the plain-text summary of the best matching article. ' +
+    'Use this for lore, rules clarifications, card names, or any factual question.';
+const WIKIPEDIA_PARAMETERS = {
+    type: 'object',
+    properties: {
+        query: { type: 'string', description: 'Search terms or article title.' }
+    },
+    required: ['query']
+};
+
+const SEARCH_TOOLS_GEMINI  = SEARCH_WORKER_URL ? [
+    { name: 'web_search', description: WEB_SEARCH_DESCRIPTION, parameters: WEB_SEARCH_PARAMETERS },
+    { name: 'fetch_url',  description: FETCH_URL_DESCRIPTION,  parameters: FETCH_URL_PARAMETERS  },
+] : [];
+
+const SEARCH_TOOLS_MISTRAL = SEARCH_WORKER_URL ? [
+    { type: 'function', function: { name: 'web_search', description: WEB_SEARCH_DESCRIPTION, parameters: WEB_SEARCH_PARAMETERS } },
+    { type: 'function', function: { name: 'fetch_url',  description: FETCH_URL_DESCRIPTION,  parameters: FETCH_URL_PARAMETERS  } },
+] : [];
+
 // Gemini format
 const GEMINI_TOOLS = [{
     functionDeclarations: [
-        { name: 'get_available_resources', description: TOOL_DESCRIPTION,         parameters: TOOL_PARAMETERS           },
-        { name: 'set_resources',           description: SET_RESOURCES_DESCRIPTION, parameters: SET_RESOURCES_PARAMETERS   },
-        { name: 'set_board',               description: SET_BOARD_DESCRIPTION,     parameters: SET_BOARD_PARAMETERS       },
-        { name: 'clear_blend',             description: CLEAR_BLEND_DESCRIPTION,   parameters: EMPTY_PARAMETERS           },
-        { name: 'get_blend',               description: BLEND_TOOL_DESCRIPTION,   parameters: BLEND_TOOL_PARAMETERS     },
-        { name: 'get_blend_statistics',    description: STATS_TOOL_DESCRIPTION,   parameters: STATS_TOOL_PARAMETERS     }
+        { name: 'get_available_resources', description: TOOL_DESCRIPTION,          parameters: TOOL_PARAMETERS           },
+        { name: 'set_resources',           description: SET_RESOURCES_DESCRIPTION,  parameters: SET_RESOURCES_PARAMETERS   },
+        { name: 'set_board',               description: SET_BOARD_DESCRIPTION,      parameters: SET_BOARD_PARAMETERS       },
+        { name: 'clear_blend',             description: CLEAR_BLEND_DESCRIPTION,    parameters: EMPTY_PARAMETERS           },
+        { name: 'get_blend',               description: BLEND_TOOL_DESCRIPTION,     parameters: BLEND_TOOL_PARAMETERS      },
+        { name: 'get_blend_statistics',    description: STATS_TOOL_DESCRIPTION,     parameters: STATS_TOOL_PARAMETERS      },
+        { name: 'wikipedia_search',        description: WIKIPEDIA_DESCRIPTION,      parameters: WIKIPEDIA_PARAMETERS       },
+        ...SEARCH_TOOLS_GEMINI
     ]
 }];
 
 // Mistral / OpenAI format
 const MISTRAL_TOOLS = [
-    { type: 'function', function: { name: 'get_available_resources', description: TOOL_DESCRIPTION,         parameters: TOOL_PARAMETERS           } },
-    { type: 'function', function: { name: 'set_resources',           description: SET_RESOURCES_DESCRIPTION, parameters: SET_RESOURCES_PARAMETERS   } },
-    { type: 'function', function: { name: 'set_board',               description: SET_BOARD_DESCRIPTION,     parameters: SET_BOARD_PARAMETERS       } },
-    { type: 'function', function: { name: 'clear_blend',             description: CLEAR_BLEND_DESCRIPTION,   parameters: EMPTY_PARAMETERS           } },
-    { type: 'function', function: { name: 'get_blend',               description: BLEND_TOOL_DESCRIPTION,   parameters: BLEND_TOOL_PARAMETERS     } },
-    { type: 'function', function: { name: 'get_blend_statistics',    description: STATS_TOOL_DESCRIPTION,   parameters: STATS_TOOL_PARAMETERS     } }
+    { type: 'function', function: { name: 'get_available_resources', description: TOOL_DESCRIPTION,          parameters: TOOL_PARAMETERS           } },
+    { type: 'function', function: { name: 'set_resources',           description: SET_RESOURCES_DESCRIPTION,  parameters: SET_RESOURCES_PARAMETERS   } },
+    { type: 'function', function: { name: 'set_board',               description: SET_BOARD_DESCRIPTION,      parameters: SET_BOARD_PARAMETERS       } },
+    { type: 'function', function: { name: 'clear_blend',             description: CLEAR_BLEND_DESCRIPTION,    parameters: EMPTY_PARAMETERS           } },
+    { type: 'function', function: { name: 'get_blend',               description: BLEND_TOOL_DESCRIPTION,     parameters: BLEND_TOOL_PARAMETERS      } },
+    { type: 'function', function: { name: 'get_blend_statistics',    description: STATS_TOOL_DESCRIPTION,     parameters: STATS_TOOL_PARAMETERS      } },
+    { type: 'function', function: { name: 'wikipedia_search',        description: WIKIPEDIA_DESCRIPTION,      parameters: WIKIPEDIA_PARAMETERS       } },
+    ...SEARCH_TOOLS_MISTRAL
 ];
 
 const VALID_RESOURCE_TYPES = new Set([
     'imperium', 'intrigue', 'tleilax', 'reserve', 'tech',
     'contracts', 'leader', 'sardaukar', 'starter', 'conflict'
 ]);
+
+// ----------------------------------------
+// Tool label helper
+// ----------------------------------------
+function toolLabel(name, args) {
+    if (name === 'set_resources')           return `set:${args.resource_type}`;
+    if (name === 'get_available_resources') return `get:${args.resource_type}`;
+    if (name === 'get_blend_statistics')    return 'get:statistics';
+    if (name === 'get_blend')               return `get:${args.filename || 'blend list'}`;
+    if (name === 'set_board')               return 'set_board';
+    if (name === 'clear_blend')             return 'clear_blend';
+    if (name === 'web_search')              return `search:${args.query}`;
+    if (name === 'fetch_url')               return `fetch:${args.url}`;
+    if (name === 'wikipedia_search')        return `wiki:${args.query}`;
+    return name;
+}
 
 // ----------------------------------------
 // Tool execution
@@ -173,7 +248,6 @@ async function executeToolAsync(name, args) {
         const allRes = window.getAllResources ? window.getAllResources() : {};
         const items  = allRes[type] || [];
         // Group by name+source to detect synonyms (distinct cards sharing a name, e.g. "Skirmish #1/#2/#3").
-        // Each raw item with a distinct resource_id is a separate physical card, not a duplicate copy.
         const synonymGroups = new Map();
         for (const r of items) {
             const name = r.objective || r.name || '';
@@ -187,7 +261,6 @@ async function executeToolAsync(name, args) {
             group.sort((a, b) => (a.resource_id ?? 0) - (b.resource_id ?? 0));
         }
         // One string per raw item. Same-name cards get "#N" suffix for unambiguous reference.
-        // Cards with count/count_per_player > 1 get N× prefix.
         const resources = [];
         for (const group of synonymGroups.values()) {
             const needsSuffix = group.length > 1;
@@ -234,7 +307,6 @@ async function executeToolAsync(name, args) {
         const sets = (args.sets || []).map(s => s.toLowerCase());
         const has  = keyword => sets.some(s => s.includes(keyword));
 
-        // Main board: Uprising board if Uprising is in the blend, otherwise base Imperium board
         const uprisingRadio  = document.getElementById('board-uprising');
         const imperiumRadio  = document.getElementById('board-imperium');
         if (uprisingRadio && imperiumRadio) {
@@ -242,13 +314,12 @@ async function executeToolAsync(name, args) {
             imperiumRadio.checked = !has('uprising');
         }
 
-        // Additional boards per expansion
         const set = (id, val) => { const el = document.getElementById(id); if (el) el.checked = val; };
-        set('board-choam',    has('ix'));           // Rise of Ix
-        set('board-ix',       has('ix'));           // Rise of Ix
-        set('board-tleilax',  has('immortality'));  // Immortality
-        set('board-research', has('immortality'));  // Immortality
-        set('board-embassy',  has('bloodlines'));   // Bloodlines
+        set('board-choam',    has('ix'));
+        set('board-ix',       has('ix'));
+        set('board-tleilax',  has('immortality'));
+        set('board-research', has('immortality'));
+        set('board-embassy',  has('bloodlines'));
 
         if (window.updateRequiredSets) window.updateRequiredSets();
         if (window.refreshAllStats)    window.refreshAllStats();
@@ -267,6 +338,57 @@ async function executeToolAsync(name, args) {
         }
         const applied = applySelections(resource_type, selections || []);
         return { applied, resource_type };
+    }
+
+    if (name === 'web_search') {
+        if (!SEARCH_WORKER_URL) return { error: 'Search worker not configured.' };
+        try {
+            const resp = await fetch(`${SEARCH_WORKER_URL}?q=${encodeURIComponent(args.query)}`, {
+                signal: activeAbortController?.signal
+            });
+            return await resp.json();
+        } catch (e) {
+            return { error: `Search failed: ${e.message}` };
+        }
+    }
+
+    if (name === 'fetch_url') {
+        if (!SEARCH_WORKER_URL) return { error: 'Search worker not configured.' };
+        try {
+            const resp = await fetch(`${SEARCH_WORKER_URL}?url=${encodeURIComponent(args.url)}`, {
+                signal: activeAbortController?.signal
+            });
+            const text = await resp.text();
+            return { content: text };
+        } catch (e) {
+            return { error: `Fetch failed: ${e.message}` };
+        }
+    }
+
+    if (name === 'wikipedia_search') {
+        try {
+            // Step 1: find the best-matching article title
+            const searchUrl = `https://en.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(args.query)}&limit=3&namespace=0&format=json&origin=*`;
+            const searchResp = await fetch(searchUrl, { signal: activeAbortController?.signal });
+            if (!searchResp.ok) return { error: `Wikipedia search failed: HTTP ${searchResp.status}` };
+            const [, titles] = await searchResp.json();
+            if (!titles?.length) return { results: [] };
+
+            // Step 2: fetch summaries for top results in parallel
+            const summaries = await Promise.all(titles.slice(0, 3).map(async title => {
+                const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
+                try {
+                    const r = await fetch(summaryUrl, { signal: activeAbortController?.signal });
+                    if (!r.ok) return null;
+                    const d = await r.json();
+                    return { title: d.title, summary: d.extract, url: d.content_urls?.desktop?.page || '' };
+                } catch { return null; }
+            }));
+
+            return { results: summaries.filter(Boolean) };
+        } catch (e) {
+            return { error: `Wikipedia search failed: ${e.message}` };
+        }
     }
 
     return { error: `Unknown tool: ${name}` };
@@ -299,7 +421,6 @@ function applySelections(type, selections) {
         const baseName    = suffixMatch ? suffixMatch[1] : parsed.name;
         const synonymIdx  = suffixMatch ? parseInt(suffixMatch[2]) - 1 : null;
 
-        // Find matching resources sorted by resource_id (same order as get_available_resources output).
         const matches = typeItems
             .filter(r => {
                 const n = (r.objective || r.name || '').toLowerCase();
@@ -392,25 +513,34 @@ A complete build MUST include all non-imperium types for the requested sets only
   Some starter strings start with "2× " — that means 2 physical copies; copy the prefix verbatim.
 - **intrigue / reserve**: Include all cards from the requested sets only.
 
+## Counting cards
+Always count **physical copies**, not unique entries. A selection string "2× Card Name (Source)" counts as 2 physical cards, not 1. Sum the N× prefixes when verifying any total.
+
 ## Fixed Rules (apply unless the user explicitly overrides)
 - **Starter total = 10 physical cards.** The base starter deck is: 2× Convincing Argument, 2× Dagger, 1× Diplomacy, 1× Dune The Desert Planet, 1× Reconnaissance, 1× Seek Allies, 2× Signet Ring = 10. Always verify the total equals 10.
 - **Immortality modifier:** If Immortality is included in the blend, replace 2× "Dune, The Desert Planet" with 2× "Experimentation" in the starter deck (net total stays 10).
 - **Reserve Cards from one set only.** Never mix reserve cards from multiple sets. Pick the full reserve from a single expansion matching the blend's base set.
 - **"Control the Spice" (Rise of Ix)** is included only when the user explicitly requests "Epic" game mode. Do not add it otherwise.
+- **Uprising-only mechanics (Imperium base board):** When Uprising is NOT in the blend, do not include any cards that reference spies, contracts, or sandworms. These are Uprising mechanics with no effect on the base Imperium board. This applies across all resource types — skip any card whose name or effect mentions spies, contracts, or sandworms.
+- **Bloodlines → Sardaukar:** If Bloodlines is in the blend, include ALL sardaukar resources.
+- **Immortality → Tleilax:** If Immortality is in the blend, include ALL tleilax resources.
 
 ## Your Capabilities
 1. Answer questions about Dune: Imperium rules, strategy, and blend building.
 2. Use get_available_resources before calling set_resources for any type.
    Use get_blend_statistics for percentages — never calculate them yourself.
 3. Use get_blend to read saved blends (list first, then open by exact filename).
-   Each line in a blend file: \`[N×] Resource Name (Expansion)\` — N× means N copies.`;
+   Each line in a blend file: \`[N×] Resource Name (Expansion)\` — N× means N copies.
+4. Use wikipedia_search to look up lore, rules, card details, or Dune universe information.${SEARCH_WORKER_URL ? `
+5. Use web_search to find current information about Dune: Imperium cards, rules, or strategy.
+   Use fetch_url to read a specific page from search results.` : ''}
+`;
 }
 
 // ----------------------------------------
 // Streaming helpers
 // ----------------------------------------
 
-// Yields parsed JSON objects from an SSE stream (Mistral / OpenAI / Gemini ?alt=sse format)
 async function* readSSE(resp) {
     const reader  = resp.body.getReader();
     const decoder = new TextDecoder();
@@ -434,12 +564,12 @@ async function* readSSE(resp) {
     }
 }
 
-// Stream an OpenAI-compatible SSE response; calls onChunk(text, type) per fragment.
-// Returns the assembled message object when done.
 async function streamOpenAICompat(resp, onChunk) {
-    const tcMap  = {}; // index → assembled tool call
+    const tcMap  = {};
     let content  = '';
+    let usage    = null;
     for await (const chunk of readSSE(resp)) {
+        if (chunk.usage) usage = chunk.usage;
         const delta = chunk.choices?.[0]?.delta;
         if (!delta) continue;
         if (delta.reasoning_content) onChunk(delta.reasoning_content, 'thinking');
@@ -459,21 +589,141 @@ async function streamOpenAICompat(resp, onChunk) {
         }
     }
     const tool_calls = Object.values(tcMap);
-    return { role: 'assistant', content: content || null, ...(tool_calls.length && { tool_calls }) };
+    return { role: 'assistant', content: content || null, ...(tool_calls.length && { tool_calls }), usage };
 }
 
-// Stream a Gemini SSE response (?alt=sse); calls onChunk(text, type) per fragment.
-// Returns the assembled parts array when done.
 async function streamGeminiSSE(resp, onChunk) {
     const allParts = [];
+    let usage = null;
     for await (const chunk of readSSE(resp)) {
         const parts = chunk.candidates?.[0]?.content?.parts || [];
         for (const part of parts) {
             allParts.push(part);
             if (part.text) onChunk(part.text, part.thought ? 'thinking' : 'output');
         }
+        if (chunk.usageMetadata) usage = chunk.usageMetadata;
     }
-    return allParts;
+    return { parts: allParts, usage };
+}
+
+// ----------------------------------------
+// Context compaction
+// ----------------------------------------
+
+const COMPACT_PROMPT =
+    'Summarize our entire conversation so far into a single message that will replace the conversation history. ' +
+    'Include everything needed to continue seamlessly: what was requested, all decisions made, the current blend state, ' +
+    'and any relevant context. Choose the format and structure that best preserves the essential information.';
+
+function estimateTokens(obj) {
+    return Math.ceil(JSON.stringify(obj).length / 4);
+}
+
+function getContextThreshold() {
+    const m = getAgentModel();
+    if (m.startsWith('gemini') || m.startsWith('gemma')) return 400000; // ~50% of 1M
+    return 40000; // ~50% of 80k for Mistral/OpenAI
+}
+
+async function compactGeminiHistory(apiKey, placeholder) {
+    const task = placeholder.addCompactStep();
+    task.setPrompt(`~${estimateTokens(geminiHistory).toLocaleString()} tokens in history. Summarizing…`);
+
+    const url  = `https://generativelanguage.googleapis.com/v1beta/models/${getAgentModel()}:generateContent?key=${apiKey}`;
+    const resp = await fetch(url, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal:  activeAbortController?.signal,
+        body: JSON.stringify({
+            system_instruction: { parts: [{ text: buildSystemPrompt() }] },
+            contents: [...geminiHistory, { role: 'user', parts: [{ text: COMPACT_PROMPT }] }],
+            generationConfig: { temperature: 0.1 }
+        })
+    });
+    if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error?.message || `HTTP ${resp.status}`);
+    }
+    const data    = await resp.json();
+    const summary = (data.candidates?.[0]?.content?.parts || [])
+        .filter(p => p.text && !p.thought).map(p => p.text).join('');
+    if (!summary) throw new Error('Compaction produced no summary.');
+
+    geminiHistory = [
+        { role: 'user',  parts: [{ text: `Summary of our previous conversation:\n\n${summary}` }] },
+        { role: 'model', parts: [{ text: 'Understood. I have the full context and will continue from here.' }] }
+    ];
+    fetchedResourceTypes.clear();
+    task.setOutput(summary);
+    task.complete();
+}
+
+async function compactOpenAIStyleHistory(apiKey, history, url, extraHeaders, placeholder) {
+    const task = placeholder.addCompactStep();
+    task.setPrompt(`~${estimateTokens(history).toLocaleString()} tokens in history. Summarizing…`);
+
+    const resp = await fetch(url, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', ...extraHeaders },
+        signal:  activeAbortController?.signal,
+        body: JSON.stringify({
+            model:       getAgentModel(),
+            messages:    [
+                { role: 'system', content: buildSystemPrompt() },
+                ...history,
+                { role: 'user', content: COMPACT_PROMPT }
+            ],
+            temperature: 0.1,
+            max_tokens:  4096,
+            stream:      false
+        })
+    });
+    if (!resp.ok) {
+        const body = await resp.text().catch(() => '');
+        let msg = `HTTP ${resp.status}`;
+        try { const j = JSON.parse(body); msg = j.message || j.detail || msg; } catch {}
+        throw new Error(msg);
+    }
+    const data    = await resp.json();
+    const raw     = data.choices?.[0]?.message?.content;
+    const summary = typeof raw === 'string' ? raw : '';
+    if (!summary) throw new Error('Compaction produced no summary.');
+
+    history.length = 0;
+    history.push(
+        { role: 'user',      content: `Summary of our previous conversation:\n\n${summary}` },
+        { role: 'assistant', content: 'Understood. I have the full context and will continue from here.' }
+    );
+    fetchedResourceTypes.clear();
+    task.setOutput(summary);
+    task.complete();
+}
+
+// ----------------------------------------
+// Retry helper
+// ----------------------------------------
+function isTransientError(e) {
+    const m = e.message || '';
+    return m.includes('Internal error') ||
+           /HTTP 5\d\d/.test(m) ||
+           m.includes('Failed to fetch') ||
+           m.includes('NetworkError') ||
+           m.includes('Load failed');
+}
+
+async function withRetry(fn, onRetry, maxRetries = 2) {
+    for (let attempt = 0; ; attempt++) {
+        try {
+            return await fn();
+        } catch (e) {
+            if (attempt < maxRetries && isTransientError(e)) {
+                if (onRetry) onRetry(attempt, e);
+                await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+            } else {
+                throw e;
+            }
+        }
+    }
 }
 
 // ----------------------------------------
@@ -499,41 +749,70 @@ async function callGemini(apiKey, onChunk) {
     return streamGeminiSSE(resp, onChunk);
 }
 
-async function runGeminiLoop(apiKey, placeholder, onStatus) {
+// Remove any trailing model message with unanswered function calls (Gemini history)
+function repairGeminiHistory() {
+    const last = geminiHistory[geminiHistory.length - 1];
+    if (last?.role === 'model' && last.parts?.some(p => p.functionCall)) {
+        geminiHistory.pop();
+    }
+}
+
+// Remove any trailing assistant message with unanswered tool_calls (Mistral/OpenAI history)
+function repairOpenAIStyleHistory(history) {
+    const last = history[history.length - 1];
+    if (last?.role === 'assistant' && last.tool_calls?.length) {
+        history.pop();
+    }
+}
+
+async function runGeminiLoop(apiKey, placeholder) {
+    repairGeminiHistory();
     let lastToolSig = null; let loopCount = 0; let totalActionsCount = 0;
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
-        onStatus('thinking');
-        const lastEntry = geminiHistory[geminiHistory.length - 1];
-        placeholder.setPromptContent(JSON.stringify(lastEntry, null, 2));
+        if (estimateTokens(geminiHistory) > getContextThreshold())
+            await compactGeminiHistory(apiKey, placeholder);
 
-        const parts = await callGemini(apiKey, (chunk, type) => placeholder.appendStepContent(chunk, type));
+        const thinkTask = placeholder.addThinkingTask();
+        thinkTask.setPrompt(JSON.stringify(geminiHistory[geminiHistory.length - 1], null, 2));
+
+        const { parts, usage: gUsage } = await withRetry(
+            () => callGemini(apiKey, (chunk, type) => thinkTask.append(chunk, type)),
+            (attempt, e) => thinkTask.append(`\n[retry ${attempt + 1}: ${e.message}]\n`, 'output')
+        );
         geminiHistory.push({ role: 'model', parts });
+        thinkTask.setTokens(gUsage?.promptTokenCount, gUsage?.candidatesTokenCount);
+        thinkTask.complete(); updateTokenLabel();
 
         const funcCallParts = parts.filter(p => p.functionCall);
-
         if (funcCallParts.length === 0) {
             const text = parts.filter(p => p.text && !p.thought).map(p => p.text).join('');
             return { text, actionsCount: totalActionsCount };
         }
 
-        placeholder.setStepContent(JSON.stringify(
-            funcCallParts.map(p => ({ tool: p.functionCall.name, args: p.functionCall.args })), null, 2));
-
         const sig = JSON.stringify(funcCallParts.map(p => p.functionCall));
         if (sig === lastToolSig) { if (++loopCount >= 3) return { text: '*(loop detected)*', actionsCount: totalActionsCount }; }
         else { lastToolSig = sig; loopCount = 0; }
 
-        const funcResponses = [];
-        for (const part of funcCallParts) {
+        const labels    = funcCallParts.map(p => toolLabel(p.functionCall.name, p.functionCall.args));
+        const toolTasks = placeholder.addToolStep(labels);
+
+        const funcResponses = await Promise.all(funcCallParts.map(async (part, i) => {
             const { name, args } = part.functionCall;
-            onStatus(name === 'set_resources' ? `set:${args.resource_type}` : name === 'set_board' ? 'set_board' : (args.resource_type || args.filename || name));
-            placeholder.setPromptContent(JSON.stringify({ tool: name, args }, null, 2));
-            const result = await executeToolAsync(name, args);
-            placeholder.setStepContent(JSON.stringify(result, null, 2));
+            const task = toolTasks[i];
+            task.setPrompt(JSON.stringify({ tool: name, args }, null, 2));
+            let result;
+            try {
+                result = await executeToolAsync(name, args);
+            } catch (e) {
+                result = { error: e.message };
+            }
+            task.setOutput(JSON.stringify(result, null, 2));
             if (name === 'set_resources') totalActionsCount += result.applied || 0;
             if (name === 'clear_blend' || name === 'set_board') totalActionsCount += 1;
-            funcResponses.push({ functionResponse: { name, response: result } });
-        }
+            task.complete();
+            return { functionResponse: { name, response: result } };
+        }));
+
         geminiHistory.push({ role: 'user', parts: funcResponses });
     }
     return { text: '*(max tool rounds reached)*', actionsCount: totalActionsCount };
@@ -558,48 +837,76 @@ async function callMistral(apiKey, onChunk) {
         })
     });
     if (!resp.ok) {
-        const err = await resp.json().catch(() => ({}));
-        throw new Error(err.message || err.error?.message || `HTTP ${resp.status}`);
+        const body = await resp.text().catch(() => '');
+        let msg = `HTTP ${resp.status}`;
+        try {
+            const j = JSON.parse(body);
+            const raw = j.message || j.detail || j.error?.message || j.error || msg;
+            msg = typeof raw === 'string' ? raw : JSON.stringify(raw);
+        } catch {}
+        throw new Error(msg);
     }
     return streamOpenAICompat(resp, onChunk);
 }
 
-async function runMistralLoop(apiKey, placeholder, onStatus) {
+async function runMistralLoop(apiKey, placeholder) {
+    repairOpenAIStyleHistory(mistralHistory);
     let lastToolSig = null; let loopCount = 0; let totalActionsCount = 0;
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
-        onStatus('thinking');
+        if (estimateTokens(mistralHistory) > getContextThreshold())
+            await compactOpenAIStyleHistory(apiKey, mistralHistory,
+                'https://api.mistral.ai/v1/chat/completions',
+                { 'Authorization': `Bearer ${apiKey}` }, placeholder);
+
+        const thinkTask = placeholder.addThinkingTask();
         const lastEntry = mistralHistory[mistralHistory.length - 1];
-        placeholder.setPromptContent(typeof lastEntry?.content === 'string'
+        thinkTask.setPrompt(typeof lastEntry?.content === 'string'
             ? lastEntry.content : JSON.stringify(lastEntry, null, 2));
 
-        const message = await callMistral(apiKey, (chunk, type) => placeholder.appendStepContent(chunk, type));
+        const message = await withRetry(
+            () => callMistral(apiKey, (chunk, type) => thinkTask.append(chunk, type)),
+            (attempt, e) => thinkTask.append(`\n[retry ${attempt + 1}: ${e.message}]\n`, 'output')
+        );
         if (!message) throw new Error('No response from Mistral');
+        const { usage: mUsage, ...mistralMsg } = message;
+        mistralHistory.push(mistralMsg);
+        thinkTask.setTokens(mUsage?.prompt_tokens, mUsage?.completion_tokens);
+        thinkTask.complete(); updateTokenLabel();
 
-        mistralHistory.push(message);
         const toolCalls = message.tool_calls || [];
-
         if (toolCalls.length === 0) {
             const raw  = message.content;
             const text = typeof raw === 'string' ? raw : Array.isArray(raw) ? raw.map(p => p.text || '').join('') : String(raw ?? '');
             return { text, actionsCount: totalActionsCount };
         }
 
-        placeholder.setStepContent(JSON.stringify(
-            toolCalls.map(tc => ({ tool: tc.function.name, args: JSON.parse(tc.function.arguments) })), null, 2));
-
         const sig = JSON.stringify(toolCalls.map(tc => ({ n: tc.function.name, a: tc.function.arguments })));
         if (sig === lastToolSig) { if (++loopCount >= 3) return { text: '*(loop detected)*', actionsCount: totalActionsCount }; }
         else { lastToolSig = sig; loopCount = 0; }
 
-        for (const tc of toolCalls) {
+        const safeParseArgs = s => { try { return JSON.parse(s); } catch { return {}; } };
+        const labels    = toolCalls.map(tc => toolLabel(tc.function.name, safeParseArgs(tc.function.arguments)));
+        const toolTasks = placeholder.addToolStep(labels);
+
+        const results = await Promise.all(toolCalls.map(async (tc, i) => {
             const name = tc.function.name;
-            const args = JSON.parse(tc.function.arguments);
-            onStatus(name === 'set_resources' ? `set:${args.resource_type}` : name === 'set_board' ? 'set_board' : (args.resource_type || args.filename || name));
-            placeholder.setPromptContent(JSON.stringify({ tool: name, args }, null, 2));
-            const result = await executeToolAsync(name, args);
-            placeholder.setStepContent(JSON.stringify(result, null, 2));
+            const args = safeParseArgs(tc.function.arguments);
+            const task = toolTasks[i];
+            task.setPrompt(JSON.stringify({ tool: name, args }, null, 2));
+            let result;
+            try {
+                result = await executeToolAsync(name, args);
+            } catch (e) {
+                result = { error: e.message };
+            }
+            task.setOutput(JSON.stringify(result, null, 2));
             if (name === 'set_resources') totalActionsCount += result.applied || 0;
             if (name === 'clear_blend' || name === 'set_board') totalActionsCount += 1;
+            task.complete();
+            return { tc, name, result };
+        }));
+
+        for (const { tc, name, result } of results) {
             mistralHistory.push({ role: 'tool', tool_call_id: tc.id, name, content: JSON.stringify(result) });
         }
     }
@@ -607,72 +914,6 @@ async function runMistralLoop(apiKey, placeholder, onStatus) {
 }
 
 // ----------------------------------------
-// OpenAI API
-// ----------------------------------------
-async function callOpenAI(apiKey, onChunk) {
-    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-        signal:  activeAbortController?.signal,
-        body: JSON.stringify({
-            model:       getAgentModel(),
-            messages:    [{ role: 'system', content: buildSystemPrompt() }, ...openaiHistory],
-            tools:       MISTRAL_TOOLS,
-            tool_choice: 'auto',
-            temperature: 0.1,
-            max_tokens:  32768,
-            stream:      true
-        })
-    });
-    if (!resp.ok) {
-        const err = await resp.json().catch(() => ({}));
-        throw new Error(err.message || err.error?.message || `HTTP ${resp.status}`);
-    }
-    return streamOpenAICompat(resp, onChunk);
-}
-
-async function runOpenAILoop(apiKey, placeholder, onStatus) {
-    let lastToolSig = null; let loopCount = 0; let totalActionsCount = 0;
-    for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
-        onStatus('thinking');
-        const lastEntry = openaiHistory[openaiHistory.length - 1];
-        placeholder.setPromptContent(typeof lastEntry?.content === 'string'
-            ? lastEntry.content : JSON.stringify(lastEntry, null, 2));
-
-        const message = await callOpenAI(apiKey, (chunk, type) => placeholder.appendStepContent(chunk, type));
-        if (!message) throw new Error('No response from OpenAI');
-
-        openaiHistory.push(message);
-        const toolCalls = message.tool_calls || [];
-
-        if (toolCalls.length === 0) {
-            const raw  = message.content;
-            const text = typeof raw === 'string' ? raw : Array.isArray(raw) ? raw.map(p => p.text || '').join('') : String(raw ?? '');
-            return { text, actionsCount: totalActionsCount };
-        }
-
-        placeholder.setStepContent(JSON.stringify(
-            toolCalls.map(tc => ({ tool: tc.function.name, args: JSON.parse(tc.function.arguments) })), null, 2));
-
-        const sig = JSON.stringify(toolCalls.map(tc => ({ n: tc.function.name, a: tc.function.arguments })));
-        if (sig === lastToolSig) { if (++loopCount >= 3) return { text: '*(loop detected)*', actionsCount: totalActionsCount }; }
-        else { lastToolSig = sig; loopCount = 0; }
-
-        for (const tc of toolCalls) {
-            const name = tc.function.name;
-            const args = JSON.parse(tc.function.arguments);
-            onStatus(name === 'set_resources' ? `set:${args.resource_type}` : name === 'set_board' ? 'set_board' : (args.resource_type || args.filename || name));
-            placeholder.setPromptContent(JSON.stringify({ tool: name, args }, null, 2));
-            const result = await executeToolAsync(name, args);
-            placeholder.setStepContent(JSON.stringify(result, null, 2));
-            if (name === 'set_resources') totalActionsCount += result.applied || 0;
-            if (name === 'clear_blend' || name === 'set_board') totalActionsCount += 1;
-            openaiHistory.push({ role: 'tool', tool_call_id: tc.id, name, content: JSON.stringify(result) });
-        }
-    }
-    return { text: '*(max tool rounds reached)*', actionsCount: totalActionsCount };
-}
-
 // ----------------------------------------
 // Text helpers
 // ----------------------------------------
@@ -727,9 +968,12 @@ function appendMessage(role, html, actionsCount = 0) {
     return div;
 }
 
+// ----------------------------------------
+// Sequence graph placeholder
+// ----------------------------------------
 function createResponsePlaceholder() {
-    const msgs   = getMessagesEl();
-    const div    = document.createElement('div');
+    const msgs = getMessagesEl();
+    const div  = document.createElement('div');
     div.className = 'agent-msg agent-msg-model';
 
     const bubble = document.createElement('div');
@@ -738,15 +982,26 @@ function createResponsePlaceholder() {
     msgs.appendChild(div);
     msgs.scrollTop = msgs.scrollHeight;
 
-    let stepEl      = null;
-    let promptBox   = null;
-    let thinkingBox = null;
-    let outputBox   = null;
-    let timerHandle = null;
-    let stepStart   = null;
-    let thinkingBtn = null;
+    // Left-to-right sequence graph
+    const graphEl = document.createElement('div');
+    graphEl.className = 'seq-graph';
+    bubble.appendChild(graphEl);
 
-    function makeSubBox(label, open) {
+    // Live streaming area — active task columns shown here during execution
+    const liveEl = document.createElement('div');
+    liveEl.className = 'seq-live-detail';
+    bubble.appendChild(liveEl);
+
+    // Selected-task detail area — shown after clicking a completed task
+    const selectedEl = document.createElement('div');
+    selectedEl.className = 'seq-selected-detail';
+    bubble.appendChild(selectedEl);
+
+    let stepCount     = 0;
+    let selectedBadge = null; // currently highlighted task badge
+    const activeTimers = new Set();
+
+    function makeSubBox(label) {
         const wrap = document.createElement('div');
         wrap.className = 'step-sub-box';
 
@@ -755,7 +1010,7 @@ function createResponsePlaceholder() {
 
         const btn = document.createElement('button');
         btn.className = 'step-toggle';
-        btn.textContent = open ? '▼' : '▶';
+        btn.textContent = '▶';
 
         const nameEl = document.createElement('span');
         nameEl.className = 'step-sub-name';
@@ -765,7 +1020,7 @@ function createResponsePlaceholder() {
         labelRow.appendChild(nameEl);
 
         const detail = document.createElement('div');
-        detail.className = 'step-detail' + (open ? ' step-detail-open' : '');
+        detail.className = 'step-detail';
 
         const pre = document.createElement('pre');
         pre.className = 'step-content-pre';
@@ -778,92 +1033,192 @@ function createResponsePlaceholder() {
 
         wrap.appendChild(labelRow);
         wrap.appendChild(detail);
-        return { wrap, detail, btn, pre };
-    }
 
-    function stopCurrentStep() {
-        if (timerHandle) { clearInterval(timerHandle); timerHandle = null; }
-        if (stepEl) {
-            const elapsed = ((Date.now() - stepStart) / 1000).toFixed(1);
-            stepEl.querySelector('.step-timer').textContent = `${elapsed}s`;
-            stepEl.querySelector('.agent-cursor')?.remove();
+        function open() {
+            if (!detail.classList.contains('step-detail-open')) {
+                detail.classList.add('step-detail-open');
+                btn.textContent = '▼';
+            }
         }
+
+        return { wrap, detail, pre, open };
     }
 
-    function closeCurrentDetail() {
-        if (!stepEl) return;
-        stepEl.querySelectorAll('.step-detail-open').forEach(el => el.classList.remove('step-detail-open'));
-        stepEl.querySelectorAll('.step-toggle').forEach(btn => { btn.textContent = '▶'; });
-    }
+    function createTask(stepEl, label) {
+        // Badge in graph
+        const badge = document.createElement('div');
+        badge.className = 'seq-task seq-running';
 
-    function addStep(label) {
-        stopCurrentStep();
-        closeCurrentDetail();
-        stepStart = Date.now();
+        const labelEl = document.createElement('span');
+        labelEl.textContent = label;
+        badge.appendChild(labelEl);
 
-        stepEl = document.createElement('div');
-        stepEl.className = 'agent-step';
+        const tokenEl = document.createElement('span');
+        tokenEl.className = 'seq-task-tokens';
+        badge.appendChild(tokenEl);
 
-        const header = document.createElement('div');
-        header.className = 'step-header';
-        header.insertAdjacentHTML('beforeend',
-            `<em class="text-muted">${escapeHtml(label)}</em> ` +
-            `<span class="step-timer text-muted">0.0s</span>` +
-            `<span class="agent-cursor">&#9607;</span>`);
+        // Timer
+        const timerEl = document.createElement('span');
+        timerEl.className = 'seq-task-timer';
+        timerEl.textContent = ' 0.0s';
+        badge.appendChild(timerEl);
 
-        const p = makeSubBox('Prompt',   true);
-        const t = makeSubBox('Thinking', false);
-        const o = makeSubBox('Output',   true);
-
-        promptBox   = p.detail;
-        thinkingBox = t.detail;
-        thinkingBtn = t.btn;
-        outputBox   = o.detail;
-
-        stepEl.appendChild(header);
-        stepEl.appendChild(p.wrap);
-        stepEl.appendChild(t.wrap);
-        stepEl.appendChild(o.wrap);
-        bubble.appendChild(stepEl);
-        msgs.scrollTop = msgs.scrollHeight;
-
-        timerHandle = setInterval(() => {
-            const elapsed = ((Date.now() - stepStart) / 1000).toFixed(1);
-            stepEl.querySelector('.step-timer').textContent = `${elapsed}s`;
+        stepEl.appendChild(badge);
+        const startTime = Date.now();
+        const timerId = setInterval(() => {
+            timerEl.textContent = ` ${((Date.now() - startTime) / 1000).toFixed(1)}s`;
         }, 100);
+        activeTimers.add(timerId);
+
+        // Detail column (shown in liveEl during run, stored after complete)
+        const colEl = document.createElement('div');
+        colEl.className = 'seq-detail-col';
+
+        const colHeader = document.createElement('div');
+        colHeader.className = 'seq-col-header';
+        colHeader.textContent = label;
+        colEl.appendChild(colHeader);
+
+        const promptBox   = makeSubBox('Prompt');
+        const thinkingBox = makeSubBox('Thinking');
+        const outputBox   = makeSubBox('Output');
+
+        colEl.appendChild(promptBox.wrap);
+        colEl.appendChild(thinkingBox.wrap);
+        colEl.appendChild(outputBox.wrap);
+        liveEl.appendChild(colEl);
+
+        let done = false;
+
+        const handle = {
+            markCompact() {
+                badge.classList.add('seq-compact');
+            },
+            setTokens(input, output) {
+                const parts = [];
+                if (input  != null) parts.push(`↑${input}`);
+                if (output != null) parts.push(`↓${output}`);
+                if (parts.length) tokenEl.textContent = ' ' + parts.join(' ');
+            },
+            setPrompt(text) {
+                promptBox.pre.textContent = text;
+                msgs.scrollTop = msgs.scrollHeight;
+            },
+            append(text, type) {
+                if (type === 'thinking') {
+                    thinkingBox.open();
+                    thinkingBox.pre.textContent += text;
+                    thinkingBox.pre.scrollTop = thinkingBox.pre.scrollHeight;
+                } else {
+                    outputBox.open();
+                    outputBox.pre.textContent += text;
+                    outputBox.pre.scrollTop = outputBox.pre.scrollHeight;
+                }
+                msgs.scrollTop = msgs.scrollHeight;
+            },
+            setOutput(text) {
+                outputBox.open();
+                outputBox.pre.textContent = text;
+                msgs.scrollTop = msgs.scrollHeight;
+            },
+            complete() {
+                if (done) return;
+                done = true;
+                clearInterval(timerId);
+                activeTimers.delete(timerId);
+                const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+                timerEl.textContent = ` ${elapsed}s`;
+                badge.classList.remove('seq-running');
+                badge.classList.add('seq-done');
+
+                // Close all sub-boxes
+                [promptBox, thinkingBox, outputBox].forEach(b => {
+                    b.detail.classList.remove('step-detail-open');
+                    b.detail.querySelector('.step-toggle') && (b.detail.querySelector('.step-toggle').textContent = '▶');
+                    b.wrap.querySelector('.step-toggle').textContent = '▶';
+                    b.detail.classList.remove('step-detail-open');
+                });
+
+                // Move col out of live area (stored in closure)
+                colEl.remove();
+
+                // Click badge to show/hide stored detail below graph
+                badge.addEventListener('click', () => {
+                    if (selectedBadge === badge) {
+                        badge.classList.remove('seq-selected');
+                        selectedEl.innerHTML = '';
+                        selectedBadge = null;
+                    } else {
+                        if (selectedBadge) selectedBadge.classList.remove('seq-selected');
+                        selectedEl.innerHTML = '';
+                        selectedEl.appendChild(colEl);
+                        badge.classList.add('seq-selected');
+                        selectedBadge = badge;
+                        msgs.scrollTop = msgs.scrollHeight;
+                    }
+                });
+            },
+            abort() {
+                if (done) return;
+                done = true;
+                clearInterval(timerId);
+                activeTimers.delete(timerId);
+                badge.classList.remove('seq-running');
+                badge.classList.add('seq-stopped');
+                colEl.remove();
+            }
+        };
+
+        return handle;
     }
 
-    function setPromptContent(text) {
-        if (!promptBox) return;
-        promptBox.querySelector('.step-content-pre').textContent = text;
-        msgs.scrollTop = msgs.scrollHeight;
-    }
-
-    function setStepContent(text, type = 'output') {
-        const box = type === 'thinking' ? thinkingBox : outputBox;
-        if (!box) return;
-        box.querySelector('.step-content-pre').textContent = text;
-        msgs.scrollTop = msgs.scrollHeight;
-    }
-
-    function appendStepContent(text, type = 'output') {
-        const box = type === 'thinking' ? thinkingBox : outputBox;
-        if (!box) return;
-        if (type === 'thinking' && !box.classList.contains('step-detail-open')) {
-            box.classList.add('step-detail-open');
-            if (thinkingBtn) thinkingBtn.textContent = '▼';
+    function addStep(labels) {
+        // Arrow between steps
+        if (stepCount > 0) {
+            const arrow = document.createElement('div');
+            arrow.className = 'seq-arrow';
+            arrow.textContent = '→';
+            graphEl.appendChild(arrow);
         }
-        const pre = box.querySelector('.step-content-pre');
-        pre.textContent += text;
-        pre.scrollTop = pre.scrollHeight;
+        stepCount++;
+
+        const stepEl = document.createElement('div');
+        stepEl.className = 'seq-step';
+        graphEl.appendChild(stepEl);
         msgs.scrollTop = msgs.scrollHeight;
+
+        return labels.map(label => createTask(stepEl, label));
+    }
+
+    function addThinkingTask() {
+        return addStep(['Thinking…'])[0];
+    }
+
+    function addToolStep(labels) {
+        return addStep(labels);
+    }
+
+    function addCompactStep() {
+        const task = addStep(['compact history…'])[0];
+        task.markCompact();
+        return task;
+    }
+
+    function stopAll() {
+        activeTimers.forEach(t => clearInterval(t));
+        activeTimers.clear();
+        // Mark any still-running badges as stopped and clear live area
+        graphEl.querySelectorAll('.seq-task.seq-running').forEach(el => {
+            el.classList.remove('seq-running');
+            el.classList.add('seq-stopped');
+        });
+        while (liveEl.firstChild) liveEl.removeChild(liveEl.firstChild);
     }
 
     function finalize(fullText, actionsCount) {
-        stopCurrentStep();
-        closeCurrentDetail();
+        stopAll();
         const safeText = typeof fullText === 'string' ? fullText : String(fullText ?? '');
-        const cleaned = cleanResponse(safeText);
+        const cleaned  = cleanResponse(safeText);
         if (cleaned) {
             const responseEl = document.createElement('div');
             responseEl.className = 'agent-response-text';
@@ -874,7 +1229,7 @@ function createResponsePlaceholder() {
         msgs.scrollTop = msgs.scrollHeight;
     }
 
-    return { div, addStep, setPromptContent, setStepContent, appendStepContent, finalize };
+    return { div, addThinkingTask, addToolStep, addCompactStep, finalize };
 }
 
 function setInputState(enabled) {
@@ -886,6 +1241,109 @@ function setInputState(enabled) {
         btn.className = enabled ? 'btn btn-success' : 'btn btn-danger';
     }
     if (input) input.disabled = !enabled;
+}
+
+// ----------------------------------------
+// Bidirectional history conversion
+// ----------------------------------------
+
+// Gemini → Mistral format
+function geminiToMistral(history) {
+    const out = [];
+    let pendingCallIds = {}; // tool name → [synthetic IDs in order]
+
+    for (const msg of history) {
+        if (msg.role === 'user') {
+            const textParts     = (msg.parts || []).filter(p => p.text);
+            const responseParts = (msg.parts || []).filter(p => p.functionResponse);
+
+            if (responseParts.length > 0) {
+                // One Mistral tool message per functionResponse part
+                const nameCounters = {};
+                for (const part of responseParts) {
+                    const name = part.functionResponse.name;
+                    nameCounters[name] = nameCounters[name] || 0;
+                    const idList = pendingCallIds[name] || [];
+                    const id = idList[nameCounters[name]] || `call_${name}_${nameCounters[name]}`;
+                    nameCounters[name]++;
+                    out.push({
+                        role: 'tool',
+                        tool_call_id: id,
+                        name,
+                        content: JSON.stringify(part.functionResponse.response)
+                    });
+                }
+                pendingCallIds = {};
+            } else {
+                const text = textParts.map(p => p.text).join('');
+                out.push({ role: 'user', content: text });
+            }
+        } else if (msg.role === 'model') {
+            const textParts = (msg.parts || []).filter(p => p.text && !p.thought);
+            const callParts = (msg.parts || []).filter(p => p.functionCall);
+
+            if (callParts.length > 0) {
+                const tool_calls = callParts.map((part, i) => {
+                    const name = part.functionCall.name;
+                    const id   = `call_${name}_${Date.now()}_${i}`;
+                    if (!pendingCallIds[name]) pendingCallIds[name] = [];
+                    pendingCallIds[name].push(id);
+                    return {
+                        id,
+                        type: 'function',
+                        function: { name, arguments: JSON.stringify(part.functionCall.args || {}) }
+                    };
+                });
+                const content = textParts.map(p => p.text).join('') || null;
+                out.push({ role: 'assistant', content, tool_calls });
+            } else {
+                const content = textParts.map(p => p.text).join('');
+                out.push({ role: 'assistant', content });
+            }
+        }
+    }
+    return out;
+}
+
+// Mistral → Gemini format
+function mistralToGemini(history) {
+    const out = [];
+    let i = 0;
+
+    while (i < history.length) {
+        const msg = history[i];
+
+        if (msg.role === 'user') {
+            const text = typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content);
+            out.push({ role: 'user', parts: [{ text }] });
+            i++;
+        } else if (msg.role === 'assistant') {
+            const parts = [];
+            const content = typeof msg.content === 'string' ? msg.content : '';
+            if (content) parts.push({ text: content });
+            for (const tc of (msg.tool_calls || [])) {
+                let args;
+                try { args = JSON.parse(tc.function.arguments); } catch { args = {}; }
+                parts.push({ functionCall: { name: tc.function.name, args } });
+            }
+            out.push({ role: 'model', parts });
+            i++;
+        } else if (msg.role === 'tool') {
+            // Collect all consecutive tool messages into one user functionResponse message
+            const parts = [];
+            while (i < history.length && history[i].role === 'tool') {
+                const tm = history[i];
+                let response;
+                try { response = JSON.parse(tm.content); } catch { response = { content: tm.content }; }
+                parts.push({ functionResponse: { name: tm.name, response } });
+                i++;
+            }
+            out.push({ role: 'user', parts });
+        } else {
+            i++;
+        }
+    }
+    return out;
 }
 
 // ----------------------------------------
@@ -912,10 +1370,19 @@ async function agentSend() {
     appendMessage('user', renderMarkdown(text));
 
     const provider = getProvider();
+
+    // Convert history when switching providers so context is preserved
+    if (lastProvider && provider !== lastProvider) {
+        if (provider === 'mistral' && geminiHistory.length > 0) {
+            mistralHistory = geminiToMistral(geminiHistory);
+        } else if (provider === 'google' && mistralHistory.length > 0) {
+            geminiHistory = mistralToGemini(mistralHistory);
+        }
+    }
+    lastProvider = provider;
+
     if (provider === 'mistral') {
         mistralHistory.push({ role: 'user', content: text });
-    } else if (provider === 'openai') {
-        openaiHistory.push({ role: 'user', content: text });
     } else {
         geminiHistory.push({ role: 'user', parts: [{ text }] });
     }
@@ -925,22 +1392,9 @@ async function agentSend() {
     const placeholder     = activePlaceholder;
 
     try {
-        const onStatus = label => {
-            const msg =
-                label === 'thinking'             ? 'Thinking…' :
-                label === 'clear_blend'          ? 'Clearing blend…' :
-                label === 'set_board'            ? 'Setting board…' :
-                label === 'get_blend'            ? 'Reading blend list…' :
-                label === 'get_blend_statistics' ? 'Reading blend statistics…' :
-                label.startsWith('set:')         ? `Setting ${label.slice(4)} resources…` :
-                label.endsWith('.md')            ? `Reading ${label}…` :
-                                                   `Fetching ${label} resources…`;
-            placeholder.addStep(msg);
-        };
         const { text: finalText, actionsCount } =
-            provider === 'mistral' ? await runMistralLoop(apiKey, placeholder, onStatus) :
-            provider === 'openai'  ? await runOpenAILoop(apiKey, placeholder, onStatus)  :
-                                     await runGeminiLoop(apiKey, placeholder, onStatus);
+            provider === 'mistral' ? await runMistralLoop(apiKey, placeholder) :
+                                     await runGeminiLoop(apiKey, placeholder);
         placeholder.finalize(finalText, actionsCount);
     } catch (err) {
         if (err.name === 'AbortError') {
@@ -975,10 +1429,11 @@ function agentAction() {
 function agentClear() {
     geminiHistory    = [];
     mistralHistory   = [];
-    openaiHistory    = [];
+    lastProvider     = null;
     fetchedResourceTypes = new Set();
     const msgs = getMessagesEl();
     if (msgs) msgs.innerHTML = '';
+    updateTokenLabel();
 }
 
 // ----------------------------------------
