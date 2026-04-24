@@ -695,6 +695,8 @@ A complete build MUST include ALL resource types for the requested sets. Never i
 Always count **physical copies**, not unique entries. A selection string "2× Card Name (Source)" counts as 2 physical cards, not 1. Sum the N× prefixes when verifying any total.
 
 ## Fixed Rules (apply unless the user explicitly overrides)
+- **Expansion preference:** When adding an expansion, include as much of its Imperium and Intrigue cards as possible. To make space, remove base-set cards first — the base sets are "Imperium" and "Uprising". Expansion content (Rise of Ix, Immortality, Bloodlines) takes priority over base-set content unless the user specifies otherwise.
+
 - **Starter total = 10 physical cards.** The base starter deck is: 2× Convincing Argument, 2× Dagger, 1× Diplomacy, 1× Dune The Desert Planet, 1× Reconnaissance, 1× Seek Allies, 2× Signet Ring = 10. Always verify the total equals 10.
 - **Immortality modifier:** If Immortality is included in the blend, replace 2× "Dune, The Desert Planet" with 2× "Experimentation" in the starter deck (net total stays 10).
 - **Reserve Cards from one set only.** Never mix reserve cards from multiple sets. Pick the full reserve from a single expansion matching the blend's base set.
