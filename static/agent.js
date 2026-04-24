@@ -7,6 +7,10 @@
 const AGENT_MODEL_DEFAULT = 'gemma-4-31b-it';
 const MAX_TOOL_ROUNDS     = 1000;
 
+function gcTrack(path, title) {
+    try { window.goatcounter?.count({ path, title, event: true }); } catch {}
+}
+
 // Set this to your deployed Cloudflare Worker URL, e.g.:
 // 'https://duneblend-search.YOUR-SUBDOMAIN.workers.dev'
 const SEARCH_WORKER_URL = '';
@@ -485,6 +489,7 @@ async function executeToolAsync(name, args) {
     }
 
     if (name === 'web_search') {
+        gcTrack('/agent/search/web', 'Agent web search');
         if (!SEARCH_WORKER_URL) return { error: 'Search worker not configured.' };
         try {
             const resp = await fetch(`${SEARCH_WORKER_URL}?q=${encodeURIComponent(args.query)}`, {
@@ -510,6 +515,7 @@ async function executeToolAsync(name, args) {
     }
 
     if (name === 'wikipedia_search') {
+        gcTrack('/agent/search/wikipedia', 'Agent wikipedia search');
         try {
             // Step 1: find the best-matching article title
             const searchUrl = `https://en.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(args.query)}&limit=3&namespace=0&format=json&origin=*`;
@@ -2043,6 +2049,8 @@ async function agentSend() {
     agentStreaming       = true;
     setInputState(false);
 
+    gcTrack('/agent/message', 'Agent message sent');
+
     const ckptId    = saveCheckpoint();
     const userMsgEl = appendMessage('user', renderMarkdown(text));
     userMsgEl.dataset.checkpointId = ckptId;
@@ -2116,6 +2124,7 @@ function agentAction() {
 }
 
 function agentClear() {
+    gcTrack('/agent/new-chat', 'Agent new chat');
     geminiHistory       = [];
     mistralHistory      = [];
     lastProvider        = null;
