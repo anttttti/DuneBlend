@@ -785,7 +785,7 @@ Always count **physical copies**, not unique entries. A selection string "2× Ca
 ## Answering rules questions
 When the user asks about game rules, mechanics, or card interactions, follow this order:
 1. **Rulebook + FAQ together**: Call fetch_rulebook for the relevant expansion(s) **and always also fetch rules/faq** in the same step. The FAQ supersedes the rulebook — if a rule has been updated in the FAQ, use the FAQ version. Page numbers appear in headers (e.g. "=== Uprising Main Rulebook | Page 12 ===") — use these to cite your source.
-2. **Community resources**: If the rulebook/FAQ doesn't fully resolve it, or if you have any remaining doubt, check fetch_url with `reddit.com/r/duneimperium/search.json?q=QUERY&sort=relevance&limit=10` or BoardGameGeek threads for community consensus.
+2. **Community resources**: If the rulebook/FAQ doesn't fully resolve it, or if you have any remaining doubt, check fetch_url with reddit.com/r/duneimperium/search.json?q=QUERY&sort=relevance&limit=10 or BoardGameGeek threads for community consensus.
 3. **Open web search**: If still in doubt, use web_search for more recent advice, errata, or designer clarifications.
 
 Always cite your source:
