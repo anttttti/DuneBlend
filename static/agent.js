@@ -723,7 +723,8 @@ Always count **physical copies**, not unique entries. A selection string "2× Ca
    Each line in a blend file: \`[N×] Resource Name (Expansion)\` — N× means N copies.
 4. Use wikipedia_search to look up lore, rules, card details, or Dune universe information.${SEARCH_WORKER_URL ? `
 5. Use web_search to find current information about Dune: Imperium cards, rules, or strategy.
-   Use fetch_url to read a specific page from search results.` : ''}
+   Use fetch_url to read a specific page from search results.` : `
+   Note: web_search and fetch_url are NOT available in this deployment. Do not mention them.`}
 `;
 }
 
@@ -758,14 +759,44 @@ async function streamOpenAICompat(resp, onChunk) {
     const tcMap  = {};
     let content  = '';
     let usage    = null;
+    let inThinkTag = false;  // track inline <thinking> tag state
     for await (const chunk of readSSE(resp)) {
         if (chunk.usage) usage = chunk.usage;
         const delta = chunk.choices?.[0]?.delta;
         if (!delta) continue;
         if (delta.reasoning_content) onChunk(delta.reasoning_content, 'thinking');
         if (delta.content) {
-            content += delta.content;
-            onChunk(delta.content, 'output');
+            // Extract <thinking>...</thinking> tags and route to thinking display
+            let raw = delta.content;
+            let processed = '';
+            let i = 0;
+            while (i < raw.length) {
+                if (!inThinkTag) {
+                    const start = raw.indexOf('<thinking>', i);
+                    if (start === -1) {
+                        processed += raw.slice(i);
+                        i = raw.length;
+                    } else {
+                        processed += raw.slice(i, start);
+                        inThinkTag = true;
+                        i = start + '<thinking>'.length;
+                    }
+                } else {
+                    const end = raw.indexOf('</thinking>', i);
+                    if (end === -1) {
+                        onChunk(raw.slice(i), 'thinking');
+                        i = raw.length;
+                    } else {
+                        onChunk(raw.slice(i, end), 'thinking');
+                        inThinkTag = false;
+                        i = end + '</thinking>'.length;
+                    }
+                }
+            }
+            if (processed) {
+                content += processed;
+                onChunk(processed, 'output');
+            }
         }
         if (delta.tool_calls) {
             for (const tc of delta.tool_calls) {
@@ -1019,20 +1050,30 @@ async function runGeminiLoop(apiKey, placeholder) {
 // ----------------------------------------
 // Mistral API
 // ----------------------------------------
+function mistralSupportsThinking(model) {
+    // mistral-large-2512 and magistral models support thinking budgets
+    return model === 'mistral-large-2512' || model.startsWith('magistral');
+}
+
 async function callMistral(apiKey, onChunk) {
+    const model = getAgentModel();
+    const body = {
+        model,
+        messages:    [{ role: 'system', content: buildSystemPrompt() }, ...mistralHistory],
+        tools:       MISTRAL_TOOLS,
+        tool_choice: 'auto',
+        temperature: 0.1,
+        max_tokens:  32768,
+        stream:      true
+    };
+    if (mistralSupportsThinking(model)) {
+        body.thinking = { type: 'enabled', budget_tokens: 8192 };
+    }
     const resp = await fetch('https://api.mistral.ai/v1/chat/completions', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
         signal:  activeAbortController?.signal,
-        body: JSON.stringify({
-            model:       getAgentModel(),
-            messages:    [{ role: 'system', content: buildSystemPrompt() }, ...mistralHistory],
-            tools:       MISTRAL_TOOLS,
-            tool_choice: 'auto',
-            temperature: 0.1,
-            max_tokens:  32768,
-            stream:      true
-        })
+        body: JSON.stringify(body)
     });
     if (!resp.ok) {
         const body = await resp.text().catch(() => '');
