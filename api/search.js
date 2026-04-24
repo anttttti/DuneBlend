@@ -12,7 +12,6 @@
 const BRAVE_API_KEY    = process.env.BRAVE_API_KEY    || '';
 const SEARXNG_OVERRIDE = process.env.SEARXNG_INSTANCE || '';
 
-// Public SearXNG instances to try in order
 const SEARXNG_INSTANCES = SEARXNG_OVERRIDE
     ? [SEARXNG_OVERRIDE]
     : [
@@ -34,6 +33,46 @@ async function braveSearch(query) {
         url:     r.url         || '',
         snippet: r.description || '',
     }));
+}
+
+async function ddgSearch(query) {
+    // DuckDuckGo HTML search scraper — no API key needed
+    const url  = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
+    const resp = await fetch(url, {
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:124.0) Gecko/20100101 Firefox/124.0',
+            'Accept': 'text/html',
+            'Accept-Language': 'en-US,en;q=0.9',
+        },
+        signal: AbortSignal.timeout(10000),
+    });
+    if (!resp.ok) throw new Error(`DDG returned HTTP ${resp.status}`);
+    const html = await resp.text();
+
+    const results = [];
+    // Extract result blocks: <a class="result__a" href="...">title</a> and <a class="result__snippet">snippet</a>
+    const blockRe = /<div class="result[^"]*"[\s\S]*?(?=<div class="result[^"]*"|<\/div>\s*<\/div>\s*<\/div>)/g;
+    const titleRe = /class="result__a"[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/;
+    const snippetRe = /class="result__snippet"[^>]*>([\s\S]*?)<\/a>/;
+    const stripTags = s => s.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+
+    // Simpler approach: find all result__a links and result__snippets
+    const linkRe    = /class="result__a"[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/g;
+    const snipRe    = /class="result__snippet"[^>]*>([\s\S]*?)<\/a>/g;
+    const links     = [...html.matchAll(linkRe)].map(m => ({ url: m[1], title: stripTags(m[2]) }));
+    const snippets  = [...html.matchAll(snipRe)].map(m => stripTags(m[1]));
+
+    for (let i = 0; i < Math.min(links.length, 6); i++) {
+        let url = links[i].url;
+        // DDG wraps URLs — decode if needed
+        if (url.startsWith('//duckduckgo.com/l/?')) {
+            const uddg = new URL('https:' + url).searchParams.get('uddg');
+            if (uddg) url = decodeURIComponent(uddg);
+        }
+        results.push({ title: links[i].title, url, snippet: snippets[i] || '' });
+    }
+    if (results.length === 0) throw new Error('DDG returned no results');
+    return results;
 }
 
 async function searxngSearch(query) {
@@ -70,9 +109,17 @@ export default async function handler(req, res) {
 
     try {
         if (query) {
-            const results = BRAVE_API_KEY
-                ? await braveSearch(query)
-                : await searxngSearch(query);
+            let results;
+            if (BRAVE_API_KEY) {
+                results = await braveSearch(query);
+            } else {
+                // Try SearXNG first, fall back to DDG scraping
+                try {
+                    results = await searxngSearch(query);
+                } catch (e) {
+                    results = await ddgSearch(query);
+                }
+            }
             return res.status(200).json({ results });
         }
 
