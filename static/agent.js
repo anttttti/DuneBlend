@@ -4,7 +4,7 @@
 // API keys stored in localStorage: 'geminiApiKey', 'mistralApiKey'
 // ========================================
 
-const AGENT_MODEL_DEFAULT = 'gemini-3-flash-preview';
+const AGENT_MODEL_DEFAULT = 'gemma-4-31b-it';
 const MAX_TOOL_ROUNDS     = 1000;
 
 // Set this to your deployed Cloudflare Worker URL, e.g.:
@@ -20,7 +20,10 @@ let agentStreaming        = false;
 let fetchedResourceTypes  = new Set();
 let activePlaceholder     = null;
 let activeAbortController = null;
-let lastProvider          = null; // tracks previous provider to detect switches
+let lastProvider           = null; // tracks previous provider to detect switches
+let lastUserMessageText    = '';   // for regenerate
+let interactionLog         = [];   // manual UI changes since last message
+let suppressInteractionLog = false;
 
 // ----------------------------------------
 // Provider / model helpers
@@ -122,6 +125,50 @@ const SET_BOARD_PARAMETERS = {
     required: ['sets']
 };
 
+const LOAD_BLEND_DESCRIPTION =
+    'Load a saved blend file by filename and apply it to the current session, ' +
+    'replacing board, overview, and all resource selections. ' +
+    'Call get_blend without a filename first to list available filenames.';
+
+const LOAD_BLEND_PARAMETERS = {
+    type: 'object',
+    properties: {
+        filename: {
+            type: 'string',
+            description: 'Blend filename to load, e.g. "Anttis_House_Blend.md". Must exist in the blends/ directory.'
+        }
+    },
+    required: ['filename']
+};
+
+const GET_BOARD_DESCRIPTION =
+    'Returns the current Board tab state: which main board is selected and which expansion boards/overlays are enabled.';
+
+const GET_OVERVIEW_DESCRIPTION =
+    'Returns the current contents of the Overview tab text fields: description, leader selection, and house rules.';
+
+const SET_OVERVIEW_DESCRIPTION =
+    'Set one or more Overview tab text fields. Omit any field to leave it unchanged.';
+
+const SET_OVERVIEW_PARAMETERS = {
+    type: 'object',
+    properties: {
+        description: {
+            type: 'string',
+            description: 'Blend description text. Leave unset to keep the current value.'
+        },
+        leader_selection: {
+            type: 'string',
+            description: 'Leader selection notes. Leave unset to keep the current value.'
+        },
+        house_rules: {
+            type: 'string',
+            description: 'House rules text. Leave unset to keep the current value.'
+        }
+    },
+    required: []
+};
+
 const STATS_TOOL_DESCRIPTION =
     'Returns the current blend\'s calculated statistics as percentages: ' +
     'imperium cost distribution, mechanic coverage, and affiliation breakdown; ' +
@@ -175,6 +222,33 @@ const WIKIPEDIA_PARAMETERS = {
     required: ['query']
 };
 
+const RENDER_CHART_DESCRIPTION =
+    'Render a chart or graph illustration directly in the chat. ' +
+    'Use this to visualise blend statistics, card distributions, or any numeric comparison. ' +
+    'Supported types: bar (vertical), horizontal_bar, pie, donut, line.';
+const RENDER_CHART_PARAMETERS = {
+    type: 'object',
+    properties: {
+        type:     { type: 'string', enum: ['bar','horizontal_bar','pie','donut','line'], description: 'Chart type.' },
+        title:    { type: 'string', description: 'Optional chart title.' },
+        labels:   { type: 'array', items: { type: 'string' }, description: 'Category or x-axis labels.' },
+        datasets: {
+            type: 'array',
+            items: {
+                type: 'object',
+                properties: {
+                    label:  { type: 'string', description: 'Series label (shown in legend for multi-series charts).' },
+                    values: { type: 'array', items: { type: 'number' } },
+                    color:  { type: 'string', description: 'Optional hex color, e.g. "#4e79a7". Omit to use defaults.' }
+                },
+                required: ['values']
+            },
+            description: 'One dataset for pie/donut/horizontal_bar; one or more for bar/line.'
+        }
+    },
+    required: ['type', 'labels', 'datasets']
+};
+
 const SEARCH_TOOLS_GEMINI  = SEARCH_WORKER_URL ? [
     { name: 'web_search', description: WEB_SEARCH_DESCRIPTION, parameters: WEB_SEARCH_PARAMETERS },
     { name: 'fetch_url',  description: FETCH_URL_DESCRIPTION,  parameters: FETCH_URL_PARAMETERS  },
@@ -191,10 +265,15 @@ const GEMINI_TOOLS = [{
         { name: 'get_available_resources', description: TOOL_DESCRIPTION,          parameters: TOOL_PARAMETERS           },
         { name: 'set_resources',           description: SET_RESOURCES_DESCRIPTION,  parameters: SET_RESOURCES_PARAMETERS   },
         { name: 'set_board',               description: SET_BOARD_DESCRIPTION,      parameters: SET_BOARD_PARAMETERS       },
+        { name: 'get_board',               description: GET_BOARD_DESCRIPTION,      parameters: EMPTY_PARAMETERS           },
         { name: 'clear_blend',             description: CLEAR_BLEND_DESCRIPTION,    parameters: EMPTY_PARAMETERS           },
+        { name: 'load_blend',              description: LOAD_BLEND_DESCRIPTION,     parameters: LOAD_BLEND_PARAMETERS      },
         { name: 'get_blend',               description: BLEND_TOOL_DESCRIPTION,     parameters: BLEND_TOOL_PARAMETERS      },
         { name: 'get_blend_statistics',    description: STATS_TOOL_DESCRIPTION,     parameters: STATS_TOOL_PARAMETERS      },
+        { name: 'get_overview',            description: GET_OVERVIEW_DESCRIPTION,   parameters: EMPTY_PARAMETERS           },
+        { name: 'set_overview',            description: SET_OVERVIEW_DESCRIPTION,   parameters: SET_OVERVIEW_PARAMETERS    },
         { name: 'wikipedia_search',        description: WIKIPEDIA_DESCRIPTION,      parameters: WIKIPEDIA_PARAMETERS       },
+        { name: 'render_chart',            description: RENDER_CHART_DESCRIPTION,   parameters: RENDER_CHART_PARAMETERS    },
         ...SEARCH_TOOLS_GEMINI
     ]
 }];
@@ -204,10 +283,15 @@ const MISTRAL_TOOLS = [
     { type: 'function', function: { name: 'get_available_resources', description: TOOL_DESCRIPTION,          parameters: TOOL_PARAMETERS           } },
     { type: 'function', function: { name: 'set_resources',           description: SET_RESOURCES_DESCRIPTION,  parameters: SET_RESOURCES_PARAMETERS   } },
     { type: 'function', function: { name: 'set_board',               description: SET_BOARD_DESCRIPTION,      parameters: SET_BOARD_PARAMETERS       } },
+    { type: 'function', function: { name: 'get_board',               description: GET_BOARD_DESCRIPTION,      parameters: EMPTY_PARAMETERS           } },
     { type: 'function', function: { name: 'clear_blend',             description: CLEAR_BLEND_DESCRIPTION,    parameters: EMPTY_PARAMETERS           } },
+    { type: 'function', function: { name: 'load_blend',              description: LOAD_BLEND_DESCRIPTION,     parameters: LOAD_BLEND_PARAMETERS      } },
     { type: 'function', function: { name: 'get_blend',               description: BLEND_TOOL_DESCRIPTION,     parameters: BLEND_TOOL_PARAMETERS      } },
     { type: 'function', function: { name: 'get_blend_statistics',    description: STATS_TOOL_DESCRIPTION,     parameters: STATS_TOOL_PARAMETERS      } },
+    { type: 'function', function: { name: 'get_overview',            description: GET_OVERVIEW_DESCRIPTION,   parameters: EMPTY_PARAMETERS           } },
+    { type: 'function', function: { name: 'set_overview',            description: SET_OVERVIEW_DESCRIPTION,   parameters: SET_OVERVIEW_PARAMETERS    } },
     { type: 'function', function: { name: 'wikipedia_search',        description: WIKIPEDIA_DESCRIPTION,      parameters: WIKIPEDIA_PARAMETERS       } },
+    { type: 'function', function: { name: 'render_chart',            description: RENDER_CHART_DESCRIPTION,   parameters: RENDER_CHART_PARAMETERS    } },
     ...SEARCH_TOOLS_MISTRAL
 ];
 
@@ -220,16 +304,22 @@ const VALID_RESOURCE_TYPES = new Set([
 // Tool label helper
 // ----------------------------------------
 function toolLabel(name, args) {
-    if (name === 'set_resources')           return `set:${args.resource_type}`;
-    if (name === 'get_available_resources') return `get:${args.resource_type}`;
+    const a = (args && typeof args === 'object' && !Array.isArray(args)) ? args : {};
+    if (name === 'set_resources')           return `set:${a.resource_type}`;
+    if (name === 'get_available_resources') return `get:${a.resource_type}`;
     if (name === 'get_blend_statistics')    return 'get:statistics';
-    if (name === 'get_blend')               return `get:${args.filename || 'blend list'}`;
+    if (name === 'get_blend')               return `get:${a.filename || 'blend list'}`;
+    if (name === 'load_blend')              return `load:${a.filename || '?'}`;
     if (name === 'set_board')               return 'set_board';
+    if (name === 'get_board')               return 'get_board';
     if (name === 'clear_blend')             return 'clear_blend';
-    if (name === 'web_search')              return `search:${args.query}`;
-    if (name === 'fetch_url')               return `fetch:${args.url}`;
-    if (name === 'wikipedia_search')        return `wiki:${args.query}`;
-    return name;
+    if (name === 'get_overview')            return 'get_overview';
+    if (name === 'set_overview')            return 'set_overview';
+    if (name === 'web_search')              return `search:${a.query}`;
+    if (name === 'fetch_url')               return `fetch:${a.url}`;
+    if (name === 'wikipedia_search')        return `wiki:${a.query}`;
+    if (name === 'render_chart')            return `chart:${a.title || a.type}`;
+    return typeof name === 'string' ? name : '?';
 }
 
 // ----------------------------------------
@@ -326,9 +416,63 @@ async function executeToolAsync(name, args) {
         return { success: true };
     }
 
+    if (name === 'get_board') {
+        const chk = id => !!document.getElementById(id)?.checked;
+        return {
+            main_board:     document.querySelector('input[name="mainBoard"]:checked')?.value || 'imperium',
+            choam:          chk('board-choam'),
+            ix:             chk('board-ix'),
+            tleilax:        chk('board-tleilax'),
+            research:       chk('board-research'),
+            embassy:        chk('board-embassy'),
+            family_atomics: chk('board-family-atomics'),
+        };
+    }
+
+    if (name === 'get_overview') {
+        return {
+            description:      document.getElementById('overview-description')?.value      || '',
+            leader_selection: document.getElementById('overview-leader-selection')?.value || '',
+            house_rules:      document.getElementById('overview-house-rules')?.value      || '',
+        };
+    }
+
+    if (name === 'set_overview') {
+        const setText = (id, val) => {
+            if (val === undefined) return;
+            const el = document.getElementById(id);
+            if (el) { el.value = val; el.dispatchEvent(new Event('input')); }
+        };
+        setText('overview-description',      args.description);
+        setText('overview-leader-selection', args.leader_selection);
+        setText('overview-house-rules',      args.house_rules);
+        if (window.saveBlendState) window.saveBlendState();
+        return { success: true };
+    }
+
     if (name === 'clear_blend') {
         if (window.clearAllResources) window.clearAllResources();
         return { success: true };
+    }
+
+    if (name === 'load_blend') {
+        const filename = args.filename;
+        if (!filename) return { error: 'filename is required' };
+        const safe = filename.replace(/[^a-zA-Z0-9_\-. ]/g, '');
+        if (!safe) return { error: 'Invalid filename.' };
+        if (!window.loadParsedBlendData) return { error: 'loadParsedBlendData not available.' };
+        try {
+            const resp = await fetch(`blends/${safe}?t=${Date.now()}`, { cache: 'no-store' });
+            if (!resp.ok) return { error: `Blend not found: ${safe}` };
+            const text = await resp.text();
+            if (!window.parseBlendFile) return { error: 'parseBlendFile not available.' };
+            const parsed = window.parseBlendFile(text);
+            if (!parsed?.success) return { error: 'Failed to parse blend file.' };
+            window.loadParsedBlendData(parsed, safe);
+            return { success: true, filename: safe };
+        } catch (e) {
+            return { error: `Failed to load blend: ${e.message}` };
+        }
     }
 
     if (name === 'set_resources') {
@@ -388,6 +532,16 @@ async function executeToolAsync(name, args) {
             return { results: summaries.filter(Boolean) };
         } catch (e) {
             return { error: `Wikipedia search failed: ${e.message}` };
+        }
+    }
+
+    if (name === 'render_chart') {
+        try {
+            const svg = renderChartSVG(args);
+            activePlaceholder?.addChart(svg);
+            return { success: true };
+        } catch (e) {
+            return { error: `Chart rendering failed: ${e.message}` };
         }
     }
 
@@ -459,6 +613,35 @@ function applySelections(type, selections) {
 // ----------------------------------------
 // System prompt — rebuilt on every send
 // ----------------------------------------
+// Build a summary of manual UI interactions since the last message, then reset the log.
+function buildInteractionContext() {
+    if (!interactionLog.length) return '';
+
+    const blendEntries = interactionLog.filter(e => /^[+-]/.test(e));
+    const boardEntries = interactionLog.filter(e => e.startsWith('Board'));
+    const lines = [];
+
+    // Net change per card (collapses rapid +1/-1 clicks into a single delta)
+    if (blendEntries.length) {
+        const net = {};
+        for (const e of blendEntries) {
+            const m = e.match(/^([+-]\d+) (.+) \((.+)\) \[(.+)\]$/);
+            if (!m) continue;
+            const key = `${m[2]}|${m[3]}|${m[4]}`;
+            if (!net[key]) net[key] = { label: `${m[2]} (${m[3]}) [${m[4]}]`, delta: 0 };
+            net[key].delta += parseInt(m[1], 10);
+        }
+        for (const { label, delta } of Object.values(net))
+            if (delta !== 0) lines.push(`${delta > 0 ? '+' : ''}${delta} ${label}`);
+    }
+
+    // Only the last board change matters
+    if (boardEntries.length) lines.push(boardEntries[boardEntries.length - 1]);
+
+    if (!lines.length) return '';
+    return `[Manual UI changes since your last message:\n${lines.map(l => `- ${l}`).join('\n')}]\n\n`;
+}
+
 function buildSystemPrompt() {
     const allRes = window.getAllResources ? window.getAllResources() : {};
     const selectedLines = [];
@@ -490,7 +673,7 @@ ${poolLines.join('\n')}
 1. Call get_blend (no filename) to list blends, then get_blend with the exact filename to read it.
    Match filenames by the word in the user's description — never guess.
 2. Call set_board with all expansions in the blend (e.g. ["Uprising", "Immortality"]).
-3. Call get_available_resources for each resource type you need.
+3. Call get_available_resources for ALL needed resource types at once in a single parallel step — never one type at a time across multiple rounds.
 4. Call clear_blend to reset everything.
 5. Call set_resources once per resource type with the full selections list.
 
@@ -507,7 +690,8 @@ ${poolLines.join('\n')}
 - "below N" or "up to N" means maximize while not exceeding N.
 
 ## Complete Build Rule
-A complete build MUST include all non-imperium types for the requested sets only. Never include cards from sets not in the blend.
+A complete build MUST include ALL resource types for the requested sets. Never include cards from sets not in the blend.
+- **imperium**: Include all imperium cards whose source matches one of the requested expansions. Exclude cards from other expansions entirely.
 - **leader / conflict**: Include ALL cards whose source matches one of the requested expansions. Exclude cards from other expansions entirely.
 - **starter**: Include ALL starter cards from the primary base set (e.g. Uprising for an Uprising+Immortality blend). Exclude starters from other sets.
   Some starter strings start with "2× " — that means 2 physical copies; copy the prefix verbatim.
@@ -584,7 +768,6 @@ async function streamOpenAICompat(resp, onChunk) {
                 if (tc.id)                  tcMap[i].id = tc.id;
                 if (tc.function?.name)      tcMap[i].function.name      += tc.function.name;
                 if (tc.function?.arguments) tcMap[i].function.arguments += tc.function.arguments;
-                if (tc.function?.arguments) onChunk(tc.function.arguments, 'output');
             }
         }
     }
@@ -765,9 +948,13 @@ function repairOpenAIStyleHistory(history) {
     }
 }
 
+const PROGRESS_TOOLS    = new Set(['set_resources', 'clear_blend', 'load_blend', 'set_board', 'set_overview']);
+const NON_PROGRESS_LIMIT = 5; // consecutive info-only rounds before aborting
+
 async function runGeminiLoop(apiKey, placeholder) {
     repairGeminiHistory();
     let lastToolSig = null; let loopCount = 0; let totalActionsCount = 0;
+    let nonProgressRounds = 0;
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
         if (estimateTokens(geminiHistory) > getContextThreshold())
             await compactGeminiHistory(apiKey, placeholder);
@@ -792,6 +979,11 @@ async function runGeminiLoop(apiKey, placeholder) {
         const sig = JSON.stringify(funcCallParts.map(p => p.functionCall));
         if (sig === lastToolSig) { if (++loopCount >= 3) return { text: '*(loop detected)*', actionsCount: totalActionsCount }; }
         else { lastToolSig = sig; loopCount = 0; }
+
+        const hasProgress = funcCallParts.some(p => PROGRESS_TOOLS.has(p.functionCall.name));
+        if (hasProgress) nonProgressRounds = 0;
+        else if (++nonProgressRounds >= NON_PROGRESS_LIMIT)
+            return { text: '*(stopped: too many rounds without blend changes)*', actionsCount: totalActionsCount };
 
         const labels    = funcCallParts.map(p => toolLabel(p.functionCall.name, p.functionCall.args));
         const toolTasks = placeholder.addToolStep(labels);
@@ -852,6 +1044,7 @@ async function callMistral(apiKey, onChunk) {
 async function runMistralLoop(apiKey, placeholder) {
     repairOpenAIStyleHistory(mistralHistory);
     let lastToolSig = null; let loopCount = 0; let totalActionsCount = 0;
+    let nonProgressRounds = 0;
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
         if (estimateTokens(mistralHistory) > getContextThreshold())
             await compactOpenAIStyleHistory(apiKey, mistralHistory,
@@ -883,6 +1076,11 @@ async function runMistralLoop(apiKey, placeholder) {
         const sig = JSON.stringify(toolCalls.map(tc => ({ n: tc.function.name, a: tc.function.arguments })));
         if (sig === lastToolSig) { if (++loopCount >= 3) return { text: '*(loop detected)*', actionsCount: totalActionsCount }; }
         else { lastToolSig = sig; loopCount = 0; }
+
+        const hasProgress = toolCalls.some(tc => PROGRESS_TOOLS.has(tc.function.name));
+        if (hasProgress) nonProgressRounds = 0;
+        else if (++nonProgressRounds >= NON_PROGRESS_LIMIT)
+            return { text: '*(stopped: too many rounds without blend changes)*', actionsCount: totalActionsCount };
 
         const safeParseArgs = s => { try { return JSON.parse(s); } catch { return {}; } };
         const labels    = toolCalls.map(tc => toolLabel(tc.function.name, safeParseArgs(tc.function.arguments)));
@@ -940,9 +1138,119 @@ function cleanResponse(text) {
 }
 
 // ----------------------------------------
+// Chart rendering (SVG)
+// ----------------------------------------
+const CHART_PALETTE = ['#4e79a7','#f28e2b','#e15759','#76b7b2','#59a14f','#edc948','#b07aa1','#ff9da7','#9c755f','#bab0ac'];
+
+function renderChartSVG({ type = 'bar', title = '', labels = [], datasets = [] }) {
+    const W = 500, H = 300;
+    const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    let body = '';
+
+    if (title) body += `<text x="${W/2}" y="20" text-anchor="middle" font-size="14" font-weight="600" fill="#333">${esc(title)}</text>`;
+
+    const pad = { top: title ? 36 : 12, right: 20, bottom: 56, left: 56 };
+    const cw = W - pad.left - pad.right, ch = H - pad.top - pad.bottom;
+
+    if (type === 'pie' || type === 'donut') {
+        const vals  = datasets[0]?.values || [];
+        const total = vals.reduce((a, b) => a + b, 0) || 1;
+        const cx = pad.left + cw * 0.38, cy = pad.top + ch / 2, r = Math.min(cw * 0.38, ch / 2) - 4;
+        let angle = -Math.PI / 2;
+        const slices = vals.map((v, i) => {
+            const a  = (v / total) * 2 * Math.PI;
+            const x1 = cx + r * Math.cos(angle), y1 = cy + r * Math.sin(angle);
+            angle += a;
+            return { v, label: labels[i] || '', color: CHART_PALETTE[i % CHART_PALETTE.length],
+                     x1, y1, x2: cx + r * Math.cos(angle), y2: cy + r * Math.sin(angle),
+                     large: a > Math.PI ? 1 : 0, pct: ((v / total) * 100).toFixed(1) };
+        });
+        for (const s of slices)
+            body += `<path d="M${cx},${cy} L${s.x1},${s.y1} A${r},${r} 0 ${s.large},1 ${s.x2},${s.y2} Z" fill="${s.color}" stroke="white" stroke-width="1.5"/>`;
+        if (type === 'donut') body += `<circle cx="${cx}" cy="${cy}" r="${r*0.45}" fill="white"/>`;
+        const legX = cx + r + 18;
+        for (let i = 0; i < slices.length; i++) {
+            const ly = pad.top + i * 18;
+            body += `<rect x="${legX}" y="${ly}" width="11" height="11" fill="${slices[i].color}" rx="2"/>`;
+            body += `<text x="${legX+15}" y="${ly+9}" font-size="11" fill="#444">${esc(slices[i].label)} (${slices[i].pct}%)</text>`;
+        }
+    } else if (type === 'horizontal_bar') {
+        const vals = datasets[0]?.values || [];
+        const max  = Math.max(...vals.map(Math.abs), 1);
+        const step = ch / (labels.length || 1);
+        const barH = Math.min(22, step - 5);
+        for (let gi = 0; gi <= 4; gi++) {
+            const x = pad.left + (gi / 4) * cw;
+            body += `<line x1="${x}" y1="${pad.top}" x2="${x}" y2="${pad.top+ch}" stroke="${gi===0?'#ccc':'#eee'}" stroke-width="1"/>`;
+            body += `<text x="${x}" y="${pad.top+ch+14}" text-anchor="middle" font-size="10" fill="#aaa">${Math.round((gi/4)*max)}</text>`;
+        }
+        for (let i = 0; i < labels.length; i++) {
+            const y  = pad.top + i * step + step / 2;
+            const bw = Math.max(0, (vals[i] / max) * cw);
+            const color = CHART_PALETTE[i % CHART_PALETTE.length];
+            body += `<rect x="${pad.left}" y="${y - barH/2}" width="${bw}" height="${barH}" fill="${color}" rx="2"/>`;
+            body += `<text x="${pad.left-5}" y="${y+4}" text-anchor="end" font-size="11" fill="#555">${esc(labels[i])}</text>`;
+            if (vals[i] > 0) body += `<text x="${pad.left+bw+4}" y="${y+4}" font-size="11" fill="#333">${vals[i]}</text>`;
+        }
+    } else {
+        // bar or line
+        const allVals = datasets.flatMap(d => d.values || []);
+        const max = Math.max(...allVals.map(Math.abs), 1);
+        const n = labels.length || 1, nd = datasets.length || 1;
+        const groupW = cw / n;
+        const barW   = Math.min(groupW / nd - 3, 38);
+        for (let gi = 0; gi <= 4; gi++) {
+            const y = pad.top + ch - (gi / 4) * ch;
+            body += `<line x1="${pad.left}" y1="${y}" x2="${pad.left+cw}" y2="${y}" stroke="${gi===0?'#ccc':'#eee'}" stroke-width="1"/>`;
+            body += `<text x="${pad.left-4}" y="${y+4}" text-anchor="end" font-size="10" fill="#aaa">${Math.round((gi/4)*max)}</text>`;
+        }
+        if (type === 'line') {
+            for (let di = 0; di < datasets.length; di++) {
+                const color = datasets[di].color || CHART_PALETTE[di % CHART_PALETTE.length];
+                const pts = (datasets[di].values || []).map((v, i) =>
+                    `${pad.left + (i + 0.5) * groupW},${pad.top + ch - (v / max) * ch}`).join(' ');
+                body += `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round"/>`;
+                (datasets[di].values || []).forEach((v, i) => {
+                    const x = pad.left + (i + 0.5) * groupW, y = pad.top + ch - (v / max) * ch;
+                    body += `<circle cx="${x}" cy="${y}" r="3.5" fill="${color}" stroke="white" stroke-width="1.5"/>`;
+                });
+            }
+        } else {
+            for (let di = 0; di < datasets.length; di++) {
+                const color = datasets[di].color || CHART_PALETTE[di % CHART_PALETTE.length];
+                (datasets[di].values || []).forEach((v, i) => {
+                    const x  = pad.left + i * groupW + (groupW - nd * (barW + 3)) / 2 + di * (barW + 3);
+                    const bh = (v / max) * ch, y = pad.top + ch - bh;
+                    body += `<rect x="${x}" y="${y}" width="${barW}" height="${bh}" fill="${color}" rx="2"/>`;
+                    if (bh > 14) body += `<text x="${x+barW/2}" y="${y+11}" text-anchor="middle" font-size="9" fill="white">${v}</text>`;
+                });
+            }
+        }
+        for (let i = 0; i < labels.length; i++) {
+            const x = pad.left + (i + 0.5) * groupW;
+            body += `<text x="${x}" y="${pad.top+ch+16}" text-anchor="end" font-size="10" fill="#555" transform="rotate(-35 ${x} ${pad.top+ch+16})">${esc(labels[i])}</text>`;
+        }
+        if (datasets.length > 1) datasets.forEach((ds, di) => {
+            const lx = pad.left + di * 110;
+            body += `<rect x="${lx}" y="${H-16}" width="10" height="10" fill="${ds.color||CHART_PALETTE[di%CHART_PALETTE.length]}" rx="2"/>`;
+            body += `<text x="${lx+14}" y="${H-7}" font-size="10" fill="#444">${esc(ds.label||'')}</text>`;
+        });
+    }
+
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" style="max-width:100%;height:auto;display:block;font-family:system-ui,sans-serif">${body}</svg>`;
+}
+
+// ----------------------------------------
 // UI helpers
 // ----------------------------------------
 function getMessagesEl() { return document.getElementById('agent-messages'); }
+
+function scrollIfNearBottom(el, threshold = 80) {
+    if (!el) return;
+    if (el.scrollHeight - el.scrollTop - el.clientHeight < threshold) {
+        el.scrollTop = el.scrollHeight;
+    }
+}
 
 function actionsNote(count) {
     const note = document.createElement('div');
@@ -996,6 +1304,11 @@ function createResponsePlaceholder() {
     const selectedEl = document.createElement('div');
     selectedEl.className = 'seq-selected-detail';
     bubble.appendChild(selectedEl);
+
+    // Chart area — render_chart tool appends SVG charts here
+    const chartsEl = document.createElement('div');
+    chartsEl.className = 'seq-charts';
+    bubble.appendChild(chartsEl);
 
     let stepCount     = 0;
     let selectedBadge = null; // currently highlighted task badge
@@ -1089,6 +1402,13 @@ function createResponsePlaceholder() {
         liveEl.appendChild(colEl);
 
         let done = false;
+        let latestOutputSpan   = null;
+        let latestThinkingSpan = null;
+
+        function commitLatest(spanRef, setRef) {
+            if (spanRef) spanRef.classList.remove('seq-stream-latest');
+            setRef(null);
+        }
 
         const handle = {
             markCompact() {
@@ -1102,28 +1422,41 @@ function createResponsePlaceholder() {
             },
             setPrompt(text) {
                 promptBox.pre.textContent = text;
-                msgs.scrollTop = msgs.scrollHeight;
+                scrollIfNearBottom(msgs);
             },
             append(text, type) {
                 if (type === 'thinking') {
                     thinkingBox.open();
-                    thinkingBox.pre.textContent += text;
+                    if (latestThinkingSpan) latestThinkingSpan.classList.remove('seq-stream-latest');
+                    const span = document.createElement('span');
+                    span.className = 'seq-stream-latest';
+                    span.textContent = text;
+                    thinkingBox.pre.appendChild(span);
+                    latestThinkingSpan = span;
                     thinkingBox.pre.scrollTop = thinkingBox.pre.scrollHeight;
                 } else {
                     outputBox.open();
-                    outputBox.pre.textContent += text;
+                    if (latestOutputSpan) latestOutputSpan.classList.remove('seq-stream-latest');
+                    const span = document.createElement('span');
+                    span.className = 'seq-stream-latest';
+                    span.textContent = text;
+                    outputBox.pre.appendChild(span);
+                    latestOutputSpan = span;
                     outputBox.pre.scrollTop = outputBox.pre.scrollHeight;
                 }
-                msgs.scrollTop = msgs.scrollHeight;
+                scrollIfNearBottom(msgs);
             },
             setOutput(text) {
+                latestOutputSpan = null;
                 outputBox.open();
                 outputBox.pre.textContent = text;
-                msgs.scrollTop = msgs.scrollHeight;
+                scrollIfNearBottom(msgs);
             },
             complete() {
                 if (done) return;
                 done = true;
+                commitLatest(latestOutputSpan,   v => { latestOutputSpan   = v; });
+                commitLatest(latestThinkingSpan, v => { latestThinkingSpan = v; });
                 clearInterval(timerId);
                 activeTimers.delete(timerId);
                 const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
@@ -1131,12 +1464,11 @@ function createResponsePlaceholder() {
                 badge.classList.remove('seq-running');
                 badge.classList.add('seq-done');
 
-                // Close all sub-boxes
+                // Close sub-boxes; hide entirely if they have no content
                 [promptBox, thinkingBox, outputBox].forEach(b => {
                     b.detail.classList.remove('step-detail-open');
-                    b.detail.querySelector('.step-toggle') && (b.detail.querySelector('.step-toggle').textContent = '▶');
                     b.wrap.querySelector('.step-toggle').textContent = '▶';
-                    b.detail.classList.remove('step-detail-open');
+                    if (!b.pre.textContent.trim()) b.wrap.style.display = 'none';
                 });
 
                 // Move col out of live area (stored in closure)
@@ -1154,6 +1486,14 @@ function createResponsePlaceholder() {
                         selectedEl.appendChild(colEl);
                         badge.classList.add('seq-selected');
                         selectedBadge = badge;
+                        // Auto-expand sub-boxes that have content, in time order (Prompt → Thinking → Output)
+                        [promptBox, thinkingBox, outputBox].forEach(box => {
+                            if (box.wrap.style.display === 'none') return;
+                            if (!box.detail.classList.contains('step-detail-open')) {
+                                box.detail.classList.add('step-detail-open');
+                                box.wrap.querySelector('.step-toggle').textContent = '▼';
+                            }
+                        });
                         msgs.scrollTop = msgs.scrollHeight;
                     }
                 });
@@ -1161,6 +1501,8 @@ function createResponsePlaceholder() {
             abort() {
                 if (done) return;
                 done = true;
+                commitLatest(latestOutputSpan,   v => { latestOutputSpan   = v; });
+                commitLatest(latestThinkingSpan, v => { latestThinkingSpan = v; });
                 clearInterval(timerId);
                 activeTimers.delete(timerId);
                 badge.classList.remove('seq-running');
@@ -1185,7 +1527,7 @@ function createResponsePlaceholder() {
         const stepEl = document.createElement('div');
         stepEl.className = 'seq-step';
         graphEl.appendChild(stepEl);
-        msgs.scrollTop = msgs.scrollHeight;
+        scrollIfNearBottom(msgs);
 
         return labels.map(label => createTask(stepEl, label));
     }
@@ -1224,24 +1566,297 @@ function createResponsePlaceholder() {
             responseEl.className = 'agent-response-text';
             responseEl.innerHTML = renderMarkdown(cleaned);
             bubble.appendChild(responseEl);
+
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'agent-copy-btn';
+            copyBtn.textContent = 'Copy';
+            copyBtn.onclick = () => {
+                navigator.clipboard.writeText(cleaned).then(() => {
+                    copyBtn.textContent = 'Copied!';
+                    setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1500);
+                }).catch(() => {});
+            };
+            bubble.appendChild(copyBtn);
         }
         if (actionsCount > 0) div.appendChild(actionsNote(actionsCount));
-        msgs.scrollTop = msgs.scrollHeight;
+        scrollIfNearBottom(msgs);
     }
 
-    return { div, addThinkingTask, addToolStep, addCompactStep, finalize };
+    function addChart(svgHtml) {
+        const wrap = document.createElement('div');
+        wrap.className = 'seq-chart-wrap';
+        wrap.innerHTML = svgHtml; // safe — generated by renderChartSVG, not user input
+        chartsEl.appendChild(wrap);
+        scrollIfNearBottom(msgs);
+    }
+
+    return { div, addThinkingTask, addToolStep, addCompactStep, addChart, finalize };
 }
 
 function setInputState(enabled) {
     const btn   = document.getElementById('agent-action-btn');
     const input = document.getElementById('agent-input');
+    const regen = document.getElementById('agent-regen-btn');
     if (btn) {
         btn.innerHTML = enabled ? '&#9654;&#65038;' : '&#9632;&#65038;';
         btn.title     = enabled ? 'Send' : 'Stop';
         btn.className = enabled ? 'btn btn-success' : 'btn btn-danger';
     }
     if (input) input.disabled = !enabled;
+    if (regen) regen.style.display = (enabled && lastUserMessageText) ? '' : 'none';
 }
+
+// ----------------------------------------
+// History persistence (localStorage)
+// ----------------------------------------
+function saveHistoryToStorage() {
+    try {
+        const gh = JSON.stringify(geminiHistory);
+        const mh = JSON.stringify(mistralHistory);
+        if (gh.length + mh.length < 3_500_000) {
+            localStorage.setItem('db_gh', gh);
+            localStorage.setItem('db_mh', mh);
+            localStorage.setItem('db_lp', lastProvider || '');
+        }
+    } catch {}
+    try {
+        const html = getMessagesEl()?.innerHTML || '';
+        if (html.length < 2_000_000) localStorage.setItem('db_msgs', html);
+    } catch {}
+    saveBlendState();
+}
+
+function loadHistoryFromStorage() {
+    try {
+        const gh = localStorage.getItem('db_gh');
+        const mh = localStorage.getItem('db_mh');
+        const lp = localStorage.getItem('db_lp');
+        if (gh) geminiHistory  = JSON.parse(gh);
+        if (mh) mistralHistory = JSON.parse(mh);
+        if (lp) lastProvider   = lp || null;
+        return geminiHistory.length > 0 || mistralHistory.length > 0;
+    } catch {}
+    return false;
+}
+
+function restoreMessages() {
+    try {
+        const saved = localStorage.getItem('db_msgs');
+        if (!saved) return false;
+        const msgs = getMessagesEl();
+        if (!msgs) return false;
+        msgs.innerHTML = saved;
+        // Detail panels reference closures that no longer exist — clear them to avoid stale DOM
+        msgs.querySelectorAll('.seq-selected-detail').forEach(el => { el.innerHTML = ''; });
+        msgs.scrollTop = msgs.scrollHeight;
+        return true;
+    } catch {}
+    return false;
+}
+
+// Fallback: render a plain text transcript from API history when saved HTML isn't available
+function renderHistoryFallback() {
+    const msgs = getMessagesEl();
+    if (!msgs) return;
+
+    const notice = document.createElement('div');
+    notice.className = 'agent-history-notice';
+    notice.textContent = '↩ Reconstructed from saved context — tool steps not shown.';
+    msgs.appendChild(notice);
+
+    if (geminiHistory.length) {
+        for (const msg of geminiHistory) {
+            const textParts = (msg.parts || []).filter(p => p.text && !p.thought);
+            if (!textParts.length) continue;
+            if (msg.role === 'user' && !(msg.parts || []).some(p => p.functionResponse)) {
+                appendMessage('user', renderMarkdown(textParts.map(p => p.text).join('')));
+            } else if (msg.role === 'model') {
+                const text = cleanResponse(textParts.map(p => p.text).join(''));
+                if (text) appendMessage('model', renderMarkdown(text));
+            }
+        }
+    } else {
+        for (const msg of mistralHistory) {
+            if (msg.role === 'user' && typeof msg.content === 'string') {
+                appendMessage('user', renderMarkdown(msg.content));
+            } else if (msg.role === 'assistant' && typeof msg.content === 'string' && msg.content) {
+                const text = cleanResponse(msg.content);
+                if (text) appendMessage('model', renderMarkdown(text));
+            }
+        }
+    }
+
+    msgs.scrollTop = msgs.scrollHeight;
+}
+
+function clearHistoryStorage() {
+    ['db_gh', 'db_mh', 'db_lp', 'db_msgs'].forEach(k => localStorage.removeItem(k));
+    try {
+        const list = JSON.parse(localStorage.getItem('db_ckpt_list') || '[]');
+        list.forEach(id => localStorage.removeItem(`db_ckpt_${id}`));
+        localStorage.removeItem('db_ckpt_list');
+    } catch {}
+}
+
+// ----------------------------------------
+// Blend state persistence
+// ----------------------------------------
+
+function collectBlendSnapshot() {
+    const allRes = window.getAllResources ? window.getAllResources() : {};
+    const selections = {};
+    for (const [type, items] of Object.entries(allRes)) {
+        const sel = items.filter(r => (r.selected || 0) > 0);
+        if (sel.length) selections[type] = sel.map(r => ({
+            name:   r.objective || r.name    || '',
+            source: r.source    || r.card_set || '',
+            ...(r.resource_id !== undefined && { resource_id: r.resource_id }),
+            count: r.selected
+        }));
+    }
+    const board = {
+        main:          document.querySelector('input[name="mainBoard"]:checked')?.value || 'imperium',
+        choam:         !!document.getElementById('board-choam')?.checked,
+        ix:            !!document.getElementById('board-ix')?.checked,
+        tleilax:       !!document.getElementById('board-tleilax')?.checked,
+        research:      !!document.getElementById('board-research')?.checked,
+        embassy:       !!document.getElementById('board-embassy')?.checked,
+        familyAtomics: !!document.getElementById('board-family-atomics')?.checked,
+    };
+    const overview = {
+        description:      document.getElementById('overview-description')?.value      || '',
+        leader_selection: document.getElementById('overview-leader-selection')?.value || '',
+        house_rules:      document.getElementById('overview-house-rules')?.value      || '',
+    };
+    return { selections, board, overview };
+}
+
+function saveBlendState() {
+    try {
+        localStorage.setItem('db_blend', JSON.stringify(collectBlendSnapshot()));
+    } catch {}
+}
+
+function applyBlendSnapshot({ selections = {}, board = {}, overview = {} } = {}) {
+    suppressInteractionLog = true;
+    try {
+        // Board radios and checkboxes
+        const mainEl = document.getElementById(`board-${board.main || 'imperium'}`);
+        if (mainEl) mainEl.checked = true;
+        const setCheck = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
+        setCheck('board-choam',          board.choam);
+        setCheck('board-ix',             board.ix);
+        setCheck('board-tleilax',        board.tleilax);
+        setCheck('board-research',       board.research);
+        setCheck('board-embassy',        board.embassy);
+        setCheck('board-family-atomics', board.familyAtomics);
+
+        // Overview fields
+        const setText = (id, val) => { if (val !== undefined) { const el = document.getElementById(id); if (el) el.value = val; } };
+        setText('overview-description',      overview.description);
+        setText('overview-leader-selection', overview.leader_selection);
+        setText('overview-house-rules',      overview.house_rules);
+
+        // Clear all current selections, then re-render tables at 0
+        const allRes = window.getAllResources ? window.getAllResources() : {};
+        for (const items of Object.values(allRes)) for (const r of items) r.selected = 0;
+        window.initializeAllTabs?.();
+
+        // Restore selections
+        for (const [type, saved] of Object.entries(selections)) {
+            const pool = allRes[type] || [];
+            for (const s of saved) {
+                const targets = pool.filter(r =>
+                    s.resource_id !== undefined
+                        ? r.resource_id === s.resource_id
+                        : (r.objective || r.name    || '') === s.name &&
+                          (r.source    || r.card_set || '') === s.source
+                );
+                for (const r of targets) {
+                    const name  = r.objective || r.name;
+                    const src   = r.source    || r.card_set || '';
+                    const max   = r.count     || r.count_per_player || 1;
+                    const props = r.resource_id !== undefined ? { resource_id: r.resource_id } : {};
+                    const toAdd = Math.min(s.count, max) - (r.selected || 0);
+                    for (let i = 0; i < toAdd; i++) window.incrementSelected(type, name, src, max, props);
+                }
+            }
+        }
+        for (const type of Object.keys(allRes)) window.updateBadge?.(type);
+        window.updateRequiredSets?.();
+        window.refreshAllStats?.();
+    } catch {}
+    suppressInteractionLog = false;
+}
+
+function restoreBlendState() {
+    try {
+        const raw = localStorage.getItem('db_blend');
+        if (!raw) return;
+        applyBlendSnapshot(JSON.parse(raw));
+    } catch {}
+}
+
+// ----------------------------------------
+// Checkpoints — blend snapshot per message
+// ----------------------------------------
+
+function saveCheckpoint() {
+    const id = Date.now().toString();
+    const ckpt = {
+        blend:      collectBlendSnapshot(),
+        geminiLen:  geminiHistory.length,
+        mistralLen: mistralHistory.length,
+        provider:   lastProvider,
+    };
+    try {
+        localStorage.setItem(`db_ckpt_${id}`, JSON.stringify(ckpt));
+        const list = JSON.parse(localStorage.getItem('db_ckpt_list') || '[]');
+        list.push(id);
+        // Cap at 50 checkpoints
+        if (list.length > 50) {
+            list.splice(0, list.length - 50).forEach(old => localStorage.removeItem(`db_ckpt_${old}`));
+        }
+        localStorage.setItem('db_ckpt_list', JSON.stringify(list));
+    } catch {}
+    return id;
+}
+
+function reloadCheckpoint(ckptId, msgDiv) {
+    if (agentStreaming) return;
+    if (!confirm('Rewind to this checkpoint? This will restore the blend to the state before this message and remove it and all later messages from the chat.')) return;
+    try {
+        const raw = localStorage.getItem(`db_ckpt_${ckptId}`);
+        if (!raw) { alert('Checkpoint data not found.'); return; }
+        const { blend, geminiLen, mistralLen, provider } = JSON.parse(raw);
+
+        // Restore history lengths
+        geminiHistory.length  = geminiLen;
+        mistralHistory.length = mistralLen;
+        if (provider !== undefined) lastProvider = provider;
+        lastUserMessageText = '';
+
+        // Restore blend state
+        applyBlendSnapshot(blend);
+
+        // Remove msgDiv and all following siblings
+        const msgs = getMessagesEl();
+        let el = msgs.lastElementChild;
+        while (el && el !== msgDiv) {
+            const prev = el.previousElementSibling;
+            el.remove();
+            el = prev;
+        }
+        if (msgDiv.parentNode) msgDiv.remove();
+
+        saveHistoryToStorage();
+        updateTokenLabel();
+        setInputState(true);
+    } catch (e) {
+        console.error('[checkpoint] restore failed', e);
+    }
+}
+window.reloadCheckpoint = reloadCheckpoint;
 
 // ----------------------------------------
 // Bidirectional history conversion
@@ -1347,6 +1962,66 @@ function mistralToGemini(history) {
 }
 
 // ----------------------------------------
+// Regenerate
+// ----------------------------------------
+
+// Truncate the current provider's history back to just after the last real user message,
+// removing the model's response and any intervening tool rounds.
+function truncateHistoryToLastUserMessage() {
+    const provider = getProvider();
+    if (provider === 'mistral') {
+        let i = mistralHistory.length - 1;
+        while (i >= 0 && mistralHistory[i].role !== 'user') i--;
+        if (i >= 0) mistralHistory.splice(i + 1);
+    } else {
+        let i = geminiHistory.length - 1;
+        while (i >= 0) {
+            const m = geminiHistory[i];
+            if (m.role === 'user' && !m.parts?.some(p => p.functionResponse)) break;
+            i--;
+        }
+        if (i >= 0) geminiHistory.splice(i + 1);
+    }
+}
+
+async function agentRegenerate() {
+    if (agentStreaming || !lastUserMessageText) return;
+    const apiKey = getActiveApiKey();
+    if (!apiKey) return;
+
+    truncateHistoryToLastUserMessage();
+
+    // Remove the last model message bubble from the DOM
+    const msgs = getMessagesEl();
+    if (msgs?.lastElementChild?.classList.contains('agent-msg-model'))
+        msgs.lastElementChild.remove();
+
+    agentStreaming         = true;
+    setInputState(false);
+    activePlaceholder     = createResponsePlaceholder();
+    activeAbortController = new AbortController();
+    const placeholder     = activePlaceholder;
+    const provider        = getProvider();
+
+    try {
+        const { text: finalText, actionsCount } =
+            provider === 'mistral' ? await runMistralLoop(apiKey, placeholder) :
+                                     await runGeminiLoop(apiKey, placeholder);
+        placeholder.finalize(finalText, actionsCount);
+    } catch (err) {
+        if (err.name === 'AbortError') placeholder.finalize('*(stopped)*', 0);
+        else { placeholder.finalize(`**Error:** ${err.message}`, 0); console.error('[agent]', err); }
+    }
+
+    saveHistoryToStorage();
+    activePlaceholder     = null;
+    activeAbortController = null;
+    agentStreaming        = false;
+    setInputState(true);
+    document.getElementById('agent-input')?.focus();
+}
+
+// ----------------------------------------
 // Main send
 // ----------------------------------------
 async function agentSend() {
@@ -1363,11 +2038,19 @@ async function agentSend() {
     const text  = (input.value || '').trim();
     if (!text) return;
 
-    input.value    = '';
-    agentStreaming = true;
+    input.value          = '';
+    lastUserMessageText  = text;
+    agentStreaming       = true;
     setInputState(false);
 
-    appendMessage('user', renderMarkdown(text));
+    const ckptId    = saveCheckpoint();
+    const userMsgEl = appendMessage('user', renderMarkdown(text));
+    userMsgEl.dataset.checkpointId = ckptId;
+    const ckptBtn = document.createElement('button');
+    ckptBtn.className   = 'agent-ckpt-btn';
+    ckptBtn.textContent = '⏮ Rewind checkpoint';
+    ckptBtn.title       = 'Rewind blend to state before this message and remove this and later messages';
+    userMsgEl.appendChild(ckptBtn);
 
     const provider = getProvider();
 
@@ -1381,10 +2064,15 @@ async function agentSend() {
     }
     lastProvider = provider;
 
+    // Prepend any manual UI changes as context, then reset the log
+    const interactionContext = buildInteractionContext();
+    interactionLog = [];
+    const messageText = interactionContext ? `${interactionContext}${text}` : text;
+
     if (provider === 'mistral') {
-        mistralHistory.push({ role: 'user', content: text });
+        mistralHistory.push({ role: 'user', content: messageText });
     } else {
-        geminiHistory.push({ role: 'user', parts: [{ text }] });
+        geminiHistory.push({ role: 'user', parts: [{ text: messageText }] });
     }
 
     activePlaceholder     = createResponsePlaceholder();
@@ -1405,6 +2093,7 @@ async function agentSend() {
         }
     }
 
+    saveHistoryToStorage();
     activePlaceholder     = null;
     activeAbortController = null;
     agentStreaming        = false;
@@ -1427,19 +2116,76 @@ function agentAction() {
 }
 
 function agentClear() {
-    geminiHistory    = [];
-    mistralHistory   = [];
-    lastProvider     = null;
+    geminiHistory       = [];
+    mistralHistory      = [];
+    lastProvider        = null;
+    lastUserMessageText = '';
+    interactionLog      = [];
     fetchedResourceTypes = new Set();
+    clearHistoryStorage();
     const msgs = getMessagesEl();
     if (msgs) msgs.innerHTML = '';
     updateTokenLabel();
+    setInputState(true);
 }
 
 // ----------------------------------------
 // Init
 // ----------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
+    loadHistoryFromStorage();
+    const messagesRestored = restoreMessages();
+    updateTokenLabel();
+
+    // If history exists but HTML wasn't saved, reconstruct a plain transcript
+    if (!messagesRestored && (geminiHistory.length || mistralHistory.length)) {
+        renderHistoryFallback();
+    }
+
+    // Event delegation for checkpoint buttons — works even after HTML restore
+    getMessagesEl()?.addEventListener('click', e => {
+        const btn = e.target.closest('.agent-ckpt-btn');
+        if (!btn) return;
+        const msgDiv = btn.closest('[data-checkpoint-id]');
+        const ckptId = msgDiv?.dataset.checkpointId;
+        if (ckptId) reloadCheckpoint(ckptId, msgDiv);
+    });
+
+    // Called by initializeAllTabs() — must only run once (initializeAllTabs is called again on clearBlend)
+    window.onBlendReady = () => {
+        window.onBlendReady = null;
+        restoreBlendState();
+
+        // Wrap selection mutators to auto-save and log manual user changes
+        const _inc = window.incrementSelected;
+        const _dec = window.decrementSelected;
+        let blendTimer = null;
+        const schedSave = () => { clearTimeout(blendTimer); blendTimer = setTimeout(saveBlendState, 400); };
+        window.incrementSelected = (...a) => {
+            _inc(...a); schedSave();
+            if (!agentStreaming && !suppressInteractionLog)
+                interactionLog.push(`+1 ${a[1]} (${a[2]}) [${a[0]}]`);
+        };
+        window.decrementSelected = (...a) => {
+            _dec(...a); schedSave();
+            if (!agentStreaming && !suppressInteractionLog)
+                interactionLog.push(`-1 ${a[1]} (${a[2]}) [${a[0]}]`);
+        };
+    };
+
+    // Track board changes the user makes manually
+    ['board-imperium','board-uprising','board-choam','board-ix',
+     'board-tleilax','board-research','board-embassy','board-family-atomics'
+    ].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', ({ target: el }) => {
+            if (agentStreaming || suppressInteractionLog) return;
+            const name = id.replace('board-', '');
+            interactionLog.push(el.type === 'radio'
+                ? `Board: set to ${el.value}`
+                : `Board ${name}: ${el.checked ? 'on' : 'off'}`);
+        });
+    });
+
     const input = document.getElementById('agent-input');
     if (input) {
         input.addEventListener('keydown', e => {
@@ -1454,6 +2200,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (labelEl) labelEl.textContent = getAgentModel();
 });
 
-window.agentSend   = agentSend;
-window.agentClear  = agentClear;
-window.agentAction = agentAction;
+window.agentSend           = agentSend;
+window.agentClear          = agentClear;
+window.agentAction         = agentAction;
+window.agentRegenerate     = agentRegenerate;
+window.saveBlendState      = saveBlendState;
+window.applyBlendSnapshot  = applyBlendSnapshot;
+window.collectBlendSnapshot = collectBlendSnapshot;

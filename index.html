@@ -197,7 +197,6 @@
         /* Access column colors */
         .access-x {
             text-align: center;
-            font-weight: bold;
             color: #0066cc;
             width: 40px !important;
             max-width: 40px !important;
@@ -218,7 +217,6 @@
         /* Affiliation column styling - similar to access but with different sizing */
         .affiliation-x {
             text-align: center;
-            font-weight: bold;
             color: #0066cc;
             padding: 4px 2px !important;
             overflow: hidden;
@@ -587,6 +585,38 @@
             margin-top: 3px;
             padding-left: 2px;
         }
+        .agent-copy-btn {
+            display: inline-block;
+            margin-top: 5px;
+            font-size: 0.71em;
+            padding: 1px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: transparent;
+            color: #aaa;
+            cursor: pointer;
+            line-height: 1.6;
+        }
+        .agent-copy-btn:hover { background: #f5f5f5; color: #555; border-color: #bbb; }
+        .agent-ckpt-btn {
+            display: block;
+            margin-top: 5px;
+            font-size: 0.71em;
+            padding: 1px 8px;
+            border: 1px solid #c8a84b44;
+            border-radius: 4px;
+            background: transparent;
+            color: #b8944488;
+            cursor: pointer;
+            line-height: 1.6;
+        }
+        .agent-ckpt-btn:hover { background: #fdf6e3; color: #8a6a20; border-color: #c8a84b; }
+        .agent-history-notice {
+            text-align: center;
+            padding: 6px 0 2px;
+            color: #bbb;
+            font-size: 0.75em;
+        }
 
         .agent-cursor {
             animation: agent-blink 1s step-end infinite;
@@ -675,6 +705,8 @@
             color: #7a3900;
         }
         .seq-task.seq-compact.seq-done:hover { background: #ffd999; }
+        .seq-stream-latest { color: #0077ff; }
+        .seq-chart-wrap { margin: 6px 0; }
         .seq-live-detail {
             display: flex;
             gap: 6px;
@@ -994,6 +1026,9 @@
                                     <col style="width: 45px;"><!-- Fremen Affiliation -->
                                     <col style="width: 50px;"><!-- Compatibility -->
                                     <col style="width: 35px;"><!-- VPs -->
+                                    <col style="width: 45px;"><!-- DCH Rating -->
+                                    <col style="width: 40px;"><!-- DCH Votes -->
+                                    <col style="width: 40px;"><!-- DCH Tier -->
                                 </colgroup>
                                 <thead class="sticky-top bg-white">
                                     <tr>
@@ -1017,7 +1052,7 @@
                                         </th>
                                         <th colspan="3" class="group-header">Abilities</th>
                                         <th colspan="3" class="group-header">Reveal</th>
-                                        <th colspan="10" class="group-header">Mechanics</th>
+                                        <th colspan="13" class="group-header">Mechanics</th>
                                         <th colspan="8" class="group-header">Access</th>
                                         <th colspan="4" class="group-header">Affiliation</th>
                                         <th rowspan="2" class="resizable sortable" style="width: 80px; cursor: pointer;" onclick="sortResourceTable('imperium', 'compatibility')">
@@ -1026,6 +1061,7 @@
                                         <th rowspan="2" class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('imperium', 'vps_available')">
                                             VPs<div class="resize-handle"></div>
                                         </th>
+                                        <th colspan="3" class="group-header" title="Community ratings from dunecardshub.com">DCH</th>
                                     </tr>
                                     <tr>
                                         <!-- Ability columns -->
@@ -1079,6 +1115,15 @@
                                         <th class="resizable sortable" style="width: 60px; cursor: pointer;" onclick="sortResourceTable('imperium', 'sardaukar')">
                                             Sardaukar<div class="resize-handle"></div>
                                         </th>
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('imperium', 'trash')">
+                                            Trash<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="resizable sortable" style="width: 55px; cursor: pointer;" onclick="sortResourceTable('imperium', 'discard')">
+                                            Discard<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="resizable sortable" style="width: 45px; cursor: pointer;" onclick="sortResourceTable('imperium', 'draw')">
+                                            Draw<div class="resize-handle"></div>
+                                        </th>
                                         <!-- Access columns -->
                                         <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('imperium', 'green_access')">
                                             Green<div class="resize-handle"></div>
@@ -1116,6 +1161,15 @@
                                         </th>
                                         <th class="resizable sortable" style="width: 55px; cursor: pointer;" onclick="sortResourceTable('imperium', 'fremen_affiliation')">
                                             Fremen<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="resizable sortable" style="width: 45px; cursor: pointer;" onclick="sortResourceTable('imperium', 'dch_rating')" title="Community rating 1-5 from dunecardshub.com">
+                                            Rating<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="resizable sortable" style="width: 40px; cursor: pointer;" onclick="sortResourceTable('imperium', 'dch_votes')" title="Number of community votes">
+                                            Votes<div class="resize-handle"></div>
+                                        </th>
+                                        <th class="resizable sortable" style="width: 40px; cursor: pointer;" onclick="sortResourceTable('imperium', 'dch_tier')" title="Community tier (S/A/B/C/D)">
+                                            Tier<div class="resize-handle"></div>
                                         </th>
                                     </tr>
                                 </thead>
@@ -1160,6 +1214,9 @@
                                     <col style="width: 70px;"><!-- Combat -->
                                     <col style="width: 70px;"><!-- Endgame -->
                                     <col style="width: 30px;"><!-- VPs -->
+                                    <col style="width: 45px;"><!-- DCH Rating -->
+                                    <col style="width: 40px;"><!-- DCH Votes -->
+                                    <col style="width: 40px;"><!-- DCH Tier -->
                                 </colgroup>
                                 <thead class="sticky-top bg-white">
                                     <tr>
@@ -1170,9 +1227,10 @@
                                         <th rowspan="2" class="resizable sortable" style="width: 150px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'name')">Name<div class="resize-handle"></div></th>
                                         <th rowspan="2" class="resizable sortable" style="width: 80px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'source')">Set<div class="resize-handle"></div></th>
                                         <th rowspan="2" class="resizable sortable" style="width: 70px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'count')">Count<div class="resize-handle"></div></th>
-                                        <th colspan="7" class="group-header">Mechanics</th>
+                                        <th colspan="10" class="group-header">Mechanics</th>
                                         <th colspan="3" class="group-header">Effects</th>
                                         <th rowspan="2" class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'vps_available')">VPs<div class="resize-handle"></div></th>
+                                        <th colspan="3" class="group-header" title="Community ratings from dunecardshub.com">DCH</th>
                                     </tr>
                                     <tr>
                                         <!-- Mechanics -->
@@ -1183,10 +1241,16 @@
                                         <th class="resizable sortable" style="width: 60px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'sandworms')">Sandworms<div class="resize-handle"></div></th>
                                         <th class="resizable sortable" style="width: 60px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'contracts')">Contracts<div class="resize-handle"></div></th>
                                         <th class="resizable sortable" style="width: 60px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'sardaukar')">Sardaukar<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 50px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'trash')">Trash<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 55px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'discard')">Discard<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 45px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'draw')">Draw<div class="resize-handle"></div></th>
                                         <!-- Effects -->
                                         <th class="resizable sortable" style="width: 100px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'plot_effect')">Plot<div class="resize-handle"></div></th>
                                         <th class="resizable sortable" style="width: 100px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'combat_effect')">Combat<div class="resize-handle"></div></th>
                                         <th class="resizable sortable" style="width: 100px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'endgame_effect')">Endgame<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 45px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'dch_rating')" title="Community rating 1-5">Rating<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 40px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'dch_votes')" title="Number of votes">Votes<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="width: 40px; cursor: pointer;" onclick="sortResourceTable('intrigue', 'dch_tier')" title="Community tier (S/A/B/C/D)">Tier<div class="resize-handle"></div></th>
                                     </tr>
                                 </thead>
                                 <tbody id="intrigue-tbody"></tbody>
@@ -1701,9 +1765,10 @@
                 <div id="agent-messages"></div>
                 <div class="agent-input-row">
                     <textarea id="agent-input" rows="2" placeholder="Ask about Dune: Imperium rules, cards, or say "build me a blend with Uprising"… (Enter to send, Shift+Enter for newline)"></textarea>
-                    <div class="d-flex flex-column align-items-center">
+                    <div class="d-flex flex-column align-items-center gap-1">
                         <button id="agent-action-btn" class="btn btn-success" onclick="agentAction()" title="Send">&#9654;&#65038;</button>
-                        <span id="agent-token-label" class="text-muted" style="font-size:0.6rem;line-height:1.2;margin-top:2px;white-space:nowrap"></span>
+                        <span id="agent-token-label" class="text-muted" style="font-size:0.6rem;line-height:1.2;white-space:nowrap"></span>
+                        <button id="agent-regen-btn" class="btn btn-outline-secondary" onclick="agentRegenerate()" title="Regenerate last response" style="display:none;font-size:0.8rem;padding:1px 7px;line-height:1.5">↺</button>
                     </div>
                 </div>
                 <small class="text-muted mt-1 d-block">The agent knows your current blend and can modify it. Requires an API key from the model provider.</small>
@@ -2441,7 +2506,7 @@
                         stats.imperium.bySets[set] = (stats.imperium.bySets[set] || 0) + count;
 
                         // Mechanics
-                        const mechanicFields = ['tech', 'shipping', 'unload', 'infiltration', 'research', 'grafting', 'spies', 'sandworms', 'contracts', 'sardaukar'];
+                        const mechanicFields = ['tech', 'shipping', 'unload', 'infiltration', 'research', 'grafting', 'spies', 'sandworms', 'contracts', 'sardaukar', 'trash', 'discard', 'draw'];
                         mechanicFields.forEach(field => {
                             if (fullResource[field] && fullResource[field] !== '0' && fullResource[field] !== '0.0') {
                                 stats.imperium.mechanics[field] = (stats.imperium.mechanics[field] || 0) + count;
@@ -2474,7 +2539,7 @@
                         const set = fullResource.source || 'Unknown';
                         stats.intrigue.bySets[set] = (stats.intrigue.bySets[set] || 0) + count;
 
-                        const mechanicFields = ['tech', 'shipping', 'research', 'spies', 'sandworms', 'contracts', 'sardaukar'];
+                        const mechanicFields = ['tech', 'shipping', 'research', 'spies', 'sandworms', 'contracts', 'sardaukar', 'trash', 'discard', 'draw'];
                         mechanicFields.forEach(field => {
                             if (fullResource[field] && fullResource[field] !== '0' && fullResource[field] !== '0.0') {
                                 stats.intrigue.mechanics[field] = (stats.intrigue.mechanics[field] || 0) + count;
@@ -2584,6 +2649,9 @@
 
             // Initial update of required sets (Board tab is active by default)
             updateRequiredSets();
+
+            // Notify agent.js that resources are ready (triggers blend restore + auto-save setup)
+            window.onBlendReady?.();
         }
 
         function initializeTab(type) {
@@ -3027,6 +3095,9 @@
                     <td class="compact">${card.sandworms || ''}</td>
                     <td class="compact">${card.contracts || ''}</td>
                     <td class="compact">${card.sardaukar || ''}</td>
+                    <td class="compact">${card.trash || ''}</td>
+                    <td class="compact">${card.discard || ''}</td>
+                    <td class="compact">${card.draw || ''}</td>
                     <td class="access-x access-green">${hasX(card.green_access) ? 'X' : ''}</td>
                     <td class="access-x access-purple">${hasX(card.purple_access) ? 'X' : ''}</td>
                     <td class="access-x access-yellow">${hasX(card.yellow_access) ? 'X' : ''}</td>
@@ -3041,6 +3112,9 @@
                     <td class="affiliation-x access-fremen" style="width: 55px !important;">${hasX(card.fremen_affiliation) ? 'X' : ''}</td>
                     <td class="compact">${card.compatibility || 'All'}</td>
                     <td class="compact">${card.vps_available && parseFloat(card.vps_available) !== 0 && !isNaN(parseFloat(card.vps_available)) ? card.vps_available : ''}</td>
+                    <td class="compact" title="${card.dch_rating ? 'Rating: ' + card.dch_rating + '/5 (' + (card.dch_votes || 0) + ' votes) — dunecardshub.com' : ''}">${card.dch_rating || ''}</td>
+                    <td class="compact" title="${card.dch_votes ? card.dch_votes + ' community votes — dunecardshub.com' : ''}">${card.dch_votes || ''}</td>
+                    <td class="compact" style="font-weight: bold; ${card.dch_tier === 'S' ? 'color:#b5880a' : card.dch_tier === 'A' ? 'color:#2a7a2a' : card.dch_tier === 'B' ? 'color:#1a5fa0' : card.dch_tier === 'C' ? 'color:#888' : card.dch_tier === 'D' ? 'color:#c0392b' : ''}" title="${card.dch_tier === 'S' ? 'S: Once Bought, more likely to win' : card.dch_tier === 'A' ? 'A: Always want to have in deck' : card.dch_tier === 'B' ? 'B: Don\'t hate to have in deck' : card.dch_tier === 'C' ? 'C: Indifferent' : card.dch_tier === 'D' ? 'D: Feels bad' : ''}">${card.dch_tier || ''}</td>
                 `;
 
                 tbody.appendChild(tr);
@@ -3089,10 +3163,16 @@
                     <td class="compact" style="max-width: 50px !important;">${card.sandworms || ''}</td>
                     <td class="compact" style="max-width: 50px !important;">${card.contracts || ''}</td>
                     <td class="compact" style="max-width: 50px !important;">${card.sardaukar || ''}</td>
+                    <td class="compact" style="max-width: 50px !important;">${card.trash || ''}</td>
+                    <td class="compact" style="max-width: 50px !important;">${card.discard || ''}</td>
+                    <td class="compact" style="max-width: 50px !important;">${card.draw || ''}</td>
                     <td title="${card.plot_effect || ''}">${truncate(card.plot_effect || '', 50)}</td>
                     <td title="${card.combat_effect || ''}">${truncate(card.combat_effect || '', 50)}</td>
                     <td title="${card.endgame_effect || ''}">${truncate(card.endgame_effect || '', 50)}</td>
                     <td class="compact">${card.vps_available && parseFloat(card.vps_available) !== 0 && !isNaN(parseFloat(card.vps_available)) ? card.vps_available : ''}</td>
+                    <td class="compact" style="max-width: 50px !important;" title="${card.dch_rating ? 'Rating: ' + card.dch_rating + '/5 (' + (card.dch_votes || 0) + ' votes) — dunecardshub.com' : ''}">${card.dch_rating || ''}</td>
+                    <td class="compact" style="max-width: 50px !important;" title="${card.dch_votes ? card.dch_votes + ' community votes — dunecardshub.com' : ''}">${card.dch_votes || ''}</td>
+                    <td class="compact" style="max-width: 50px !important; font-weight: bold; ${card.dch_tier === 'S' ? 'color:#b5880a' : card.dch_tier === 'A' ? 'color:#2a7a2a' : card.dch_tier === 'B' ? 'color:#1a5fa0' : card.dch_tier === 'C' ? 'color:#888' : card.dch_tier === 'D' ? 'color:#c0392b' : ''}" title="${card.dch_tier === 'S' ? 'S: Once Bought, more likely to win' : card.dch_tier === 'A' ? 'A: Always want to have in deck' : card.dch_tier === 'B' ? 'B: Don\'t hate to have in deck' : card.dch_tier === 'C' ? 'C: Indifferent' : card.dch_tier === 'D' ? 'D: Feels bad' : ''}">${card.dch_tier || ''}</td>
                 `;
 
                 tbody.appendChild(tr);
@@ -3772,7 +3852,7 @@
                 byCosts[costKey] = (byCosts[costKey] || 0) + count;
 
                 // Count mechanics
-                const mechanicFields = ['tech', 'shipping', 'unload', 'infiltration', 'research', 'grafting', 'spies', 'sandworms', 'contracts', 'sardaukar'];
+                const mechanicFields = ['tech', 'shipping', 'unload', 'infiltration', 'research', 'grafting', 'spies', 'sandworms', 'contracts', 'sardaukar', 'trash', 'discard', 'draw'];
                 mechanicFields.forEach(field => {
                     if (c[field] && c[field] !== '0' && c[field] !== '0.0') {
                         mechanics[field] = (mechanics[field] || 0) + count;
@@ -3921,7 +4001,7 @@
                 bySets[set] = (bySets[set] || 0) + count;
 
                 // Count mechanics
-                const mechanicFields = ['tech', 'shipping', 'research', 'spies', 'sandworms', 'contracts', 'sardaukar'];
+                const mechanicFields = ['tech', 'shipping', 'research', 'spies', 'sandworms', 'contracts', 'sardaukar', 'trash', 'discard', 'draw'];
                 mechanicFields.forEach(field => {
                     if (c[field] && c[field] !== '0' && c[field] !== '0.0') {
                         mechanics[field] = (mechanics[field] || 0) + count;
@@ -4497,10 +4577,17 @@
             if (!confirm('Clear all selected resources?')) return;
 
             // Clear Overview fields
-            const descField = document.getElementById('overview-description');
-            const rulesField = document.getElementById('overview-house-rules');
-            if (descField) descField.value = '';
-            if (rulesField) rulesField.value = '';
+            ['overview-description', 'overview-leader-selection', 'overview-house-rules'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+
+            // Reset board to default (imperium, no additional boards)
+            const defaultBoard = document.getElementById('board-imperium');
+            if (defaultBoard) defaultBoard.checked = true;
+            document.querySelectorAll('#board-panel input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+            updateRequiredSets();
+            refreshAllStats();
 
             // Reset all selected counts to 0
             for (let type in allResources) {
@@ -4517,6 +4604,9 @@
                 updateBadge(type);
                 updateStatsForType(type);
             }
+
+            // Persist the cleared state so page reload doesn't restore old blend
+            if (window.saveBlendState) window.saveBlendState();
         }
         window.clearBlend = clearBlend; // Ensure global access
 
@@ -5297,21 +5387,28 @@
             }
 
             // Update the filename field with the loaded blend's filename
-            document.getElementById('blendName').value = filename;
+            if (filename) {
+                const blendNameEl = document.getElementById('blendName');
+                if (blendNameEl) blendNameEl.value = filename;
+            }
+
+            // Persist to agent cache so checkpoints and page-reload restore reflect loaded blend
+            if (window.saveBlendState) window.saveBlendState();
 
             // Update required sets display (in case Board tab is currently open)
             updateRequiredSets();
 
             // Deferred resize of Overview textareas (in case tab was hidden during load)
             setTimeout(() => {
-                const descField = document.getElementById('overview-description');
-                const leaderField = document.getElementById('overview-leader-selection');
-                const rulesField = document.getElementById('overview-house-rules');
-                if (descField) autoResizeTextarea(descField);
-                if (leaderField) autoResizeTextarea(leaderField);
-                if (rulesField) autoResizeTextarea(rulesField);
+                ['overview-description', 'overview-leader-selection', 'overview-house-rules'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) autoResizeTextarea(el);
+                });
             }, 100);
         }
+
+        // Expose so agent.js can call the same load path as the UI button
+        window.loadParsedBlendData = loadParsedBlendData;
 
         function loadBlendFromServer(filename) {
             loadBlend(filename)
@@ -6345,7 +6442,7 @@
             if (imp.length) {
                 const total = imp.reduce((s, c) => s + c.selected, 0);
                 const costs = {}, mechanics = {}, affiliation = {};
-                const mechanicFields = ['tech','shipping','unload','infiltration','research','grafting','spies','sandworms','contracts','sardaukar'];
+                const mechanicFields = ['tech','shipping','unload','infiltration','research','grafting','spies','sandworms','contracts','sardaukar','trash','discard','draw'];
                 const affiliationFields = ['emperor_affiliation','spacing_guild_affiliation','bene_gesserit_affiliation','fremen_affiliation'];
                 imp.forEach(c => {
                     const n = c.selected;
@@ -6369,7 +6466,7 @@
             if (intr.length) {
                 const total = intr.reduce((s, c) => s + c.selected, 0);
                 const mechanics = {};
-                const mechanicFields = ['tech','shipping','research','spies','sandworms','contracts','sardaukar'];
+                const mechanicFields = ['tech','shipping','research','spies','sandworms','contracts','sardaukar','trash','discard','draw'];
                 intr.forEach(c => { const n = c.selected; mechanicFields.forEach(f => { if (c[f] && c[f] !== '0' && c[f] !== '0.0') mechanics[f] = (mechanics[f] || 0) + n; }); });
                 result.intrigue = { total, mechanic_pct: Object.fromEntries(Object.entries(mechanics).map(([k,v]) => [k, pct(v,total)])) };
             }
