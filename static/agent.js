@@ -18,7 +18,7 @@ function gcTrack(path, title) {
 //   • Vercel / local server     → use relative path
 const SEARCH_WORKER_URL = (() => {
     const h = window.location.hostname;
-    if (h.endsWith('github.io')) return 'https://duneblend.vercel.app/api/search';
+    if (h.endsWith('github.io')) return 'https://dune-blend.vercel.app/api/search';
     // On Vercel or local server the api/ route is available at relative path
     return '/api/search';
 })();
