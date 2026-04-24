@@ -11,10 +11,14 @@ import os
 import ssl
 import socket
 import threading
+import urllib.request
+import urllib.parse as urlparse_module
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 from email import message_from_bytes
 from io import BytesIO
+
+SEARXNG_INSTANCE = 'https://searx.be'
 
 HTTP_PORT = 5000
 HTTPS_PORT = 5443
@@ -37,10 +41,22 @@ class BlendServerHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Expires', '0')
         super().end_headers()
 
+    def do_OPTIONS(self):
+        """Handle CORS preflight."""
+        self.send_response(204)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+        self.end_headers()
+
     def do_GET(self):
         """Handle GET requests - serve files and list blends."""
         try:
             parsed = urlparse(self.path)
+
+            if parsed.path == '/api/search':
+                self.handle_search(parsed)
+                return
 
             if parsed.path == '/api/blends':
                 result = self.list_blends()
@@ -102,6 +118,45 @@ class BlendServerHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_error(500, f"Internal server error: {str(e)}")
             except:
                 pass
+
+    def handle_search(self, parsed):
+        """Proxy web search via SearXNG or fetch a URL."""
+        params = parse_qs(parsed.query)
+        query    = params.get('q',   [None])[0]
+        fetch_url = params.get('url', [None])[0]
+        try:
+            if query:
+                search_url = (f"{SEARXNG_INSTANCE}/search"
+                              f"?q={urlparse_module.quote(query)}&format=json&language=en")
+                req = urllib.request.Request(search_url,
+                    headers={'User-Agent': 'DuneBlend/1.0'})
+                with urllib.request.urlopen(req, timeout=10) as r:
+                    data = json.loads(r.read().decode())
+                results = [
+                    {'title': x.get('title',''), 'url': x.get('url',''), 'snippet': x.get('content','')}
+                    for x in (data.get('results') or [])[:6]
+                ]
+                self.send_json_response({'results': results})
+                return
+            if fetch_url:
+                req = urllib.request.Request(fetch_url,
+                    headers={'User-Agent': 'Mozilla/5.0 (compatible; DuneBlend/1.0)'})
+                with urllib.request.urlopen(req, timeout=10) as r:
+                    html = r.read().decode('utf-8', errors='replace')
+                import re
+                text = re.sub(r'<script[\s\S]*?</script>', '', html, flags=re.IGNORECASE)
+                text = re.sub(r'<style[\s\S]*?</style>', '', text, flags=re.IGNORECASE)
+                text = re.sub(r'<[^>]+>', ' ', text)
+                text = re.sub(r'\s{2,}', ' ', text).strip()[:8000]
+                self.send_response(200)
+                self.send_header('Content-Type', 'text/plain')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(text.encode('utf-8'))
+                return
+            self.send_json_response({'error': 'Provide ?q= for search or ?url= to fetch a page.'}, 400)
+        except Exception as e:
+            self.send_json_response({'error': str(e)}, 502)
 
     def send_json_response(self, data, status=200):
         """Send JSON response."""

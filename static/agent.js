@@ -13,7 +13,15 @@ function gcTrack(path, title) {
 
 // Set this to your deployed Cloudflare Worker URL, e.g.:
 // 'https://duneblend-search.YOUR-SUBDOMAIN.workers.dev'
-const SEARCH_WORKER_URL = '';
+// Auto-detect search proxy URL:
+//   • GitHub Pages (*.github.io) → call the Vercel deployment
+//   • Vercel / local server     → use relative path
+const SEARCH_WORKER_URL = (() => {
+    const h = window.location.hostname;
+    if (h.endsWith('github.io')) return 'https://duneblend.vercel.app/api/search';
+    // On Vercel or local server the api/ route is available at relative path
+    return '/api/search';
+})();
 
 // ----------------------------------------
 // Session state  (reset on agentClear)
