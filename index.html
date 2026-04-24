@@ -571,7 +571,10 @@
             word-break: break-all;
             margin: 0;
             font-family: monospace;
+            -webkit-user-select: text;
+            user-select: text;
         }
+        .step-content-pre::-webkit-copy-button { display: none; }
         .step-timer {
             font-variant-numeric: tabular-nums;
             margin-left: 0.1em;
