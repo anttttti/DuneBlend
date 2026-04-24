@@ -585,32 +585,27 @@
             margin-top: 3px;
             padding-left: 2px;
         }
-        .agent-copy-btn {
-            display: inline-block;
-            margin-top: 5px;
-            font-size: 0.71em;
-            padding: 1px 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background: transparent;
-            color: #aaa;
-            cursor: pointer;
-            line-height: 1.6;
+        .agent-ckpt-row {
+            display: flex;
+            gap: 4px;
+            margin-top: -0.6rem;
+            margin-bottom: 1px;
         }
-        .agent-copy-btn:hover { background: #f5f5f5; color: #555; border-color: #bbb; }
         .agent-ckpt-btn {
-            display: block;
-            margin-top: 5px;
+            display: inline-block;
             font-size: 0.71em;
             padding: 1px 8px;
-            border: 1px solid #c8a84b44;
-            border-radius: 4px;
+            border: 1px solid #c8a84b;
+            border-radius: 4px 4px 0 0;
+            border-bottom: none;
             background: transparent;
-            color: #b8944488;
+            color: #8a6a20;
             cursor: pointer;
             line-height: 1.6;
         }
-        .agent-ckpt-btn:hover { background: #fdf6e3; color: #8a6a20; border-color: #c8a84b; }
+        .agent-ckpt-btn:hover { background: #fdf6e3; color: #5a4010; border-color: #8a6a20; border-bottom: none; }
+        .agent-ckpt-btn[data-action="rerun"] { border-color: #4b88c8; color: #1a5a8a; }
+        .agent-ckpt-btn[data-action="rerun"]:hover { background: #e8f4fd; color: #0a3a6a; border-color: #2a68a8; }
         .agent-history-notice {
             text-align: center;
             padding: 6px 0 2px;
@@ -1901,6 +1896,14 @@
                                     </td>
                                     <td class="py-1">
                                         <input type="text" class="form-control form-control-sm font-monospace" id="openaiApiKeyInput" placeholder="sk-…">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="ps-0 align-middle py-1" style="white-space:nowrap">
+                                        <a href="https://brave.com/search/api/" target="_blank">Brave Search</a>
+                                    </td>
+                                    <td class="py-1">
+                                        <input type="text" class="form-control form-control-sm font-monospace" id="braveApiKeyInput" placeholder="BSA…">
                                     </td>
                                 </tr>
                             </tbody>
@@ -5872,6 +5875,7 @@
                 document.getElementById('agentModelSelect').value = localStorage.getItem('agentModel') || 'gemma-4-31b-it';
                 document.getElementById('mistralApiKeyInput').value = localStorage.getItem('mistralApiKey') || '';
                 document.getElementById('openaiApiKeyInput').value = localStorage.getItem('openaiApiKey') || '';
+                document.getElementById('braveApiKeyInput').value = localStorage.getItem('braveApiKey') || '';
                 apiKeyModal.show();
             }, photoScanModal ? 300 : 0); // Wait for transition if modal was open
         }
@@ -5882,6 +5886,7 @@
             const agentModel = document.getElementById('agentModelSelect').value;
             const mistralKey = document.getElementById('mistralApiKeyInput').value.trim();
             const openaiKey  = document.getElementById('openaiApiKeyInput').value.trim();
+            const braveKey   = document.getElementById('braveApiKeyInput').value.trim();
 
             if (apiKey) {
                 // Validate API key format (should start with AIza)
@@ -5900,12 +5905,17 @@
             if (openaiKey) {
                 localStorage.setItem('openaiApiKey', openaiKey);
             }
+            if (braveKey) {
+                localStorage.setItem('braveApiKey', braveKey);
+            } else {
+                localStorage.removeItem('braveApiKey'); // fall back to default
+            }
             if (agentModel) {
                 localStorage.setItem('agentModel', agentModel);
                 const labelEl = document.getElementById('agent-model-label');
                 if (labelEl) labelEl.textContent = agentModel;
             }
-            if (apiKey || mistralKey || openaiKey) {
+            if (apiKey || mistralKey || openaiKey || braveKey || agentModel) {
 
                 // Close API key modal
                 const apiKeyModalEl = document.getElementById('apiKeyModal');

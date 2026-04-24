@@ -11,17 +11,7 @@ function gcTrack(path, title) {
     try { window.goatcounter?.count({ path, title, event: true }); } catch {}
 }
 
-// Set this to your deployed Cloudflare Worker URL, e.g.:
-// 'https://duneblend-search.YOUR-SUBDOMAIN.workers.dev'
-// Auto-detect search proxy URL:
-//   • GitHub Pages (*.github.io) → call the Vercel deployment
-//   • Vercel / local server     → use relative path
-const SEARCH_WORKER_URL = (() => {
-    const h = window.location.hostname;
-    if (h.endsWith('github.io')) return 'https://dune-blend.vercel.app/api/search';
-    // On Vercel or local server the api/ route is available at relative path
-    return '/api/search';
-})();
+const SEARCH_PROXY_URL = 'https://duneblend.antti-puurula.workers.dev';
 
 // ----------------------------------------
 // Session state  (reset on agentClear)
@@ -261,14 +251,12 @@ const RENDER_CHART_PARAMETERS = {
     required: ['type', 'labels', 'datasets']
 };
 
-const SEARCH_TOOLS_GEMINI  = SEARCH_WORKER_URL ? [
+const SEARCH_TOOLS_GEMINI  = SEARCH_PROXY_URL ? [
     { name: 'web_search', description: WEB_SEARCH_DESCRIPTION, parameters: WEB_SEARCH_PARAMETERS },
-    { name: 'fetch_url',  description: FETCH_URL_DESCRIPTION,  parameters: FETCH_URL_PARAMETERS  },
 ] : [];
 
-const SEARCH_TOOLS_MISTRAL = SEARCH_WORKER_URL ? [
+const SEARCH_TOOLS_MISTRAL = SEARCH_PROXY_URL ? [
     { type: 'function', function: { name: 'web_search', description: WEB_SEARCH_DESCRIPTION, parameters: WEB_SEARCH_PARAMETERS } },
-    { type: 'function', function: { name: 'fetch_url',  description: FETCH_URL_DESCRIPTION,  parameters: FETCH_URL_PARAMETERS  } },
 ] : [];
 
 // Gemini format
@@ -498,27 +486,19 @@ async function executeToolAsync(name, args) {
 
     if (name === 'web_search') {
         gcTrack('/agent/search/web', 'Agent web search');
-        if (!SEARCH_WORKER_URL) return { error: 'Search worker not configured.' };
+        if (!SEARCH_PROXY_URL) return { error: 'Search proxy not configured.' };
+        const userKey = localStorage.getItem('braveApiKey');
+        const headers = {};
+        if (userKey) headers['X-Brave-Key'] = userKey;
         try {
-            const resp = await fetch(`${SEARCH_WORKER_URL}?q=${encodeURIComponent(args.query)}`, {
-                signal: activeAbortController?.signal
-            });
+            const resp = await fetch(
+                `${SEARCH_PROXY_URL}?q=${encodeURIComponent(args.query)}`,
+                { headers, signal: activeAbortController?.signal }
+            );
+            if (!resp.ok) return { error: `Search returned HTTP ${resp.status}` };
             return await resp.json();
         } catch (e) {
             return { error: `Search failed: ${e.message}` };
-        }
-    }
-
-    if (name === 'fetch_url') {
-        if (!SEARCH_WORKER_URL) return { error: 'Search worker not configured.' };
-        try {
-            const resp = await fetch(`${SEARCH_WORKER_URL}?url=${encodeURIComponent(args.url)}`, {
-                signal: activeAbortController?.signal
-            });
-            const text = await resp.text();
-            return { content: text };
-        } catch (e) {
-            return { error: `Fetch failed: ${e.message}` };
         }
     }
 
@@ -729,10 +709,12 @@ Always count **physical copies**, not unique entries. A selection string "2× Ca
    Use get_blend_statistics for percentages — never calculate them yourself.
 3. Use get_blend to read saved blends (list first, then open by exact filename).
    Each line in a blend file: \`[N×] Resource Name (Expansion)\` — N× means N copies.
-4. Use wikipedia_search to look up lore, rules, card details, or Dune universe information.${SEARCH_WORKER_URL ? `
-5. Use web_search to find current information about Dune: Imperium cards, rules, or strategy.
-   Use fetch_url to read a specific page from search results.` : `
-   Note: web_search and fetch_url are NOT available in this deployment. Do not mention them.`}
+4. Use wikipedia_search to look up lore, rules, card details, or Dune universe information.${SEARCH_PROXY_URL ? `
+5. Use web_search to find current information about Dune: Imperium cards, rules, or strategy.` : ''}
+
+## Honesty
+- Never hallucinate card names, rules, or statistics. Only state facts you can verify with your tools or are certain of.
+- If you lack the context or tools to give a confident answer, search for more information, explore the current tools, and finally ask the user for more information if needed.
 `;
 }
 
@@ -1622,16 +1604,6 @@ function createResponsePlaceholder() {
             responseEl.innerHTML = renderMarkdown(cleaned);
             bubble.appendChild(responseEl);
 
-            const copyBtn = document.createElement('button');
-            copyBtn.className = 'agent-copy-btn';
-            copyBtn.textContent = 'Copy';
-            copyBtn.onclick = () => {
-                navigator.clipboard.writeText(cleaned).then(() => {
-                    copyBtn.textContent = 'Copied!';
-                    setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1500);
-                }).catch(() => {});
-            };
-            bubble.appendChild(copyBtn);
         }
         if (actionsCount > 0) div.appendChild(actionsNote(actionsCount));
         scrollIfNearBottom(msgs);
@@ -1856,13 +1828,14 @@ function restoreBlendState() {
 // Checkpoints — blend snapshot per message
 // ----------------------------------------
 
-function saveCheckpoint() {
+function saveCheckpoint(userText = '') {
     const id = Date.now().toString();
     const ckpt = {
         blend:      collectBlendSnapshot(),
         geminiLen:  geminiHistory.length,
         mistralLen: mistralHistory.length,
         provider:   lastProvider,
+        userText,
     };
     try {
         localStorage.setItem(`db_ckpt_${id}`, JSON.stringify(ckpt));
@@ -1894,7 +1867,7 @@ function reloadCheckpoint(ckptId, msgDiv) {
         // Restore blend state
         applyBlendSnapshot(blend);
 
-        // Remove msgDiv and all following siblings
+        // Remove ckptRow, the user message above it, and all following siblings
         const msgs = getMessagesEl();
         let el = msgs.lastElementChild;
         while (el && el !== msgDiv) {
@@ -1902,7 +1875,9 @@ function reloadCheckpoint(ckptId, msgDiv) {
             el.remove();
             el = prev;
         }
+        const userMsgEl = msgDiv.previousElementSibling;
         if (msgDiv.parentNode) msgDiv.remove();
+        if (userMsgEl?.parentNode) userMsgEl.remove();
 
         saveHistoryToStorage();
         updateTokenLabel();
@@ -1912,6 +1887,47 @@ function reloadCheckpoint(ckptId, msgDiv) {
     }
 }
 window.reloadCheckpoint = reloadCheckpoint;
+
+function rerunCheckpoint(ckptId, msgDiv) {
+    if (agentStreaming) return;
+    try {
+        const raw = localStorage.getItem(`db_ckpt_${ckptId}`);
+        if (!raw) { alert('Checkpoint data not found.'); return; }
+        const { blend, geminiLen, mistralLen, provider, userText } = JSON.parse(raw);
+        if (!userText) { alert('No message text saved in this checkpoint.'); return; }
+
+        // Restore history and blend state (same as rewind)
+        geminiHistory.length  = geminiLen;
+        mistralHistory.length = mistralLen;
+        if (provider !== undefined) lastProvider = provider;
+        lastUserMessageText = '';
+        applyBlendSnapshot(blend);
+
+        // Remove ckptRow, the user message above it, and all following siblings
+        const msgs = getMessagesEl();
+        let el = msgs.lastElementChild;
+        while (el && el !== msgDiv) {
+            const prev = el.previousElementSibling;
+            el.remove();
+            el = prev;
+        }
+        const userMsgEl = msgDiv.previousElementSibling;
+        if (msgDiv.parentNode) msgDiv.remove();
+        if (userMsgEl?.parentNode) userMsgEl.remove();
+
+        saveHistoryToStorage();
+        updateTokenLabel();
+        setInputState(true);
+
+        // Re-send the original message
+        const input = document.getElementById('agent-input');
+        if (input) input.value = userText;
+        agentSend();
+    } catch (e) {
+        console.error('[checkpoint] rerun failed', e);
+    }
+}
+window.rerunCheckpoint = rerunCheckpoint;
 
 // ----------------------------------------
 // Bidirectional history conversion
@@ -2100,14 +2116,24 @@ async function agentSend() {
 
     gcTrack('/agent/message', 'Agent message sent');
 
-    const ckptId    = saveCheckpoint();
+    const ckptId    = saveCheckpoint(text);
     const userMsgEl = appendMessage('user', renderMarkdown(text));
     userMsgEl.dataset.checkpointId = ckptId;
-    const ckptBtn = document.createElement('button');
-    ckptBtn.className   = 'agent-ckpt-btn';
-    ckptBtn.textContent = '⏮ Rewind checkpoint';
-    ckptBtn.title       = 'Rewind blend to state before this message and remove this and later messages';
-    userMsgEl.appendChild(ckptBtn);
+    const ckptRow = document.createElement('div');
+    ckptRow.className = 'agent-ckpt-row';
+    const rewindBtn = document.createElement('button');
+    rewindBtn.className      = 'agent-ckpt-btn';
+    rewindBtn.dataset.action = 'rewind';
+    rewindBtn.textContent    = '⏮ Rewind checkpoint';
+    rewindBtn.title          = 'Rewind blend to state before this message and remove this and later messages';
+    const rerunBtn = document.createElement('button');
+    rerunBtn.className       = 'agent-ckpt-btn';
+    rerunBtn.dataset.action  = 'rerun';
+    rerunBtn.textContent     = '↺ Rerun checkpoint';
+    rerunBtn.title           = 'Rewind to this checkpoint and re-send the message with the current model';
+    ckptRow.appendChild(rewindBtn);
+    ckptRow.appendChild(rerunBtn);
+    getMessagesEl().appendChild(ckptRow);
 
     const provider = getProvider();
 
@@ -2206,7 +2232,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!btn) return;
         const msgDiv = btn.closest('[data-checkpoint-id]');
         const ckptId = msgDiv?.dataset.checkpointId;
-        if (ckptId) reloadCheckpoint(ckptId, msgDiv);
+        if (!ckptId) return;
+        if (btn.dataset.action === 'rerun') rerunCheckpoint(ckptId, msgDiv);
+        else reloadCheckpoint(ckptId, msgDiv);
     });
 
     // Called by initializeAllTabs() — must only run once (initializeAllTabs is called again on clearBlend)
