@@ -213,6 +213,20 @@ const FETCH_URL_PARAMETERS  = {
     required: ['url']
 };
 
+const RULEBOOK_DESCRIPTION = 'Fetch the official rulebook text for a Dune: Imperium game or expansion. ' +
+    'Available keys: rules/base, rules/faq, rules/rise-of-ix, rules/immortality, rules/uprising, rules/uprising-supplements, rules/bloodlines.';
+const RULEBOOK_PARAMETERS = {
+    type: 'object',
+    properties: {
+        key: {
+            type: 'string',
+            enum: ['rules/base', 'rules/faq', 'rules/rise-of-ix', 'rules/immortality', 'rules/uprising', 'rules/uprising-supplements', 'rules/bloodlines'],
+            description: 'The rulebook key to fetch.'
+        }
+    },
+    required: ['key']
+};
+
 const WIKIPEDIA_DESCRIPTION =
     'Search Wikipedia and return the plain-text summary of the best matching article. ' +
     'Use this for lore, rules clarifications, card names, or any factual question.';
@@ -252,11 +266,15 @@ const RENDER_CHART_PARAMETERS = {
 };
 
 const SEARCH_TOOLS_GEMINI  = SEARCH_PROXY_URL ? [
-    { name: 'web_search', description: WEB_SEARCH_DESCRIPTION, parameters: WEB_SEARCH_PARAMETERS },
+    { name: 'web_search',   description: WEB_SEARCH_DESCRIPTION, parameters: WEB_SEARCH_PARAMETERS },
+    { name: 'fetch_url',    description: FETCH_URL_DESCRIPTION,  parameters: FETCH_URL_PARAMETERS  },
+    { name: 'fetch_rulebook', description: RULEBOOK_DESCRIPTION, parameters: RULEBOOK_PARAMETERS   },
 ] : [];
 
 const SEARCH_TOOLS_MISTRAL = SEARCH_PROXY_URL ? [
-    { type: 'function', function: { name: 'web_search', description: WEB_SEARCH_DESCRIPTION, parameters: WEB_SEARCH_PARAMETERS } },
+    { type: 'function', function: { name: 'web_search',     description: WEB_SEARCH_DESCRIPTION, parameters: WEB_SEARCH_PARAMETERS } },
+    { type: 'function', function: { name: 'fetch_url',      description: FETCH_URL_DESCRIPTION,  parameters: FETCH_URL_PARAMETERS  } },
+    { type: 'function', function: { name: 'fetch_rulebook', description: RULEBOOK_DESCRIPTION,   parameters: RULEBOOK_PARAMETERS   } },
 ] : [];
 
 // Gemini format
@@ -317,6 +335,7 @@ function toolLabel(name, args) {
     if (name === 'set_overview')            return 'set_overview';
     if (name === 'web_search')              return `search:${a.query}`;
     if (name === 'fetch_url')               return `fetch:${a.url}`;
+    if (name === 'fetch_rulebook')          return `rulebook:${a.key}`;
     if (name === 'wikipedia_search')        return `wiki:${a.query}`;
     if (name === 'render_chart')            return `chart:${a.title || a.type}`;
     return typeof name === 'string' ? name : '?';
@@ -499,6 +518,53 @@ async function executeToolAsync(name, args) {
             return await resp.json();
         } catch (e) {
             return { error: `Search failed: ${e.message}` };
+        }
+    }
+
+    if (name === 'fetch_rulebook') {
+        if (!SEARCH_PROXY_URL) return { error: 'Search proxy not configured.' };
+        try {
+            const resp = await fetch(`${SEARCH_PROXY_URL}/pdf?key=${encodeURIComponent(args.key)}`, {
+                signal: activeAbortController?.signal,
+            });
+            if (!resp.ok) return { error: `Rulebook fetch returned HTTP ${resp.status}` };
+            const text = await resp.text();
+            return { content: text };
+        } catch (e) {
+            return { error: `fetch_rulebook failed: ${e.message}` };
+        }
+    }
+
+    if (name === 'fetch_url') {
+        try {
+            // JSON APIs (Reddit .json, /api/ paths) can be fetched directly; HTML pages go via worker proxy to avoid CORS
+            const isJsonApi = /\.json(\?|$)/.test(args.url) || args.url.includes('/api/');
+            let resp;
+            if (isJsonApi) {
+                resp = await fetch(args.url, { signal: activeAbortController?.signal });
+            } else if (SEARCH_PROXY_URL) {
+                resp = await fetch(`${SEARCH_PROXY_URL}?url=${encodeURIComponent(args.url)}`, {
+                    signal: activeAbortController?.signal,
+                });
+            } else {
+                resp = await fetch(args.url, { signal: activeAbortController?.signal });
+            }
+            if (!resp.ok) return { error: `fetch_url returned HTTP ${resp.status}` };
+            const ct = resp.headers.get('content-type') || '';
+            if (ct.includes('application/json')) {
+                return { content: JSON.stringify(await resp.json()) };
+            }
+            const html = await resp.text();
+            const text = html
+                .replace(/<script[\s\S]*?<\/script>/gi, '')
+                .replace(/<style[\s\S]*?<\/style>/gi, '')
+                .replace(/<[^>]+>/g, ' ')
+                .replace(/\s{2,}/g, ' ')
+                .trim()
+                .slice(0, 8000);
+            return { content: text };
+        } catch (e) {
+            return { error: `fetch_url failed: ${e.message}` };
         }
     }
 
@@ -712,11 +778,24 @@ Always count **physical copies**, not unique entries. A selection string "2× Ca
 3. Use get_blend to read saved blends (list first, then open by exact filename).
    Each line in a blend file: \`[N×] Resource Name (Expansion)\` — N× means N copies.
 4. Use wikipedia_search to look up lore, rules, card details, or Dune universe information.${SEARCH_PROXY_URL ? `
-5. Use web_search to find current information about Dune: Imperium cards, rules, or strategy.` : ''}
+5. Use web_search to find current information about Dune: Imperium cards, rules, or strategy.
+   Use fetch_url to read a specific URL directly — works well with open APIs like dunecardshub.com/api/decks and reddit.com/r/duneimperium/search.json?q=QUERY&sort=relevance&limit=10
+   Use fetch_rulebook to read official rulebook text. Keys: rules/base, rules/faq, rules/rise-of-ix, rules/immortality, rules/uprising, rules/uprising-supplements, rules/bloodlines.` : ''}
+
+## Answering rules questions
+When the user asks about game rules, mechanics, or card interactions, follow this order — stop as soon as you have a confident answer:
+1. **Rulebooks first**: Call fetch_rulebook for the relevant expansion(s). The text includes page numbers in headers (e.g. "=== Uprising Main Rulebook | Page 12 ===") — use these to cite your source.
+2. **Community resources**: If the rulebook doesn't cover it, check fetch_url with reddit.com/r/duneimperium/search.json?q=QUERY&sort=relevance&limit=10 or boardgamegeek.com threads.
+3. **Open web search**: Only if the above steps don't resolve it, use web_search.
+
+Always cite your source:
+- For rulebook answers: name the rulebook and page number (e.g. "Uprising Rulebook, p. 12").
+- For online sources: include the URL link.
 
 ## Honesty
 - Never hallucinate card names, rules, or statistics. Only state facts you can verify with your tools or are certain of.
 - If you lack the context or tools to give a confident answer, search for more information, explore the current tools, and finally ask the user for more information if needed.
+- When quoting or displaying external content (search results, pasted text, blend files), always wrap it in a plain code block (\`\`\`) so it is shown as-is without markdown rendering.
 `;
 }
 
@@ -1854,7 +1933,6 @@ function saveCheckpoint(userText = '') {
 
 function reloadCheckpoint(ckptId, msgDiv) {
     if (agentStreaming) return;
-    if (!confirm('Rewind to this checkpoint? This will restore the blend to the state before this message and remove it and all later messages from the chat.')) return;
     try {
         const raw = localStorage.getItem(`db_ckpt_${ckptId}`);
         if (!raw) { alert('Checkpoint data not found.'); return; }
@@ -2123,6 +2201,7 @@ async function agentSend() {
     userMsgEl.dataset.checkpointId = ckptId;
     const ckptRow = document.createElement('div');
     ckptRow.className = 'agent-ckpt-row';
+    ckptRow.dataset.checkpointId = ckptId;
     const rewindBtn = document.createElement('button');
     rewindBtn.className      = 'agent-ckpt-btn';
     rewindBtn.dataset.action = 'rewind';
