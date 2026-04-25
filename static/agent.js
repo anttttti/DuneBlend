@@ -66,10 +66,11 @@ function getActiveApiKey() {
 // Tool definitions
 // ----------------------------------------
 const TOOL_DESCRIPTION = [
-    'Returns the available resources for a given type as an array of selection strings,',
-    'ready to paste directly into set_resources. Strings with a "N× " prefix mean N physical copies.',
-    'Same-name cards from the same set are disambiguated with "#N" suffixes.',
-    'Call this before calling set_resources for any type.'
+    'Returns all resources of a given type. Each entry has a "sel" field (the exact string to pass to set_resources)',
+    'plus card detail fields (cost, abilities, faction access, effects, community rating, etc.).',
+    'Strings with a "N× " prefix in "sel" mean N physical copies — copy the prefix verbatim.',
+    'Same-name cards are disambiguated with "#N" suffixes.',
+    'Call this before calling set_resources for any type, and use the detail fields to answer questions about cards.'
 ].join(' ');
 
 const TOOL_PARAMETERS = {
@@ -344,6 +345,71 @@ function toolLabel(name, args) {
 // ----------------------------------------
 // Tool execution
 // ----------------------------------------
+function cardDetails(r, type) {
+    const has = v => v !== undefined && v !== null && v !== '';
+    const d = {};
+    const faction_board_access = ['green','purple','yellow','emperor','spacing_guild','bene_gesserit','fremen','spy']
+        .filter(f => has(r[`${f}_access`]));
+    const faction_affiliation  = ['emperor','spacing_guild','bene_gesserit','fremen']
+        .filter(f => has(r[`${f}_affiliation`]));
+    const mechanic_flags = ['tech','shipping','unload','infiltration','research','grafting',
+                            'spies','sandworms','contracts','battle_icons','sardaukar','trash','discard','draw','twisted']
+        .filter(f => has(r[f]));
+
+    if (type === 'imperium' || type === 'reserve' || type === 'starter') {
+        if (has(r.persuasion_cost))       d.persuasion_cost     = r.persuasion_cost;
+        const rev = [r.reveal_persuasion && `${r.reveal_persuasion} Persuasion`,
+                     r.reveal_swords     && `${r.reveal_swords} Sword${r.reveal_swords > 1 ? 's' : ''}`,
+                     r.reveal_ability].filter(Boolean);
+        if (rev.length)                   d.reveal_effect       = rev.join(', ');
+        if (has(r.agent_ability))         d.agent_ability       = r.agent_ability;
+        if (has(r.passive_ability))       d.passive_ability     = r.passive_ability;
+        if (faction_board_access.length)  d.faction_board_access = faction_board_access;
+        if (faction_affiliation.length)   d.faction_affiliation  = faction_affiliation;
+        if (mechanic_flags.length)        d.mechanic_flags      = mechanic_flags;
+        if (has(r.dch_tier))              d.community_strength_rating = `${r.dch_tier} (${r.dch_rating}/5, ${r.dch_votes} votes)`;
+    } else if (type === 'tleilax') {
+        if (has(r.specimen_cost))         d.specimen_cost       = r.specimen_cost;
+        const rev = [r.reveal_persuasion && `${r.reveal_persuasion} Persuasion`,
+                     r.reveal_swords     && `${r.reveal_swords} Sword${r.reveal_swords > 1 ? 's' : ''}`,
+                     r.reveal_ability].filter(Boolean);
+        if (rev.length)                   d.reveal_effect       = rev.join(', ');
+        if (has(r.agent_ability))         d.agent_ability       = r.agent_ability;
+        if (has(r.passive_ability))       d.passive_ability     = r.passive_ability;
+        if (faction_board_access.length)  d.faction_board_access = faction_board_access;
+        if (mechanic_flags.length)        d.mechanic_flags      = mechanic_flags;
+        if (has(r.dch_tier))              d.community_strength_rating = `${r.dch_tier} (${r.dch_rating}/5, ${r.dch_votes} votes)`;
+    } else if (type === 'intrigue') {
+        if (has(r.plot_effect))           d.plot_phase_effect   = r.plot_effect;
+        if (has(r.combat_effect))         d.combat_phase_effect = r.combat_effect;
+        if (has(r.endgame_effect))        d.endgame_effect      = r.endgame_effect;
+        if (mechanic_flags.length)        d.mechanic_flags      = mechanic_flags;
+        if (has(r.dch_tier))              d.community_strength_rating = `${r.dch_tier} (${r.dch_rating}/5, ${r.dch_votes} votes)`;
+    } else if (type === 'leader') {
+        if (has(r.house))                 d.house               = r.house;
+        if (has(r.starting_effect))       d.starting_ability    = r.starting_effect;
+        if (has(r.leader_ability))        d.leader_ability      = r.leader_ability;
+        if (has(r.signet_ring_ability))   d.signet_ring_ability = r.signet_ring_ability;
+        if (has(r.listed_complexity_level)) d.complexity_level  = r.listed_complexity_level;
+    } else if (type === 'conflict') {
+        d.conflict_level = r.conflict_level;
+        if (has(r.first_place))   d.first_place_reward  = r.first_place;
+        if (has(r.second_place))  d.second_place_reward = r.second_place;
+        if (has(r.third_place))   d.third_place_reward  = r.third_place;
+    } else if (type === 'tech') {
+        if (has(r.spice_cost))          d.spice_cost        = r.spice_cost;
+        if (has(r.acquisition_bonus))   d.acquisition_bonus = r.acquisition_bonus;
+        if (has(r.effect))              d.effect            = r.effect;
+        if (has(r.compatibility))       d.compatibility     = r.compatibility;
+    } else if (type === 'sardaukar') {
+        if (has(r.effect))          d.effect        = r.effect;
+        if (has(r.compatibility))   d.compatibility = r.compatibility;
+    } else if (type === 'contracts') {
+        if (has(r.reward))  d.completion_reward = r.reward;
+    }
+    return d;
+}
+
 async function executeToolAsync(name, args) {
     if (name === 'get_available_resources') {
         const type = args.resource_type;
@@ -369,7 +435,8 @@ async function executeToolAsync(name, args) {
         for (const group of synonymGroups.values()) {
             group.sort((a, b) => (a.resource_id ?? 0) - (b.resource_id ?? 0));
         }
-        // One string per raw item. Same-name cards get "#N" suffix for unambiguous reference.
+        // One entry per raw item. Same-name cards get "#N" suffix for unambiguous reference.
+        // Each entry has `sel` (the string to pass verbatim to set_resources) plus card detail fields.
         const resources = [];
         for (const group of synonymGroups.values()) {
             const needsSuffix = group.length > 1;
@@ -380,7 +447,8 @@ async function executeToolAsync(name, args) {
                 const displayName = needsSuffix ? `${name} #${idx + 1}` : name;
                 const id   = `${displayName} (${src})`;
                 const max  = r.count || r.count_per_player || 1;
-                resources.push(max > 1 ? `${max}× ${id}` : id);
+                const sel  = max > 1 ? `${max}× ${id}` : id;
+                resources.push({ sel, ...cardDetails(r, type) });
             }
         }
         return { resource_type: type, resources };
@@ -746,7 +814,7 @@ ${poolLines.join('\n')}
 4. **Final verification**: Call get_blend_statistics and confirm the counts and frequencies match the user's request and general instructions. If there are discrepancies, attempt to fix them with additional set_resources calls. If requirements still cannot be met after fixing, report the unresolved issues to the user before reporting done.
 
 ## set_resources usage
-- get_available_resources returns an array of strings. Copy them verbatim into set_resources selections.
+- get_available_resources returns an array of objects. Use the "sel" field verbatim as the selection string in set_resources.
   Strings with "N× " prefix mean N physical copies — copy the prefix too, never alter it.
 - Only listed cards change; others in the same type are untouched.
 - "below N" or "up to N" means maximize while not exceeding N.
@@ -784,6 +852,23 @@ Always count **physical copies**, not unique entries. A selection string "2× Ca
    Use fetch_url to read a specific URL directly — works well with open APIs like dunecardshub.com/api/decks and reddit.com/r/duneimperium/search.json?q=QUERY&sort=relevance&limit=10
    Use fetch_rulebook to read official rulebook text. Keys: rules/base, rules/faq, rules/rise-of-ix, rules/immortality, rules/uprising, rules/uprising-supplements, rules/bloodlines.` : ''}
 
+## Card data in get_available_resources
+Call get_available_resources to look up card details — **never** claim you lack card data, ratings, or statistics without calling this tool first.
+Each entry's "sel" field is the selection string; the remaining fields describe the card:
+
+community_strength_rating tier scale, strongest to weakest: **S** (staple/overpowered) > **A** (strong) > **B** (good) > **C** (average) > **D** (weak). Numeric score is out of 5. Not all cards have ratings.
+
+- **imperium / reserve / starter**: persuasion_cost, reveal_effect (persuasion + swords + ability text on reveal, e.g. "2 Persuasion, 1 Sword, +1 Troop"), agent_ability (effect when sent as agent), passive_ability, faction_board_access (list of board space colors this card accesses: green/purple/yellow/emperor/spacing_guild/bene_gesserit/fremen/spy), faction_affiliation (factions this card provides affiliation with), mechanic_flags (special mechanics this card involves: tech/shipping/spies/sandworms/contracts/battle_icons/sardaukar/trash/discard/draw/etc.), community_strength_rating (tier + numeric score from dunecardshub.com votes, e.g. "B (3.5/5, 12 votes)")
+- **tleilax**: specimen_cost, reveal_effect, agent_ability, passive_ability, faction_board_access, mechanic_flags (includes research/grafting/infiltration/unload), community_strength_rating
+- **intrigue**: plot_phase_effect, combat_phase_effect, endgame_effect, mechanic_flags, community_strength_rating
+- **leader**: house (Atreides/Harkonnen/etc.), starting_ability, leader_ability, signet_ring_ability, complexity_level (1–3)
+- **conflict**: conflict_level (1/2/3), first_place_reward, second_place_reward, third_place_reward
+- **tech**: spice_cost, acquisition_bonus, effect, compatibility
+- **sardaukar**: effect, compatibility
+- **contracts**: completion_reward
+
+Whenever the user asks about card abilities, costs, effects, strength, power level, community ratings, or tier rankings — call get_available_resources for the relevant type(s) and read the detail fields. The community_strength_rating field contains crowd-sourced card ratings and is the correct source for any question about "community ratings", "top cards", "best cards", or "card tier". Do not claim this data is unavailable.
+
 ## Answering rules questions
 When the user asks about game rules, mechanics, or card interactions, follow this order:
 1. **Rulebook + FAQ together**: Call fetch_rulebook for the relevant expansion(s) **and always also fetch rules/faq** in the same step. The FAQ supersedes the rulebook — if a rule has been updated in the FAQ, use the FAQ version. Page numbers appear in headers (e.g. "=== Uprising Main Rulebook | Page 12 ===") — use these to cite your source.
@@ -795,7 +880,7 @@ Always cite your source and quote the exact relevant text:
 - For online sources: include the URL link and quote the exact passage you are relying on.
 - For game resources (cards, leaders, etc.): quote the exact card text or effect as it appears in the resource.
 
-When answering any question about cards, leaders, or other game resources, always call get_available_resources for the relevant resource type(s) first and read the entries for the resources in question. Cite the exact information from those entries that is relevant to the question.
+When answering any question about cards, leaders, or other game resources, always call get_available_resources for the relevant resource type(s) first and read the detail fields (abilities, costs, effects, etc.) from those entries. Cite the exact field values that are relevant to the question.
 
 When answering questions, first cite all of the relevant information. Then deduce your answer based on the information. If the user question can't be answered from the information with certainty, simply cite the references and say you're not sure.
 
@@ -1030,21 +1115,22 @@ async function withRetry(fn, onRetry, maxRetries = 2) {
 // ----------------------------------------
 // Google Gemini API
 // ----------------------------------------
-async function callGemini(apiKey, onChunk) {
+async function callGemini(apiKey, onChunk, { withTools = true } = {}) {
     const model = getAgentModel();
     const url = apiKey
         ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`
         : `${SEARCH_PROXY_URL}/ai?model=${encodeURIComponent(model)}`;
+    const body = {
+        system_instruction: { parts: [{ text: buildSystemPrompt() }] },
+        contents:           geminiHistory,
+        generationConfig:   { temperature: 0.1 }
+    };
+    if (withTools) body.tools = GEMINI_TOOLS;
     const resp = await fetch(url, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         signal:  activeAbortController?.signal,
-        body: JSON.stringify({
-            system_instruction: { parts: [{ text: buildSystemPrompt() }] },
-            contents:           geminiHistory,
-            tools:              GEMINI_TOOLS,
-            generationConfig:   { temperature: 0.1 }
-        })
+        body:    JSON.stringify(body)
     });
     if (!resp.ok) {
         const err = await resp.json().catch(() => ({}));
@@ -1070,6 +1156,60 @@ function repairOpenAIStyleHistory(history) {
 }
 
 const NON_PROGRESS_LIMIT = 20; // consecutive tool-only rounds before aborting
+
+const SUMMARY_PROMPT = 'You have used the maximum number of tool calls allowed for this turn. ' +
+    'Please summarize what was accomplished and note anything that still needs to be done, ' +
+    'without calling any more tools.';
+
+async function requestGeminiSummary(apiKey, placeholder, actionsCount, hasPendingCalls) {
+    // If there is a dangling model turn with unanswered tool calls, remove it so
+    // the API doesn't reject the follow-up as an invalid conversation state.
+    if (hasPendingCalls) repairGeminiHistory();
+    geminiHistory.push({ role: 'user', parts: [{ text: SUMMARY_PROMPT }] });
+    const thinkTask = placeholder.addThinkingTask();
+    try {
+        const { parts } = await callGemini(apiKey, (chunk, type) => thinkTask.append(chunk, type), { withTools: false });
+        geminiHistory.push({ role: 'model', parts });
+        thinkTask.complete(); updateTokenLabel();
+        return { text: parts.filter(p => p.text && !p.thought).map(p => p.text).join(''), actionsCount };
+    } catch {
+        thinkTask.complete();
+        return { text: '', actionsCount };
+    }
+}
+
+async function requestMistralSummary(apiKey, placeholder, actionsCount) {
+    mistralHistory.push({ role: 'user', content: SUMMARY_PROMPT });
+    const thinkTask = placeholder.addThinkingTask();
+    try {
+        const model = getAgentModel();
+        const resp = await fetch('https://api.mistral.ai/v1/chat/completions', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+            signal:  activeAbortController?.signal,
+            body: JSON.stringify({
+                model,
+                messages:    [{ role: 'system', content: buildSystemPrompt() }, ...mistralHistory],
+                tool_choice: 'none',
+                temperature: 0.1,
+                max_tokens:  4096,
+                stream:      true,
+            })
+        });
+        if (!resp.ok) { thinkTask.complete(); return { text: '', actionsCount }; }
+        const message = await streamOpenAICompat(resp, (chunk, type) => thinkTask.append(chunk, type));
+        const { usage: mUsage, ...mistralMsg } = message;
+        mistralHistory.push(mistralMsg);
+        thinkTask.setTokens(mUsage?.prompt_tokens, mUsage?.completion_tokens);
+        thinkTask.complete(); updateTokenLabel();
+        const raw  = message.content;
+        const text = typeof raw === 'string' ? raw : Array.isArray(raw) ? raw.map(p => p.text || '').join('') : '';
+        return { text, actionsCount };
+    } catch {
+        thinkTask.complete();
+        return { text: '', actionsCount };
+    }
+}
 
 async function runGeminiLoop(apiKey, placeholder) {
     repairGeminiHistory();
@@ -1097,11 +1237,11 @@ async function runGeminiLoop(apiKey, placeholder) {
         }
 
         const sig = JSON.stringify(funcCallParts.map(p => p.functionCall));
-        if (sig === lastToolSig) { if (++loopCount >= 3) return { text: '*(loop detected)*', actionsCount: totalActionsCount }; }
+        if (sig === lastToolSig) { if (++loopCount >= 3) return requestGeminiSummary(apiKey, placeholder, totalActionsCount, true); }
         else { lastToolSig = sig; loopCount = 0; }
 
         if (++nonProgressRounds >= NON_PROGRESS_LIMIT)
-            return { text: '*(stopped: too many rounds)*', actionsCount: totalActionsCount };
+            return requestGeminiSummary(apiKey, placeholder, totalActionsCount, true);
 
         const labels    = funcCallParts.map(p => toolLabel(p.functionCall.name, p.functionCall.args));
         const toolTasks = placeholder.addToolStep(labels);
@@ -1125,7 +1265,7 @@ async function runGeminiLoop(apiKey, placeholder) {
 
         geminiHistory.push({ role: 'user', parts: funcResponses });
     }
-    return { text: '*(max tool rounds reached)*', actionsCount: totalActionsCount };
+    return requestGeminiSummary(apiKey, placeholder, totalActionsCount, false);
 }
 
 // ----------------------------------------
@@ -1195,11 +1335,11 @@ async function runMistralLoop(apiKey, placeholder) {
         }
 
         const sig = JSON.stringify(toolCalls.map(tc => ({ n: tc.function.name, a: tc.function.arguments })));
-        if (sig === lastToolSig) { if (++loopCount >= 3) return { text: '*(loop detected)*', actionsCount: totalActionsCount }; }
+        if (sig === lastToolSig) { if (++loopCount >= 3) return requestMistralSummary(apiKey, placeholder, totalActionsCount); }
         else { lastToolSig = sig; loopCount = 0; }
 
         if (++nonProgressRounds >= NON_PROGRESS_LIMIT)
-            return { text: '*(stopped: too many rounds)*', actionsCount: totalActionsCount };
+            return requestMistralSummary(apiKey, placeholder, totalActionsCount);
 
         const safeParseArgs = s => { try { return JSON.parse(s); } catch { return {}; } };
         const labels    = toolCalls.map(tc => toolLabel(tc.function.name, safeParseArgs(tc.function.arguments)));
@@ -1227,7 +1367,7 @@ async function runMistralLoop(apiKey, placeholder) {
             mistralHistory.push({ role: 'tool', tool_call_id: tc.id, name, content: JSON.stringify(result) });
         }
     }
-    return { text: '*(max tool rounds reached)*', actionsCount: totalActionsCount };
+    return requestMistralSummary(apiKey, placeholder, totalActionsCount);
 }
 
 // ----------------------------------------
@@ -1652,7 +1792,7 @@ function createResponsePlaceholder() {
     }
 
     function addThinkingTask() {
-        return addStep(['Thinking…'])[0];
+        return addStep(['Blending…'])[0];
     }
 
     function addToolStep(labels) {
