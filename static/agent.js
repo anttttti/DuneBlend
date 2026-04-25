@@ -920,7 +920,10 @@ async function compactGeminiHistory(apiKey, placeholder) {
     const task = placeholder.addCompactStep();
     task.setPrompt(`~${estimateTokens(geminiHistory).toLocaleString()} tokens in history. Summarizing…`);
 
-    const url  = `https://generativelanguage.googleapis.com/v1beta/models/${getAgentModel()}:generateContent?key=${apiKey}`;
+    const model = getAgentModel();
+    const url = apiKey
+        ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
+        : `${SEARCH_PROXY_URL}/ai?model=${encodeURIComponent(model)}&stream=0`;
     const resp = await fetch(url, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1021,7 +1024,10 @@ async function withRetry(fn, onRetry, maxRetries = 2) {
 // Google Gemini API
 // ----------------------------------------
 async function callGemini(apiKey, onChunk) {
-    const url  = `https://generativelanguage.googleapis.com/v1beta/models/${getAgentModel()}:streamGenerateContent?alt=sse&key=${apiKey}`;
+    const model = getAgentModel();
+    const url = apiKey
+        ? `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`
+        : `${SEARCH_PROXY_URL}/ai?model=${encodeURIComponent(model)}`;
     const resp = await fetch(url, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2131,7 +2137,7 @@ function truncateHistoryToLastUserMessage() {
 async function agentRegenerate() {
     if (agentStreaming || !lastUserMessageText) return;
     const apiKey = getActiveApiKey();
-    if (!apiKey) return;
+    if (!apiKey && !(getProvider() === 'google' && SEARCH_PROXY_URL)) return;
 
     truncateHistoryToLastUserMessage();
 
@@ -2172,7 +2178,7 @@ async function agentSend() {
     if (agentStreaming) return;
 
     const apiKey = getActiveApiKey();
-    if (!apiKey) {
+    if (!apiKey && !(getProvider() === 'google' && SEARCH_PROXY_URL)) {
         if (window.showApiKeyDialog) window.showApiKeyDialog('agent');
         else alert('Please set your API key via the ⚙️ AI Settings button.');
         return;
