@@ -736,12 +736,14 @@ ${poolLines.join('\n')}
 3. Call get_available_resources for ALL needed resource types at once in a single parallel step — never one type at a time across multiple rounds.
 4. Call clear_blend to reset everything.
 5. Call set_resources once per resource type with the full selections list.
+6. **Final verification**: Call get_blend_statistics and review the blend. Check that all resource counts and frequencies match the user's request and the general instructions (starter total, reserve source, expansion rules, etc.). If there are discrepancies, attempt to fix them with additional set_resources calls. If requirements still cannot be met after fixing, report the unresolved issues to the user before reporting the blend as complete.
 
 ## Workflow: small updates (swap a card, adjust a type)
 1. Call get_available_resources for the affected type(s) only.
 2. Call set_resources for each changed type listing only the cards that change.
    Use "0× Name (Source)" to remove; omit unchanged cards entirely.
 3. If the sets in the blend changed, also call set_board.
+4. **Final verification**: Call get_blend_statistics and confirm the counts and frequencies match the user's request and general instructions. If there are discrepancies, attempt to fix them with additional set_resources calls. If requirements still cannot be met after fixing, report the unresolved issues to the user before reporting done.
 
 ## set_resources usage
 - get_available_resources returns an array of strings. Copy them verbatim into set_resources selections.
@@ -788,9 +790,14 @@ When the user asks about game rules, mechanics, or card interactions, follow thi
 2. **Community resources**: If the rulebook/FAQ doesn't fully resolve it, or if you have any remaining doubt, check fetch_url with reddit.com/r/duneimperium/search.json?q=QUERY&sort=relevance&limit=10 or BoardGameGeek threads for community consensus.
 3. **Open web search**: If still in doubt, use web_search for more recent advice, errata, or designer clarifications.
 
-Always cite your source:
-- For rulebook/FAQ answers: name the rulebook and page number (e.g. "Uprising Rulebook, p. 12" or "FAQ, p. 3").
-- For online sources: include the URL link.
+Always cite your source and quote the exact relevant text:
+- For rulebook/FAQ answers: name the rulebook and page number (e.g. "Uprising Rulebook, p. 12" or "FAQ, p. 3"), and quote the exact rule text that supports your answer.
+- For online sources: include the URL link and quote the exact passage you are relying on.
+- For game resources (cards, leaders, etc.): quote the exact card text or effect as it appears in the resource.
+
+When answering any question about cards, leaders, or other game resources, always call get_available_resources for the relevant resource type(s) first and read the entries for the resources in question. Cite the exact information from those entries that is relevant to the question.
+
+When answering questions, first cite all of the relevant information. Then deduce your answer based on the information. If the user question can't be answered from the information with certainty, simply cite the references and say you're not sure.
 
 ## Honesty
 - Never hallucinate card names, rules, or statistics. Only state facts you can verify with your tools or are certain of.
@@ -1062,8 +1069,7 @@ function repairOpenAIStyleHistory(history) {
     }
 }
 
-const PROGRESS_TOOLS    = new Set(['set_resources', 'clear_blend', 'load_blend', 'set_board', 'set_overview']);
-const NON_PROGRESS_LIMIT = 5; // consecutive info-only rounds before aborting
+const NON_PROGRESS_LIMIT = 20; // consecutive tool-only rounds before aborting
 
 async function runGeminiLoop(apiKey, placeholder) {
     repairGeminiHistory();
@@ -1094,10 +1100,8 @@ async function runGeminiLoop(apiKey, placeholder) {
         if (sig === lastToolSig) { if (++loopCount >= 3) return { text: '*(loop detected)*', actionsCount: totalActionsCount }; }
         else { lastToolSig = sig; loopCount = 0; }
 
-        const hasProgress = funcCallParts.some(p => PROGRESS_TOOLS.has(p.functionCall.name));
-        if (hasProgress) nonProgressRounds = 0;
-        else if (++nonProgressRounds >= NON_PROGRESS_LIMIT)
-            return { text: '*(stopped: too many rounds without blend changes)*', actionsCount: totalActionsCount };
+        if (++nonProgressRounds >= NON_PROGRESS_LIMIT)
+            return { text: '*(stopped: too many rounds)*', actionsCount: totalActionsCount };
 
         const labels    = funcCallParts.map(p => toolLabel(p.functionCall.name, p.functionCall.args));
         const toolTasks = placeholder.addToolStep(labels);
@@ -1194,10 +1198,8 @@ async function runMistralLoop(apiKey, placeholder) {
         if (sig === lastToolSig) { if (++loopCount >= 3) return { text: '*(loop detected)*', actionsCount: totalActionsCount }; }
         else { lastToolSig = sig; loopCount = 0; }
 
-        const hasProgress = toolCalls.some(tc => PROGRESS_TOOLS.has(tc.function.name));
-        if (hasProgress) nonProgressRounds = 0;
-        else if (++nonProgressRounds >= NON_PROGRESS_LIMIT)
-            return { text: '*(stopped: too many rounds without blend changes)*', actionsCount: totalActionsCount };
+        if (++nonProgressRounds >= NON_PROGRESS_LIMIT)
+            return { text: '*(stopped: too many rounds)*', actionsCount: totalActionsCount };
 
         const safeParseArgs = s => { try { return JSON.parse(s); } catch { return {}; } };
         const labels    = toolCalls.map(tc => toolLabel(tc.function.name, safeParseArgs(tc.function.arguments)));
