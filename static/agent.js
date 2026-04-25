@@ -1121,11 +1121,6 @@ async function runGeminiLoop(apiKey, placeholder) {
 // ----------------------------------------
 // Mistral API
 // ----------------------------------------
-function mistralSupportsThinking(model) {
-    // mistral-large-2512 and magistral models support thinking budgets
-    return model === 'mistral-large-2512' || model.startsWith('magistral');
-}
-
 async function callMistral(apiKey, onChunk) {
     const model = getAgentModel();
     const body = {
@@ -1137,9 +1132,7 @@ async function callMistral(apiKey, onChunk) {
         max_tokens:  32768,
         stream:      true
     };
-    if (mistralSupportsThinking(model)) {
-        body.thinking = { type: 'enabled', budget_tokens: 8192 };
-    }
+    // Note: thinking/reasoning budgets are only supported by magistral models, not mistral-large
     const resp = await fetch('https://api.mistral.ai/v1/chat/completions', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
