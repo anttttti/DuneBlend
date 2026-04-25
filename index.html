@@ -2659,6 +2659,9 @@
 
             // Notify agent.js that resources are ready (triggers blend restore + auto-save setup)
             window.onBlendReady?.();
+
+            // Activate hash tab last, after all initialization is complete
+            window.activateTabFromHash?.();
         }
 
         function initializeTab(type) {
@@ -6501,6 +6504,27 @@
 
             return result;
         };
+
+        // ── Hash-based tab routing ───────────────────────────────────────────────
+        const TAB_NAMES = ['board','overview','imperium','intrigue','tleilax','reserve',
+                           'tech','contracts','leader','sardaukar','starter','conflict','agent'];
+
+        window.activateTabFromHash = function() {
+            const hash = location.hash.replace('#', '').toLowerCase();
+            if (!TAB_NAMES.includes(hash)) return;
+            const btn = document.getElementById(`${hash}-tab`);
+            if (btn && !btn.classList.contains('active')) btn.click();
+        };
+
+        // Update hash when any tab is shown (without triggering a scroll)
+        document.querySelectorAll('.nav-link[id$="-tab"]').forEach(btn => {
+            btn.addEventListener('shown.bs.tab', () => {
+                history.replaceState(null, '', `#${btn.id.replace('-tab', '')}`);
+            });
+        });
+
+        // Back/forward navigation
+        window.addEventListener('hashchange', window.activateTabFromHash);
 
     </script>
     <script src="static/agent.js?v=59"></script>
