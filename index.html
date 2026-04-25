@@ -5894,47 +5894,51 @@
             if (apiKey) {
                 // Validate API key format (should start with AIza)
                 if (!apiKey.startsWith('AIza')) {
-                    alert('Invalid API key format. image AI API keys should start with "AIza".\n\nGet your API key from: https://aistudio.google.com/app/apikey');
+                    alert('Invalid API key format. Google AI API keys should start with "AIza".\n\nGet your API key from: https://aistudio.google.com/app/apikey');
                     return;
                 }
                 geminiApiKey = apiKey;
-                geminiModel = model;
                 localStorage.setItem('geminiApiKey', apiKey);
-                localStorage.setItem('geminiModel', model);
+            } else {
+                geminiApiKey = '';
+                localStorage.removeItem('geminiApiKey');
             }
+            geminiModel = model;
+            localStorage.setItem('geminiModel', model);
+
             if (mistralKey) {
                 localStorage.setItem('mistralApiKey', mistralKey);
+            } else {
+                localStorage.removeItem('mistralApiKey');
             }
             if (openaiKey) {
                 localStorage.setItem('openaiApiKey', openaiKey);
+            } else {
+                localStorage.removeItem('openaiApiKey');
             }
             if (braveKey) {
                 localStorage.setItem('braveApiKey', braveKey);
             } else {
-                localStorage.removeItem('braveApiKey'); // fall back to default
+                localStorage.removeItem('braveApiKey');
             }
             if (agentModel) {
                 localStorage.setItem('agentModel', agentModel);
                 const labelEl = document.getElementById('agent-model-label');
                 if (labelEl) labelEl.textContent = agentModel;
             }
-            if (apiKey || mistralKey || openaiKey || braveKey || agentModel) {
 
-                // Close API key modal
-                const apiKeyModalEl = document.getElementById('apiKeyModal');
-                const apiKeyModal = bootstrap.Modal.getInstance(apiKeyModalEl);
-                if (apiKeyModal) {
-                    apiKeyModal.hide();
-                }
+            // Close API key modal
+            const apiKeyModalEl = document.getElementById('apiKeyModal');
+            const apiKeyModal = bootstrap.Modal.getInstance(apiKeyModalEl);
+            if (apiKeyModal) {
+                apiKeyModal.hide();
+            }
 
-                // Reopen photo scan dialog only if that's where settings were opened from
-                if (apiKeyDialogCaller === 'scan') {
-                    setTimeout(() => {
-                        showPhotoScanDialog(currentResourceType);
-                    }, 300);
-                }
-            } else {
-                alert('Please enter a valid API key');
+            // Reopen photo scan dialog only if that's where settings were opened from
+            if (apiKeyDialogCaller === 'scan') {
+                setTimeout(() => {
+                    showPhotoScanDialog(currentResourceType);
+                }, 300);
             }
         }
         window.saveApiKey = saveApiKey;
