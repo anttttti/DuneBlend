@@ -52,7 +52,20 @@
 
         /* Main container */
         .main-container {
-            padding: 0 20px 20px 20px;
+            padding: 0 20px 8px 20px;
+        }
+        @media (max-width: 1079px) {
+            .main-container { padding: 4px; }
+            .tab-content { padding: 0.5rem 0.75rem; }
+            .tab-content .row { --bs-gutter-x: 0.5rem; --bs-gutter-y: 0; }
+            .tab-content .card { margin-top: 0.4rem !important; margin-bottom: 0.4rem !important; }
+            .tab-content h4, .tab-content h5, .tab-content h6 { margin-top: 0.5rem !important; margin-bottom: 0.3rem !important; }
+            .tab-content .mt-3 { margin-top: 0.5rem !important; }
+            .tab-content .mb-3 { margin-bottom: 0.5rem !important; }
+            .tab-content .mt-2 { margin-top: 0.25rem !important; }
+            .tab-content .mb-2 { margin-bottom: 0.25rem !important; }
+            .tab-content .p-3 { padding: 0.5rem !important; }
+            .tab-content .p-2 { padding: 0.25rem !important; }
         }
 
         /* Controls bar */
@@ -99,12 +112,19 @@
 
         /* Tab styling */
         .nav-tabs {
-            margin-bottom: 20px;
-            border-bottom: 2px solid var(--dune-sand-dark);
+            margin-bottom: 0;
+            border: 1px solid rgba(139,105,20,0.15);
+            border-bottom: none;
             flex-wrap: wrap;
             background: rgba(255,255,255,0.6);
             padding: 0.5rem 0.5rem 0;
             border-radius: 8px 8px 0 0;
+        }
+        .nav-tabs .nav-item + .nav-item {
+            border-left: 1px solid rgba(139,105,20,0.18);
+        }
+        .nav-tabs .nav-item {
+            border-bottom: 1px solid rgba(139,105,20,0.18);
         }
         .nav-tabs .nav-link {
             color: var(--dune-dark);
@@ -117,7 +137,6 @@
         .nav-tabs .nav-link.active {
             color: #fff;
             background: linear-gradient(135deg, var(--dune-brown) 0%, #6b5210 100%);
-            border-bottom: 3px solid var(--dune-spice);
             font-weight: bold;
         }
         .nav-tabs .nav-link:hover:not(.active) {
@@ -134,7 +153,7 @@
         .tab-content {
             background: rgba(255,255,255,0.9);
             border-radius: 0 0 8px 8px;
-            padding: 1.5rem;
+            padding: 0.5rem 0.75rem 0.25rem;
             box-shadow: 0 2px 8px rgba(0,0,0,0.08);
             border: 1px solid rgba(139,105,20,0.15);
             border-top: none;
@@ -142,7 +161,11 @@
 
         .tab-pane h4, .tab-pane h5 {
             color: var(--dune-dark);
+            margin-top: 0.75rem;
         }
+        .tab-pane > .row:last-child { margin-bottom: 0; }
+        .tab-pane > .row:last-child p { margin-bottom: 0.2rem; }
+        .tab-pane .card:last-child { margin-bottom: 0 !important; }
 
         /* Expansion colors - light backgrounds with dark text */
         .expansion-base { background-color: #F5DEB3 !important; color: #000 !important; }
@@ -459,7 +482,7 @@
         }
 
         /* AI Agent chat */
-        #agent-panel {
+        #agent-panel.active {
             display: flex;
             flex-direction: column;
             height: 70vh;
@@ -469,15 +492,15 @@
         #agent-messages {
             flex: 1;
             overflow-y: auto;
-            padding: 1rem;
+            padding: 0.25rem 0.1rem;
             background: rgba(255,255,255,0.6);
             border: 1px solid rgba(139,105,20,0.2);
             border-radius: 6px;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.35rem;
         }
 
         .agent-msg {
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.25rem;
         }
 
         .agent-msg-user {
@@ -493,9 +516,9 @@
             background: linear-gradient(135deg, var(--dune-brown) 0%, #6b5210 100%);
             color: var(--dune-sand);
             display: inline-block;
-            padding: 0.5rem 0.85rem;
+            padding: 0.25rem 0.65rem;
             border-radius: 14px 14px 4px 14px;
-            max-width: 75%;
+            max-width: 92%;
             text-align: left;
             -webkit-user-select: text;
             user-select: text;
@@ -504,10 +527,9 @@
         .agent-msg-model .agent-msg-bubble {
             background: rgba(255,255,255,0.9);
             border: 1px solid rgba(139,105,20,0.25);
-            display: inline-block;
+            display: block;
             padding: 0.5rem 0.85rem;
             border-radius: 14px 14px 14px 4px;
-            max-width: 85%;
             -webkit-user-select: text;
             user-select: text;
         }
@@ -741,9 +763,10 @@
             resize: none;
             border: 1px solid rgba(139,105,20,0.4);
             border-radius: 6px;
-            padding: 0.5rem 0.75rem;
+            padding: 0.375rem 0.75rem;
             font-size: 0.95rem;
             background: rgba(255,255,255,0.9);
+            height: calc(1.5em + 0.75rem + 2px); /* match Bootstrap btn height */
         }
 
         .agent-input-row textarea:focus {
@@ -1751,26 +1774,21 @@
 
             <!-- AI Agent Panel -->
             <div class="tab-pane fade" id="agent-panel" role="tabpanel">
-                <div class="d-flex justify-content-between align-items-center mb-2 pt-2">
+                <div class="d-flex justify-content-between align-items-center mb-2">
                     <div>
-                        <strong>AI Agent</strong>
+                        <h4 class="d-inline-block mb-0">AI Agent</h4>
                         <small class="text-muted ms-2">Model: <span id="agent-model-label">gemma-4-31b-it</span></small>
                     </div>
                     <div class="d-flex gap-2 align-items-center">
                         <button class="btn btn-sm btn-outline-secondary" onclick="showApiKeyDialog('agent')" title="AI settings">⚙️ AI Settings</button>
-                        <button class="btn btn-sm btn-outline-danger" onclick="agentClear()">Clear chat</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="agentClear()">&#x2715; Clear chat</button>
                     </div>
                 </div>
                 <div id="agent-messages"></div>
                 <div class="agent-input-row">
-                    <textarea id="agent-input" rows="2" placeholder="Ask about Dune: Imperium rules, cards, or say "build me a blend with Uprising"… (Enter to send, Shift+Enter for newline)"></textarea>
-                    <div class="d-flex flex-column align-items-center gap-1">
-                        <button id="agent-action-btn" class="btn btn-success" onclick="agentAction()" title="Send">&#9654;&#65038;</button>
-                        <span id="agent-token-label" class="text-muted" style="font-size:0.6rem;line-height:1.2;white-space:nowrap"></span>
-                        <button id="agent-regen-btn" class="btn btn-outline-secondary" onclick="agentRegenerate()" title="Regenerate last response" style="display:none;font-size:0.8rem;padding:1px 7px;line-height:1.5">↺</button>
-                    </div>
+                    <textarea id="agent-input" rows="1"></textarea>
+                    <button id="agent-action-btn" class="btn btn-success" onclick="agentAction()" title="Send">&#9654;&#65038;</button>
                 </div>
-                <small class="text-muted mt-1 d-block">The agent knows your current blend and can modify it. Requires an API key from the model provider.</small>
             </div>
         </div>
     </div>
@@ -1896,10 +1914,18 @@
                                 </tr>
                                 <tr>
                                     <td class="ps-0 align-middle py-1" style="white-space:nowrap">
-                                        <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI</a>
+                                        <a href="https://build.nvidia.com/settings/api-key" target="_blank">Nvidia</a>
                                     </td>
                                     <td class="py-1">
-                                        <input type="text" class="form-control form-control-sm font-monospace" id="openaiApiKeyInput" placeholder="sk-…">
+                                        <input type="text" class="form-control form-control-sm font-monospace" id="nvidiaApiKeyInput" placeholder="nvapi-…">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="ps-0 align-middle py-1" style="white-space:nowrap">
+                                        <a href="https://openrouter.ai/keys" target="_blank">OpenRouter</a>
+                                    </td>
+                                    <td class="py-1">
+                                        <input type="text" class="form-control form-control-sm font-monospace" id="openrouterApiKeyInput" placeholder="sk-or-…">
                                     </td>
                                 </tr>
                                 <tr>
@@ -1944,10 +1970,17 @@
                             </optgroup>
                             <optgroup label="Mistral">
                                 <option value="mistral-large-2512">mistral-large-2512</option>
+                                <option value="mistral-medium-3.5">mistral-medium-3.5</option>
                                 <option value="mistral-small-2603">mistral-small-2603</option>
                             </optgroup>
-                            <optgroup label="OpenAI">
-                                <option value="gpt-5.4">gpt-5.4</option>
+                            <optgroup label="Nvidia">
+                                <option value="nvidia:nvidia/nemotron-3-ultra-550b-a55b">nvidia/nemotron-3-ultra-550b-a55b</option>
+                                <option value="nvidia:nvidia/nemotron-3-super-120b-a12b">nvidia/nemotron-3-super-120b-a12b</option>
+                                <option value="nvidia:mistralai/mistral-medium-3.5-128b">mistralai/mistral-medium-3.5-128b</option>
+                            </optgroup>
+                            <optgroup label="OpenRouter">
+                                <option value="openrouter:nvidia/nemotron-3-ultra-550b-a55b:free">nvidia/nemotron-3-ultra-550b-a55b:free</option>
+                                <option value="openrouter:nvidia/nemotron-3-super-120b-a12b:free">nvidia/nemotron-3-super-120b-a12b:free</option>
                             </optgroup>
                         </select>
                     </div>
@@ -5881,7 +5914,8 @@
                 document.getElementById('geminiModelSelect').value = geminiModel;
                 document.getElementById('agentModelSelect').value = localStorage.getItem('agentModel') || 'gemma-4-31b-it';
                 document.getElementById('mistralApiKeyInput').value = localStorage.getItem('mistralApiKey') || '';
-                document.getElementById('openaiApiKeyInput').value = localStorage.getItem('openaiApiKey') || '';
+                document.getElementById('nvidiaApiKeyInput').value = localStorage.getItem('nvidiaApiKey') || '';
+                document.getElementById('openrouterApiKeyInput').value = localStorage.getItem('openrouterApiKey') || '';
                 document.getElementById('braveApiKeyInput').value = localStorage.getItem('braveApiKey') || '';
                 apiKeyModal.show();
             }, photoScanModal ? 300 : 0); // Wait for transition if modal was open
@@ -5891,8 +5925,9 @@
             const apiKey = document.getElementById('geminiApiKeyInput').value.trim();
             const model = document.getElementById('geminiModelSelect').value;
             const agentModel = document.getElementById('agentModelSelect').value;
-            const mistralKey = document.getElementById('mistralApiKeyInput').value.trim();
-            const openaiKey  = document.getElementById('openaiApiKeyInput').value.trim();
+            const mistralKey     = document.getElementById('mistralApiKeyInput').value.trim();
+            const nvidiaKey      = document.getElementById('nvidiaApiKeyInput').value.trim();
+            const openrouterKey  = document.getElementById('openrouterApiKeyInput').value.trim();
             const braveKey   = document.getElementById('braveApiKeyInput').value.trim();
 
             if (apiKey) {
@@ -5915,10 +5950,15 @@
             } else {
                 localStorage.removeItem('mistralApiKey');
             }
-            if (openaiKey) {
-                localStorage.setItem('openaiApiKey', openaiKey);
+            if (nvidiaKey) {
+                localStorage.setItem('nvidiaApiKey', nvidiaKey);
             } else {
-                localStorage.removeItem('openaiApiKey');
+                localStorage.removeItem('nvidiaApiKey');
+            }
+            if (openrouterKey) {
+                localStorage.setItem('openrouterApiKey', openrouterKey);
+            } else {
+                localStorage.removeItem('openrouterApiKey');
             }
             if (braveKey) {
                 localStorage.setItem('braveApiKey', braveKey);

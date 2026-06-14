@@ -2,7 +2,7 @@
 
 A browser-based blend editor for **Dune: Imperium** and **Dune: Imperium – Uprising**.
 
-**[Launch the app](https://anttttti.github.io/DuneBlend/)** · [dune-blend.vercel.app](https://dune-blend.vercel.app)
+**[anttttti.github.io/DuneBlend](https://anttttti.github.io/DuneBlend/)** · **[dune-blend.vercel.app](https://dune-blend.vercel.app)**
 
 ---
 
@@ -10,7 +10,7 @@ A browser-based blend editor for **Dune: Imperium** and **Dune: Imperium – Upr
 
 A *blend* is a custom mix of cards and components drawn from multiple Dune: Imperium expansions, played together as a single game. Blends let you combine the mechanics of **Uprising** with cards from the base game, **Rise of Ix**, **Immortality**, and **Bloodlines** — creating a more varied and balanced experience than any single expansion on its own.
 
-The blending community started on BoardGameGeek; [Merakon's House Blend](https://boardgamegeek.com/thread/3213458/merakons-house-blend) is widely regarded as the starting point.
+The idea originates on BoardGameGeek — [Merakon's House Blend](https://boardgamegeek.com/thread/3213458/merakons-house-blend) is the blend that started it all.
 
 ## Features
 

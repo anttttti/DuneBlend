@@ -1,7 +1,7 @@
 // ========================================
 // AI Agent Tab — DuneBlend
 // Supports Google Gemini and Mistral AI
-// API keys stored in localStorage: 'geminiApiKey', 'mistralApiKey'
+// API keys stored in localStorage: 'geminiApiKey', 'mistralApiKey', 'nvidiaApiKey', 'openrouterApiKey'
 // ========================================
 
 const AGENT_MODEL_DEFAULT = 'gemma-4-31b-it';
@@ -37,13 +37,13 @@ function getAgentModel() {
 function getModelMaxTokens() {
     const m = getAgentModel();
     if (m.startsWith('gemini') || m.startsWith('gemma')) return 1000000;
-    return 128000; // mistral
+    return 128000;
 }
 
 function updateTokenLabel() {
     const el = document.getElementById('agent-token-label');
     if (!el) return;
-    const history = getProvider() === 'mistral' ? mistralHistory : geminiHistory;
+    const history = isOpenAICompat(getProvider()) ? mistralHistory : geminiHistory;
     const tokens  = estimateTokens(history);
     const max     = getModelMaxTokens();
     el.textContent = tokens > 0 ? `${tokens.toLocaleString()}/${(max/1000).toFixed(0)}k` : '';
@@ -53,12 +53,37 @@ function getProvider() {
     const m = getAgentModel();
     if (m.startsWith('mistral') || m.startsWith('open-mistral') || m.startsWith('codestral'))
         return 'mistral';
+    if (m.startsWith('nvidia:'))      return 'nvidia';
+    if (m.startsWith('openrouter:'))  return 'openrouter';
     return 'google';
+}
+
+function isOpenAICompat(provider) {
+    return provider === 'mistral' || provider === 'nvidia' || provider === 'openrouter';
+}
+
+function getActualModelId() {
+    const m = getAgentModel();
+    if (m.startsWith('nvidia:') || m.startsWith('openrouter:')) return m.slice(m.indexOf(':') + 1);
+    return m;
+}
+
+function getApiEndpoint(provider) {
+    if (provider === 'nvidia')     return 'https://integrate.api.nvidia.com/v1/chat/completions';
+    if (provider === 'openrouter') return 'https://openrouter.ai/api/v1/chat/completions';
+    return 'https://api.mistral.ai/v1/chat/completions';
+}
+
+function getApiExtraHeaders(provider) {
+    if (provider === 'openrouter') return { 'HTTP-Referer': 'https://anttttti.github.io/DuneBlend/' };
+    return {};
 }
 
 function getActiveApiKey() {
     const p = getProvider();
-    if (p === 'mistral') return localStorage.getItem('mistralApiKey') || '';
+    if (p === 'mistral')    return localStorage.getItem('mistralApiKey')    || '';
+    if (p === 'nvidia')     return localStorage.getItem('nvidiaApiKey')     || '';
+    if (p === 'openrouter') return localStorage.getItem('openrouterApiKey') || '';
     return localStorage.getItem('geminiApiKey') || '';
 }
 
@@ -1193,17 +1218,16 @@ async function requestGeminiSummary(apiKey, placeholder, actionsCount, hasPendin
     }
 }
 
-async function requestMistralSummary(apiKey, placeholder, actionsCount) {
+async function requestOpenAICompatSummary(apiKey, placeholder, actionsCount, provider) {
     mistralHistory.push({ role: 'user', content: SUMMARY_PROMPT });
     const thinkTask = placeholder.addThinkingTask();
     try {
-        const model = getAgentModel();
-        const resp = await fetch('https://api.mistral.ai/v1/chat/completions', {
+        const resp = await fetch(getApiEndpoint(provider), {
             method:  'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}`, ...getApiExtraHeaders(provider) },
             signal:  activeAbortController?.signal,
             body: JSON.stringify({
-                model,
+                model:       getActualModelId(),
                 messages:    [{ role: 'system', content: buildSystemPrompt() }, ...mistralHistory],
                 tool_choice: 'none',
                 temperature: 0.1,
@@ -1284,12 +1308,11 @@ async function runGeminiLoop(apiKey, placeholder) {
 }
 
 // ----------------------------------------
-// Mistral API
+// OpenAI-compatible API (Mistral, Nvidia, OpenRouter)
 // ----------------------------------------
-async function callMistral(apiKey, onChunk) {
-    const model = getAgentModel();
+async function callOpenAICompat(apiKey, onChunk, provider) {
     const body = {
-        model,
+        model:       getActualModelId(),
         messages:    [{ role: 'system', content: buildSystemPrompt() }, ...mistralHistory],
         tools:       MISTRAL_TOOLS,
         tool_choice: 'auto',
@@ -1297,10 +1320,9 @@ async function callMistral(apiKey, onChunk) {
         max_tokens:  32768,
         stream:      true
     };
-    // Note: thinking/reasoning budgets are only supported by magistral models, not mistral-large
-    const resp = await fetch('https://api.mistral.ai/v1/chat/completions', {
+    const resp = await fetch(getApiEndpoint(provider), {
         method:  'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}`, ...getApiExtraHeaders(provider) },
         signal:  activeAbortController?.signal,
         body: JSON.stringify(body)
     });
@@ -1317,15 +1339,15 @@ async function callMistral(apiKey, onChunk) {
     return streamOpenAICompat(resp, onChunk);
 }
 
-async function runMistralLoop(apiKey, placeholder) {
+async function runOpenAICompatLoop(apiKey, placeholder, provider) {
     repairOpenAIStyleHistory(mistralHistory);
     let lastToolSig = null; let loopCount = 0; let totalActionsCount = 0;
     let nonProgressRounds = 0;
     for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
         if (estimateTokens(mistralHistory) > getContextThreshold())
             await compactOpenAIStyleHistory(apiKey, mistralHistory,
-                'https://api.mistral.ai/v1/chat/completions',
-                { 'Authorization': `Bearer ${apiKey}` }, placeholder);
+                getApiEndpoint(provider),
+                { 'Authorization': `Bearer ${apiKey}`, ...getApiExtraHeaders(provider) }, placeholder);
 
         const thinkTask = placeholder.addThinkingTask();
         const lastEntry = mistralHistory[mistralHistory.length - 1];
@@ -1333,10 +1355,10 @@ async function runMistralLoop(apiKey, placeholder) {
             ? lastEntry.content : JSON.stringify(lastEntry, null, 2));
 
         const message = await withRetry(
-            () => callMistral(apiKey, (chunk, type) => thinkTask.append(chunk, type)),
+            () => callOpenAICompat(apiKey, (chunk, type) => thinkTask.append(chunk, type), provider),
             (attempt, e) => thinkTask.append(`\n[retry ${attempt + 1}: ${e.message}]\n`, 'output')
         );
-        if (!message) throw new Error('No response from Mistral');
+        if (!message) throw new Error('No response from API');
         const { usage: mUsage, ...mistralMsg } = message;
         mistralHistory.push(mistralMsg);
         thinkTask.setTokens(mUsage?.prompt_tokens, mUsage?.completion_tokens);
@@ -1350,11 +1372,11 @@ async function runMistralLoop(apiKey, placeholder) {
         }
 
         const sig = JSON.stringify(toolCalls.map(tc => ({ n: tc.function.name, a: tc.function.arguments })));
-        if (sig === lastToolSig) { if (++loopCount >= 3) return requestMistralSummary(apiKey, placeholder, totalActionsCount); }
+        if (sig === lastToolSig) { if (++loopCount >= 3) return requestOpenAICompatSummary(apiKey, placeholder, totalActionsCount, provider); }
         else { lastToolSig = sig; loopCount = 0; }
 
         if (++nonProgressRounds >= NON_PROGRESS_LIMIT)
-            return requestMistralSummary(apiKey, placeholder, totalActionsCount);
+            return requestOpenAICompatSummary(apiKey, placeholder, totalActionsCount, provider);
 
         const safeParseArgs = s => { try { return JSON.parse(s); } catch { return {}; } };
         const labels    = toolCalls.map(tc => toolLabel(tc.function.name, safeParseArgs(tc.function.arguments)));
@@ -1382,7 +1404,7 @@ async function runMistralLoop(apiKey, placeholder) {
             mistralHistory.push({ role: 'tool', tool_call_id: tc.id, name, content: JSON.stringify(result) });
         }
     }
-    return requestMistralSummary(apiKey, placeholder, totalActionsCount);
+    return requestOpenAICompatSummary(apiKey, placeholder, totalActionsCount, provider);
 }
 
 // ----------------------------------------
@@ -2276,7 +2298,7 @@ function mistralToGemini(history) {
 // removing the model's response and any intervening tool rounds.
 function truncateHistoryToLastUserMessage() {
     const provider = getProvider();
-    if (provider === 'mistral') {
+    if (isOpenAICompat(provider)) {
         let i = mistralHistory.length - 1;
         while (i >= 0 && mistralHistory[i].role !== 'user') i--;
         if (i >= 0) mistralHistory.splice(i + 1);
@@ -2312,8 +2334,8 @@ async function agentRegenerate() {
 
     try {
         const { text: finalText, actionsCount } =
-            provider === 'mistral' ? await runMistralLoop(apiKey, placeholder) :
-                                     await runGeminiLoop(apiKey, placeholder);
+            isOpenAICompat(provider) ? await runOpenAICompatLoop(apiKey, placeholder, provider) :
+                                       await runGeminiLoop(apiKey, placeholder);
         placeholder.finalize(finalText, actionsCount);
     } catch (err) {
         if (err.name === 'AbortError') placeholder.finalize('*(stopped)*', 0);
@@ -2374,13 +2396,16 @@ async function agentSend() {
 
     const provider = getProvider();
 
-    // Convert history when switching providers so context is preserved
+    // Convert history when switching between google and openai-compat providers
     if (lastProvider && provider !== lastProvider) {
-        if (provider === 'mistral' && geminiHistory.length > 0) {
+        const wasCompat = isOpenAICompat(lastProvider);
+        const nowCompat = isOpenAICompat(provider);
+        if (nowCompat && !wasCompat && geminiHistory.length > 0) {
             mistralHistory = geminiToMistral(geminiHistory);
-        } else if (provider === 'google' && mistralHistory.length > 0) {
+        } else if (!nowCompat && wasCompat && mistralHistory.length > 0) {
             geminiHistory = mistralToGemini(mistralHistory);
         }
+        // switching between openai-compat providers shares mistralHistory — no conversion needed
     }
     lastProvider = provider;
 
@@ -2389,7 +2414,7 @@ async function agentSend() {
     interactionLog = [];
     const messageText = interactionContext ? `${interactionContext}${text}` : text;
 
-    if (provider === 'mistral') {
+    if (isOpenAICompat(provider)) {
         mistralHistory.push({ role: 'user', content: messageText });
     } else {
         geminiHistory.push({ role: 'user', parts: [{ text: messageText }] });
@@ -2401,8 +2426,8 @@ async function agentSend() {
 
     try {
         const { text: finalText, actionsCount } =
-            provider === 'mistral' ? await runMistralLoop(apiKey, placeholder) :
-                                     await runGeminiLoop(apiKey, placeholder);
+            isOpenAICompat(provider) ? await runOpenAICompatLoop(apiKey, placeholder, provider) :
+                                       await runGeminiLoop(apiKey, placeholder);
         placeholder.finalize(finalText, actionsCount);
     } catch (err) {
         if (err.name === 'AbortError') {
