@@ -96,7 +96,8 @@ def generate_resources_json():
                 "Immortality": "immortality",
                 "Uprising": "uprising",
                 "Bloodlines": "bloodlines",
-                "Promo": "promo"
+                "Promo": "promo",
+                "Conspiracy": "conspiracy"
             }
             resource['card_set'] = card_set_mapping.get(source, str(source).lower() if source else 'base')
 

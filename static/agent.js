@@ -1,7 +1,7 @@
 // ========================================
 // AI Agent Tab — DuneBlend
 // Supports Google Gemini and Mistral AI
-// API keys stored in localStorage: 'geminiApiKey', 'mistralApiKey', 'nvidiaApiKey', 'openrouterApiKey'
+// API keys stored in localStorage: 'geminiApiKey', 'mistralApiKey', 'openrouterApiKey'
 // ========================================
 
 const AGENT_MODEL_DEFAULT = 'gemma-4-31b-it';
@@ -53,23 +53,21 @@ function getProvider() {
     const m = getAgentModel();
     if (m.startsWith('mistral') || m.startsWith('open-mistral') || m.startsWith('codestral'))
         return 'mistral';
-    if (m.startsWith('nvidia:'))      return 'nvidia';
     if (m.startsWith('openrouter:'))  return 'openrouter';
     return 'google';
 }
 
 function isOpenAICompat(provider) {
-    return provider === 'mistral' || provider === 'nvidia' || provider === 'openrouter';
+    return provider === 'mistral' || provider === 'openrouter';
 }
 
 function getActualModelId() {
     const m = getAgentModel();
-    if (m.startsWith('nvidia:') || m.startsWith('openrouter:')) return m.slice(m.indexOf(':') + 1);
+    if (m.startsWith('openrouter:')) return m.slice(m.indexOf(':') + 1);
     return m;
 }
 
 function getApiEndpoint(provider) {
-    if (provider === 'nvidia')     return 'https://integrate.api.nvidia.com/v1/chat/completions';
     if (provider === 'openrouter') return 'https://openrouter.ai/api/v1/chat/completions';
     return 'https://api.mistral.ai/v1/chat/completions';
 }
@@ -82,7 +80,6 @@ function getApiExtraHeaders(provider) {
 function getActiveApiKey() {
     const p = getProvider();
     if (p === 'mistral')    return localStorage.getItem('mistralApiKey')    || '';
-    if (p === 'nvidia')     return localStorage.getItem('nvidiaApiKey')     || '';
     if (p === 'openrouter') return localStorage.getItem('openrouterApiKey') || '';
     return localStorage.getItem('geminiApiKey') || '';
 }

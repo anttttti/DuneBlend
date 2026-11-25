@@ -174,6 +174,7 @@
         .expansion-uprising { background-color: #DEB887 !important; color: #000 !important; }
         .expansion-bloodlines { background-color: #FF6B6B !important; color: #000 !important; }
         .expansion-promo { background-color: #E0CFFC !important; color: #000 !important; }
+        .expansion-conspiracy { background-color: #C8A96E !important; color: #000 !important; }
 
         td.expansion-base { background-color: #F5DEB3 !important; color: #000 !important; }
         td.expansion-ix { background-color: #B0E0E6 !important; color: #000 !important; }
@@ -181,6 +182,7 @@
         td.expansion-uprising { background-color: #DEB887 !important; color: #000 !important; }
         td.expansion-bloodlines { background-color: #FF6B6B !important; color: #000 !important; }
         td.expansion-promo { background-color: #E0CFFC !important; color: #000 !important; }
+        td.expansion-conspiracy { background-color: #C8A96E !important; color: #000 !important; }
 
         /* Table styling */
         .table-sm td, .table-sm th {
@@ -434,6 +436,12 @@
         #loadBlendModal .blend-section:last-of-type {
             background: linear-gradient(135deg, #e8dcc8 0%, #ddd0bc 100%) !important;
             border-left-color: var(--dune-spice) !important;
+        }
+
+        /* File list grows with viewport height (min 250px); leaves room for header, drop zone and margins */
+        #loadBlendModal #remoteBlendList {
+            max-height: max(250px, calc(100vh - 430px));
+            overflow-y: auto;
         }
 
         #dropZone {
@@ -861,6 +869,16 @@
                 </button>
             </li>
             <li class="nav-item" role="presentation">
+                <button class="nav-link" id="conspiracy-tab" data-bs-toggle="tab" data-bs-target="#conspiracy-panel" type="button">
+                    Conspiracy <span id="conspiracy-badge" class="badge bg-secondary">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="imperial_edict-tab" data-bs-toggle="tab" data-bs-target="#imperial_edict-panel" type="button">
+                    Imperial Edicts <span id="imperial_edict-badge" class="badge bg-secondary">0</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
                 <button class="nav-link" id="agent-tab" data-bs-toggle="tab" data-bs-target="#agent-panel" type="button">
                     🤖 AI Agent
                 </button>
@@ -937,6 +955,40 @@
                                         <strong>Ixian Embassy Board</strong> - kept to the side of the main board, offering three stacks of Tech tiles available for purchase when sending agents to any Landsraad (green) space
                                     </label>
                                 </div>
+
+                                <h6 class="mt-3"><strong>Conspiracy:</strong></h6>
+                                <p class="text-muted small mb-2">When using Conspiracy with the <strong>Dune: Imperium board</strong>, the Spies module and 8/6 Swordmaster overlay are <strong>required</strong>. (Uprising already includes these.)<br>
+                                <strong>Victory Point goal increases by 1:</strong> 11 VP (≤3 players) / 10 VP (4+ players). With Immortality: 12 VP (≤3) / 11 VP (4+).</p>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="board-conspiracy-spies" value="conspiracy-spies" onchange="updateRequiredSets()">
+                                    <label class="form-check-label" for="board-conspiracy-spies">
+                                        <strong>Spies Module</strong> (required with Imperium board) — place 7 Spy tokens in the bank; spend them to infiltrate an occupied space or draw a card when sending an Agent
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="board-conspiracy-swordmaster" value="conspiracy-swordmaster" onchange="updateRequiredSets()">
+                                    <label class="form-check-label" for="board-conspiracy-swordmaster">
+                                        <strong>8/6 Swordmaster Overlay</strong> (required with Imperium board) — first player pays 8 Solari, all subsequent players pay 6 Solari
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="board-conspiracy-stoneburner" value="conspiracy-stoneburner" onchange="updateRequiredSets()">
+                                    <label class="form-check-label" for="board-conspiracy-stoneburner">
+                                        <strong>Stoneburner Module</strong> (optional) — each player gets one Stoneburner token usable once per game to refresh the Imperium Row and/or raid tokens. Recommended for higher-powered deck-building
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="board-conspiracy-imperial-edict" value="conspiracy-imperial-edict" onchange="updateRequiredSets()">
+                                    <label class="form-check-label" for="board-conspiracy-imperial-edict">
+                                        <strong>Imperial Edict Module</strong> (optional) — reveal one Imperial Edict card at the start of each round with Immediate, Ongoing, or Mission effects. Recommended to skip on first play
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="board-conspiracy-overthrow" value="conspiracy-overthrow" onchange="updateRequiredSets()">
+                                    <label class="form-check-label" for="board-conspiracy-overthrow">
+                                        <strong>Overthrow Mode</strong> (optional) — 1 player plays Emperor Paul Muad'Dib vs. 2–3 Conspirators as a team. Requires Stoneburner + Imperial Edict modules. VP goal is 11 for all players
+                                    </label>
+                                </div>
                             </div>
                         </div>
 
@@ -948,7 +1000,7 @@
                                 <div class="form-check mb-2">
                                     <input class="form-check-input" type="checkbox" id="board-family-atomics" onchange="updateRequiredSets()">
                                     <label class="form-check-label" for="board-family-atomics">
-                                        <strong>Family Atomics</strong> - use Family Atomics token from Immortality to refresh the Imperium Row
+                                        <strong>Family Atomics</strong> - use Family Atomics token from Immortality to refresh the Imperium Row. (If using Conspiracy, prefer Stoneburners instead)
                                     </label>
                                 </div>
                             </div>
@@ -1772,6 +1824,85 @@
                 </div>
             </div>
 
+            <!-- Conspiracy Cards Panel -->
+            <div class="tab-pane fade" id="conspiracy-panel" role="tabpanel">
+                <div class="row">
+                    <div class="col-12">
+                        <h4 class="d-inline-block">Conspiracy Cards <span class="badge bg-secondary" id="conspiracy-available-count">0</span></h4>
+                        <button class="btn btn-info btn-sm ms-3" onclick="showPhotoScanDialog('conspiracy')">📷 Scan Resources from Photo</button>
+                        <div class="table-responsive" style="max-height: 500px; overflow: auto;">
+                            <table class="table table-sm table-hover table-bordered" style="table-layout: fixed;">
+                                <colgroup>
+                                    <col style="width: 68px;"><!-- Selected -->
+                                    <col style="width: 220px;"><!-- Name -->
+                                    <col style="width: 80px;"><!-- Set -->
+                                    <col style="width: 110px;"><!-- Compatibility -->
+                                    <col style="width: 60px;"><!-- Count -->
+                                    <col style="width: 110px;"><!-- Effect Type -->
+                                    <col style="width: 60px;"><!-- Spice Cost -->
+                                    <col style="width: 60px;"><!-- Chip Cost -->
+                                    <col style="width: 420px;"><!-- Effect -->
+                                </colgroup>
+                                <thead class="sticky-top bg-white">
+                                    <tr>
+                                        <th class="resizable sortable" style="cursor: pointer;" onclick="sortResourceTable('conspiracy', 'selected')">Selected
+                                            <button class="btn btn-sm btn-outline-success" style="padding: 0px 3px; font-size: 0.7rem; margin-left: 2px;" onclick="event.stopPropagation(); selectAllResources('conspiracy');" title="Select all">+</button>
+                                            <button class="btn btn-sm btn-outline-danger" style="padding: 0px 3px; font-size: 0.7rem;" onclick="event.stopPropagation(); deselectAllResources('conspiracy');" title="Deselect all">-</button>
+                                            <div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="cursor: pointer;" onclick="sortResourceTable('conspiracy', 'name')">Name<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="cursor: pointer;" onclick="sortResourceTable('conspiracy', 'source')">Set<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="cursor: pointer;" onclick="sortResourceTable('conspiracy', 'compatibility')">Compatibility<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="cursor: pointer;" onclick="sortResourceTable('conspiracy', 'count')">Count<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="cursor: pointer;" onclick="sortResourceTable('conspiracy', 'effect_type')">Effect Type<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="cursor: pointer;" onclick="sortResourceTable('conspiracy', 'spice_cost')">Spice<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="cursor: pointer;" onclick="sortResourceTable('conspiracy', 'chip_cost')">Chips<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="cursor: pointer;" onclick="sortResourceTable('conspiracy', 'effect')">Effect<div class="resize-handle"></div></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="conspiracy-tbody"></tbody>
+                            </table>
+                        </div>
+                        <small class="text-muted">Use +/- buttons to include Conspiracy cards in blend. Each player drafts 4 Conspiracy cards at setup.</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Imperial Edict Cards Panel -->
+            <div class="tab-pane fade" id="imperial_edict-panel" role="tabpanel">
+                <div class="row">
+                    <div class="col-12">
+                        <h4 class="d-inline-block">Imperial Edict Cards <span class="badge bg-secondary" id="imperial_edict-available-count">0</span></h4>
+                        <div class="table-responsive" style="max-height: 500px; overflow: auto;">
+                            <table class="table table-sm table-hover table-bordered" style="table-layout: fixed;">
+                                <colgroup>
+                                    <col style="width: 68px;"><!-- Selected -->
+                                    <col style="width: 180px;"><!-- Name -->
+                                    <col style="width: 80px;"><!-- Set -->
+                                    <col style="width: 60px;"><!-- Count -->
+                                    <col style="width: 100px;"><!-- Edict Type -->
+                                    <col style="width: 450px;"><!-- Effect -->
+                                </colgroup>
+                                <thead class="sticky-top bg-white">
+                                    <tr>
+                                        <th class="resizable sortable" style="cursor: pointer;" onclick="sortResourceTable('imperial_edict', 'selected')">Selected
+                                            <button class="btn btn-sm btn-outline-success" style="padding: 0px 3px; font-size: 0.7rem; margin-left: 2px;" onclick="event.stopPropagation(); selectAllResources('imperial_edict');" title="Select all">+</button>
+                                            <button class="btn btn-sm btn-outline-danger" style="padding: 0px 3px; font-size: 0.7rem;" onclick="event.stopPropagation(); deselectAllResources('imperial_edict');" title="Deselect all">-</button>
+                                            <div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="cursor: pointer;" onclick="sortResourceTable('imperial_edict', 'name')">Name<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="cursor: pointer;" onclick="sortResourceTable('imperial_edict', 'source')">Set<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="cursor: pointer;" onclick="sortResourceTable('imperial_edict', 'count')">Count<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="cursor: pointer;" onclick="sortResourceTable('imperial_edict', 'edict_type')">Type<div class="resize-handle"></div></th>
+                                        <th class="resizable sortable" style="cursor: pointer;" onclick="sortResourceTable('imperial_edict', 'effect')">Effect<div class="resize-handle"></div></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="imperial_edict-tbody"></tbody>
+                            </table>
+                        </div>
+                        <small class="text-muted">Imperial Edicts are face-down Conspiracy cards that players can claim during the game.</small>
+                    </div>
+                </div>
+            </div>
+
             <!-- AI Agent Panel -->
             <div class="tab-pane fade" id="agent-panel" role="tabpanel">
                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -1805,8 +1936,7 @@
                     <!-- Remote Blends Section -->
                     <div class="blend-section mb-4" style="background: #e3f2fd; padding: 15px; border-radius: 8px; border-left: 4px solid #2196f3;">
                         <h6 class="fw-bold">📦 Remote Blends (Server)</h6>
-                        <p class="text-muted small mb-2">Pre-packaged blends from the server</p>
-                        <div class="list-group" id="remoteBlendList" style="max-height: 250px; overflow-y: auto;">
+                        <div class="list-group" id="remoteBlendList">
                             <p class="text-muted p-2">Loading...</p>
                         </div>
                     </div>
@@ -1814,7 +1944,6 @@
                     <!-- Local File Upload Section -->
                     <div class="blend-section" style="background: #f3e5f5; padding: 15px; border-radius: 8px; border-left: 4px solid #9c27b0;">
                         <h6 class="fw-bold">💾 Local File (Your Computer)</h6>
-                        <p class="text-muted small mb-2">Upload a .md file from your computer</p>
 
                         <!-- Drag and Drop Zone -->
                         <div id="dropZone" class="border border-2 border-dashed rounded p-4 text-center"
@@ -1914,14 +2043,6 @@
                                 </tr>
                                 <tr>
                                     <td class="ps-0 align-middle py-1" style="white-space:nowrap">
-                                        <a href="https://build.nvidia.com/settings/api-key" target="_blank">Nvidia</a>
-                                    </td>
-                                    <td class="py-1">
-                                        <input type="text" class="form-control form-control-sm font-monospace" id="nvidiaApiKeyInput" placeholder="nvapi-…">
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="ps-0 align-middle py-1" style="white-space:nowrap">
                                         <a href="https://openrouter.ai/keys" target="_blank">OpenRouter</a>
                                     </td>
                                     <td class="py-1">
@@ -1973,12 +2094,7 @@
                                 <option value="mistral-medium-3.5">mistral-medium-3.5</option>
                                 <option value="mistral-small-2603">mistral-small-2603</option>
                             </optgroup>
-                            <optgroup label="Nvidia">
-                                <option value="nvidia:nvidia/nemotron-3-ultra-550b-a55b">nvidia/nemotron-3-ultra-550b-a55b</option>
-                                <option value="nvidia:nvidia/nemotron-3-super-120b-a12b">nvidia/nemotron-3-super-120b-a12b</option>
-                                <option value="nvidia:mistralai/mistral-medium-3.5-128b">mistralai/mistral-medium-3.5-128b</option>
-                            </optgroup>
-                            <optgroup label="OpenRouter">
+                            <optgroup label="OpenRouter (Nvidia)">
                                 <option value="openrouter:nvidia/nemotron-3-ultra-550b-a55b:free">nvidia/nemotron-3-ultra-550b-a55b:free</option>
                                 <option value="openrouter:nvidia/nemotron-3-super-120b-a12b:free">nvidia/nemotron-3-super-120b-a12b:free</option>
                             </optgroup>
@@ -2135,7 +2251,8 @@
         let allResources = {};
         let selectedResources = {
             imperium: [], intrigue: [], tleilax: [], reserve: [], tech: [],
-            contracts: [], leader: [], sardaukar: [], starter: [], conflict: []
+            contracts: [], leader: [], sardaukar: [], starter: [], conflict: [],
+            conspiracy: [], imperial_edict: []
         };
 
         // Base blend stats for baseline comparison
@@ -2411,7 +2528,9 @@
             leader: { nameProp: 'name', costProp: null, hasSet: true, extraProp: 'house' },
             sardaukar: { nameProp: 'name', costProp: null, hasSet: false },
             starter: { nameProp: 'name', costProp: null, hasSet: true },
-            conflict: { nameProp: 'name', costProp: null, hasSet: true }
+            conflict: { nameProp: 'name', costProp: null, hasSet: true },
+            conspiracy: { nameProp: 'name', costProp: 'chip_cost', hasSet: true },
+            imperial_edict: { nameProp: 'name', costProp: null, hasSet: true }
         };
 
         // Centralized color scheme for all themed elements
@@ -2425,7 +2544,8 @@
                 'Immortality': '#E2EFDA',     // Light Green
                 'Uprising': '#DEB887',        // Burlywood (light brown)
                 'Bloodlines': '#FF6B6B',      // Coral Red
-                'Promo': '#E0CFFC'            // Light Purple
+                'Promo': '#E0CFFC',           // Light Purple
+                'Conspiracy': '#C8A96E'       // Sandstone Gold
             },
             // Access colors - matching color names
             access: {
@@ -2743,6 +2863,12 @@
                 case 'conflict':
                     initializeConflictDetailed(resources);
                     break;
+                case 'conspiracy':
+                    initializeConspiracyDetailed(resources);
+                    break;
+                case 'imperial_edict':
+                    initializeImperialEdictDetailed(resources);
+                    break;
                 default:
                     console.warn('No detailed renderer for type:', type);
             }
@@ -3017,13 +3143,18 @@
                 if (value === 'embassy') {
                     requiredSets.add('Bloodlines');
                 }
+                if (value === 'conspiracy-spies' || value === 'conspiracy-swordmaster' ||
+                    value === 'conspiracy-stoneburner' || value === 'conspiracy-imperial-edict' ||
+                    value === 'conspiracy-overthrow') {
+                    requiredSets.add('Conspiracy');
+                }
                 if (cb.id === 'board-family-atomics') {
                     requiredSets.add('Immortality');
                 }
             });
 
             // Check all resource types for selected items
-            const resourceTypes = ['imperium', 'intrigue', 'tleilax', 'reserve', 'tech', 'contracts', 'leader', 'sardaukar', 'starter', 'conflict', 'rival', 'navigation'];
+            const resourceTypes = ['imperium', 'intrigue', 'tleilax', 'reserve', 'tech', 'contracts', 'leader', 'sardaukar', 'starter', 'conflict', 'rival', 'navigation', 'conspiracy', 'imperial_edict'];
 
             resourceTypes.forEach(type => {
                 if (!allResources[type]) return;
@@ -3049,7 +3180,7 @@
                     container.innerHTML = '<span class="text-muted">No sets selected yet</span>';
                 } else {
                     // Sort sets in a logical order
-                    const setOrder = ['Imperium', 'Uprising', 'Rise of Ix', 'Immortality', 'Bloodlines', 'Promo', 'Ecaz & Moritani'];
+                    const setOrder = ['Imperium', 'Uprising', 'Rise of Ix', 'Immortality', 'Bloodlines', 'Conspiracy', 'Promo', 'Ecaz & Moritani'];
                     const sortedSets = Array.from(requiredSets).sort((a, b) => {
                         const indexA = setOrder.indexOf(a);
                         const indexB = setOrder.indexOf(b);
@@ -3069,6 +3200,7 @@
                         else if (lowerSet.includes('immortality')) badgeClass = 'expansion-immortality';
                         else if (lowerSet.includes('bloodlines')) badgeClass = 'expansion-bloodlines';
                         else if (lowerSet.includes('promo')) badgeClass = 'expansion-promo';
+                        else if (lowerSet.includes('conspiracy')) badgeClass = 'expansion-conspiracy';
 
                         return `<span class="badge ${badgeClass} me-2 mb-1" style="font-size: 0.95em; padding: 6px 12px;">${set}</span>`;
                     }).join('');
@@ -3087,6 +3219,7 @@
             if (lower === 'uprising' || lower.includes('uprising')) return 'Uprising';
             if (lower === 'bloodlines' || lower.includes('bloodlines')) return 'Bloodlines';
             if (lower === 'promo' || lower.includes('promo')) return 'Promo';
+            if (lower === 'conspiracy' || lower.includes('conspiracy')) return 'Conspiracy';
             if (lower.includes('ecaz') || lower.includes('moritani')) return 'Ecaz & Moritani';
 
             // Return capitalized original if no match
@@ -3599,6 +3732,87 @@
             setupResourceTableHandlers(tbody, 'conflict');
 
             document.getElementById('conflict-available-count').textContent = cards.length;
+            initializeResizing();
+        }
+
+        function initializeConspiracyDetailed(cards) {
+            const tbody = document.getElementById('conspiracy-tbody');
+            tbody.innerHTML = '';
+
+            cards.forEach(card => {
+                const tr = document.createElement('tr');
+                tr.className = 'resource-row';
+
+                if (card.selected && card.selected > 0) {
+                    tr.classList.add('has-selection');
+                }
+
+                const cardNameLink = createCardNameLink(card.name || '', 'conspiracy', card.source || card.card_set || '');
+                const cardNameSafe = (card.name || '').replace(/"/g, '&quot;');
+                const sourceSafe = (card.source || card.card_set || '').replace(/"/g, '&quot;');
+                const countId = `conspiracy-selected-${card.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${(card.source || card.card_set || '').replace(/\s+/g, '-')}`;
+
+                tr.innerHTML = `
+                    <td style="text-align: center; padding: 2px;">
+                        <button class="btn btn-sm btn-outline-danger" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="decrement" data-type="conspiracy" data-name="${cardNameSafe}" data-source="${sourceSafe}">-</button>
+                        <span id="${countId}" style="display: inline-block; min-width: 20px; text-align: center; font-weight: bold; font-size: 0.85rem;">${card.selected || 0}</span>
+                        <button class="btn btn-sm btn-outline-success" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="increment" data-type="conspiracy" data-name="${cardNameSafe}" data-source="${sourceSafe}" data-max="${card.count || 999}">+</button>
+                    </td>
+                    <td class="expansion-${card.card_set}">${cardNameLink}</td>
+                    <td class="expansion-${card.card_set}">${card.source || ''}</td>
+                    <td class="compact">${card.compatibility || ''}</td>
+                    <td class="compact">${card.count || '1'}</td>
+                    <td class="compact">${card.effect_type || ''}</td>
+                    <td class="compact">${card.spice_cost === '' || card.spice_cost === undefined ? '' : card.spice_cost}</td>
+                    <td class="compact">${card.chip_cost === '' || card.chip_cost === undefined ? '' : card.chip_cost}</td>
+                    <td title="${(card.effect || '').replace(/"/g, '&quot;')}">${truncate(card.effect || '', 200)}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            setupResourceTableHandlers(tbody, 'conspiracy');
+
+            document.getElementById('conspiracy-available-count').textContent = cards.length;
+            initializeResizing();
+        }
+
+        function initializeImperialEdictDetailed(cards) {
+            const tbody = document.getElementById('imperial_edict-tbody');
+            tbody.innerHTML = '';
+
+            cards.forEach(card => {
+                const tr = document.createElement('tr');
+                tr.className = 'resource-row';
+
+                if (card.selected && card.selected > 0) {
+                    tr.classList.add('has-selection');
+                }
+
+                const cardNameLink = createCardNameLink(card.name || '', 'imperial_edict', card.source || card.card_set || '');
+                const cardNameSafe = (card.name || '').replace(/"/g, '&quot;');
+                const sourceSafe = (card.source || card.card_set || '').replace(/"/g, '&quot;');
+                const countId = `imperial_edict-selected-${card.name.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '')}-${(card.source || card.card_set || '').replace(/\s+/g, '-')}`;
+
+                tr.innerHTML = `
+                    <td style="text-align: center; padding: 2px;">
+                        <button class="btn btn-sm btn-outline-danger" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="decrement" data-type="imperial_edict" data-name="${cardNameSafe}" data-source="${sourceSafe}">-</button>
+                        <span id="${countId}" style="display: inline-block; min-width: 20px; text-align: center; font-weight: bold; font-size: 0.85rem;">${card.selected || 0}</span>
+                        <button class="btn btn-sm btn-outline-success" style="padding: 1px 4px; font-size: 0.75rem; line-height: 1;" data-action="increment" data-type="imperial_edict" data-name="${cardNameSafe}" data-source="${sourceSafe}" data-max="${card.count || 999}">+</button>
+                    </td>
+                    <td class="expansion-${card.card_set}">${cardNameLink}</td>
+                    <td class="expansion-${card.card_set}">${card.source || ''}</td>
+                    <td class="compact">${card.count || '1'}</td>
+                    <td class="compact">${card.edict_type || ''}</td>
+                    <td title="${(card.effect || '').replace(/"/g, '&quot;')}">${truncate(card.effect || '', 300)}</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            setupResourceTableHandlers(tbody, 'imperial_edict');
+
+            document.getElementById('imperial_edict-available-count').textContent = cards.length;
             initializeResizing();
         }
 
@@ -5914,7 +6128,6 @@
                 document.getElementById('geminiModelSelect').value = geminiModel;
                 document.getElementById('agentModelSelect').value = localStorage.getItem('agentModel') || 'gemma-4-31b-it';
                 document.getElementById('mistralApiKeyInput').value = localStorage.getItem('mistralApiKey') || '';
-                document.getElementById('nvidiaApiKeyInput').value = localStorage.getItem('nvidiaApiKey') || '';
                 document.getElementById('openrouterApiKeyInput').value = localStorage.getItem('openrouterApiKey') || '';
                 document.getElementById('braveApiKeyInput').value = localStorage.getItem('braveApiKey') || '';
                 apiKeyModal.show();
@@ -5926,7 +6139,6 @@
             const model = document.getElementById('geminiModelSelect').value;
             const agentModel = document.getElementById('agentModelSelect').value;
             const mistralKey     = document.getElementById('mistralApiKeyInput').value.trim();
-            const nvidiaKey      = document.getElementById('nvidiaApiKeyInput').value.trim();
             const openrouterKey  = document.getElementById('openrouterApiKeyInput').value.trim();
             const braveKey   = document.getElementById('braveApiKeyInput').value.trim();
 
@@ -5949,11 +6161,6 @@
                 localStorage.setItem('mistralApiKey', mistralKey);
             } else {
                 localStorage.removeItem('mistralApiKey');
-            }
-            if (nvidiaKey) {
-                localStorage.setItem('nvidiaApiKey', nvidiaKey);
-            } else {
-                localStorage.removeItem('nvidiaApiKey');
             }
             if (openrouterKey) {
                 localStorage.setItem('openrouterApiKey', openrouterKey);
